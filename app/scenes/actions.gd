@@ -1,5 +1,16 @@
 extends Node
 
+var OperatorSymbolMap: Dictionary = {
+	"=": OP_EQUAL,
+	"==": OP_EQUAL,
+	">": OP_GREATER,
+	"<": OP_LESS,
+	"!=": OP_NOT_EQUAL,
+	"<>": OP_NOT_EQUAL,
+	">=": OP_GREATER_EQUAL,
+	"<=": OP_LESS_EQUAL
+}
+
 func _ready() -> void:
 	add_to_group(Group.ACTIONS)
 
@@ -12,11 +23,28 @@ func make_params(action_ent: Entity) -> Dictionary:
 	return params
 	
 func eval_action_if(caller_peer_id: int, target_peer_id: int, key_ref_condition: KeyRef) -> bool:
-	if key_ref_condition == null: return true
+	if key_ref_condition == null: return true # if there is no condition set, automatically pass
 	var condition_ent = key_ref_condition.lookup()
-	# TODO - dice eval (This needs to happen now. Target and caller resources need to be injected)
+	var caller_actor = get_tree().get_first_node_in_group(str(caller_peer_id))
 	var target_actor = get_tree().get_first_node_in_group(str(target_peer_id))
-	return false
+	var lvalue: int = Dice.builder().caller(caller_actor).target(target_actor).expression(condition_ent.left).build().evaluate()
+	var rvalue: int = Dice.builder().caller(caller_actor).target(target_actor).expression(condition_ent.right).build().evaluate()
+	match OperatorSymbolMap.get(condition_ent.operator):
+		OP_EQUAL:
+			return lvalue == rvalue
+		OP_NOT_EQUAL:
+			return lvalue != rvalue
+		OP_GREATER:
+			return lvalue > rvalue
+		OP_LESS:
+			return lvalue < rvalue
+		OP_GREATER_EQUAL:
+			return lvalue >= rvalue
+		OP_LESS_EQUAL:
+			return lvalue <= rvalue
+		_:
+			Logger.warn("Condition [%s] evaluates to false due to invalid operator [%s] used -- options are: %s" % [condition_ent.key(), condition_ent.operator, OperatorSymbolMap.keys()])
+			return false
 	
 func handle_move_actor(peer_id: int, map: String) -> void:
 	if peer_id <= 0: return
@@ -28,19 +56,21 @@ func handle_move_actor(peer_id: int, map: String) -> void:
 			actor.queue_free()
 #  ------------------------------------------------------------------------ Utils #
 # Actions ----------------------------------------------------------------------- #
-# ACTION SIGNATURE MUST ALWAYS BE (String action_key, int caller_peer_id, int target_peer_id, Dict...params)
+## ACTION SIGNATURE MUST ALWAYS BE (String action_key, int caller_peer_id, int target_peer_id, Dict...params)
 @rpc("any_peer", "reliable", "call_local")
 func invoke_action(action_key: String, caller_peer_id: int, target_peer_id: int) -> void:
 	var action_ent = Repo.select(action_key)
-	# TODO condition
-	var params := make_params(action_ent)
-	call(action_ent.do, caller_peer_id, target_peer_id, params)
-	# TODO else
-	# TODO then
-	
+	if eval_action_if(caller_peer_id, target_peer_id, action_ent.condition):
+		var params := make_params(action_ent)
+		if action_ent.do != null: call(action_ent.do, caller_peer_id, target_peer_id, params)
+	else:
+		if action_ent.else != null: invoke_action(action_ent.else.key(), caller_peer_id, target_peer_id)
+	if action_ent.then != null: invoke_action(action_ent.then.key(), caller_peer_id, target_peer_id)
+## ACTION SIGNATURE... ------------------------------------------------------------- #
 
-@rpc("any_peer", "reliable", "call_local")
 func move_map(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> void:
+	## map: KeyRef to Map.
+	## location: KeyRef to Vertex where the target actor's new position will be.
 	var pack: Dictionary = get_tree().get_first_node_in_group(str(target_peer_id)).pack()
 	pack["map"] = params.get("map")
 	pack["location"] = params.get("location")
@@ -60,4 +90,10 @@ func move_map(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> v
 		.task(func(): get_parent().render_map.rpc_id(target_peer_id, params.map))
 		.build()
 	)
+
+func minus_resource_target(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> void:
+	## resource: 
+	## value: Dice algebra to be subtracted from the target's resource
+	var target_actor: Actor = get_tree().get_first_node_in_group(str(target_peer_id))
+	params. 
 # ----------------------------------------------------------------------- Actions #
