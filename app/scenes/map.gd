@@ -1,0 +1,111 @@
+extends Node2D
+class_name Map
+
+const TILEMAP_TILESIZE: Vector2i = Vector2i(32, 16)
+const TILESET_TILESIZE: Vector2i = Vector2i(32, 32)
+
+const TILESET_TILESHAPE: TileSet.TileShape = TileSet.TILE_SHAPE_ISOMETRIC
+const TILESET_LAYOUT: TileSet.TileLayout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
+const TILESET_OFFSET_AXIS: TileSet.TileOffsetAxis = TileSet.TILE_OFFSET_AXIS_HORIZONTAL
+
+const COLLISION_LAYER_ACTOR: int = 1
+const COLLISION_LAYER_WALL: int = 2
+
+const INVALID_TILE_SYMBOLS: Array[String] = ["", " ", "\t", "\n"]
+
+var map_key: String
+var _build_complete: bool = false
+
+class MapBuilder:
+	var obj = Scene.map.instantiate()
+	
+	func map(value: String) ->  MapBuilder:
+		obj.map_key = value
+		return self
+
+	func build() -> Map: 
+		obj.name = obj.map_key
+		return obj
+		
+static func builder() -> MapBuilder:
+	return MapBuilder.new()
+
+func _ready() -> void:
+	add_to_group(Group.MAP)
+	add_to_group(name)
+	Queue.enqueue(
+		Queue.Item.builder()
+		.comment("build isometric tilemap in map %s" % name)
+		.task(build_isometric_tilemap)
+		.condition(Repo.get_child_count)
+		.build()
+	)
+	
+func build_complete() -> bool:
+	return _build_complete
+
+func build_isometric_tilemap() -> void:
+	var map_ent = Repo.query([name]).pop_front()
+	var tilemap_ent = map_ent.tilemap.lookup()
+	var tileset_ent = tilemap_ent.tileset.lookup()
+	var tileset: TileSet = TileSet.new()
+	tileset.set_tile_shape(TILESET_TILESHAPE)
+	tileset.set_tile_layout(TILESET_LAYOUT)
+	tileset.set_tile_offset_axis(TILESET_OFFSET_AXIS)
+	tileset.add_physics_layer()
+	tileset.set_physics_layer_collision_layer(0, COLLISION_LAYER_WALL)  # set the second int as value, not bit or index.
+	var atlas: TileSetAtlasSource = TileSetAtlasSource.new()
+	var texture_bytes = AssetLoader.builder()\
+	.key(tileset_ent.texture)\
+	.type(AssetLoader.Type.IMAGE)\
+	.archive(Cache.archive)\
+	.build()\
+	.pull()
+	atlas.set_texture(texture_bytes)
+	atlas.set_texture_region_size(TILESET_TILESIZE)
+	tileset.add_source(atlas)
+	tileset.set_tile_size(TILEMAP_TILESIZE)
+	for tile_ent in tileset_ent.tiles.lookup():
+		var coords = Vector2i(tile_ent.index % tileset_ent.columns, tile_ent.index / tileset_ent.columns)
+		var tile_pos: Vector2i = Vector2i(tile_ent.index % tileset_ent.columns, tile_ent.index / tileset_ent.columns)
+		tileset.get_source(0).create_tile(tile_pos)
+		var atlas_tile = atlas.get_tile_data(coords, 0)
+		atlas.set("%s:%s/0/y_sort_origin" % [coords.x, coords.y], tile_ent.origin)
+		if tile_ent.polygon != null:
+			var polygon_ent = tile_ent.polygon.lookup()
+			var vectors: PackedVector2Array = []
+			for vertex_ent in polygon_ent.vertices.lookup():
+				vectors.append(vertex_ent.to_vec2i())
+			atlas_tile.set("physics_layer_0/polygon_0/points", vectors)
+	var layers_ent_array = tilemap_ent.layers.lookup()
+	for layer_index in range(layers_ent_array.size()):
+		var tilemap_layer := TileMapLayer.new()
+		tilemap_layer.enabled = false # Sets visibilty and collisions off by default
+		var layer_ent = layers_ent_array[layer_index]
+		tilemap_layer.name = layer_ent.key()
+		tilemap_layer.tile_set = tileset
+		tilemap_layer.y_sort_enabled = layer_ent.ysort
+		tilemap_layer.z_index = layer_ent.ysort			
+		tilemap_layer.z_as_relative = true
+		tilemap_layer.set_visibility_layer_bit(0, false) # Reset defualt state to none
+		tilemap_layer.set_visibility_layer_bit(layer_index, true)
+		var layer_string: String = io.load_asset(Cache.archive + layer_ent.source, Cache.archive)
+		var coords: Vector2i = Vector2i()	
+		for row in layer_string.split("\n"):
+			coords.y = 0
+			for tile_symbol in row:
+				if !(tile_symbol in INVALID_TILE_SYMBOLS): 
+					var tile_ent = Repo.query([Group.TILE_ENTITY]).filter(func(ent): return ent.symbol == tile_symbol).front()
+					var atlas_coords: Vector2i = Vector2i( 
+							tile_ent.index % tileset_ent.columns,
+							tile_ent.index / tileset_ent.columns,
+						)
+					tilemap_layer.set_cell(coords, 0, atlas_coords)
+				coords.y -= 1
+			coords.x += 1
+		add_child(tilemap_layer)
+	Queue.enqueue(
+		Queue.Item.builder()
+		.task(func(): _build_complete = true)
+		.build()
+	)

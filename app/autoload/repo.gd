@@ -1,0 +1,92 @@
+extends Node
+
+const _entities: Dictionary = {
+	"Main": preload("res://entities/Main.gd"),
+	"Action": preload("res://entities/Action.gd"),
+	"Actor": preload("res://entities/Actor.gd"),
+	"Deployment": preload("res://entities/Deployment.gd"),
+	"Polygon": preload("res://entities/Polygon.gd"),
+	"Sprite": preload("res://entities/Sprite.gd"),
+	"TileSet": preload("res://entities/TileSet.gd"),
+	"Layer": preload("res://entities/Layer.gd"),
+	"Resource": preload("res://entities/Resource.gd"),
+	"Tile": preload("res://entities/Tile.gd"),
+	"Vertex": preload("res://entities/Vertex.gd"),
+	"Animation": preload("res://entities/Animation.gd"),
+	"Map": preload("res://entities/Map.gd"),
+	"TileMap": preload("res://entities/TileMap.gd"),
+	"KeyFrame": preload("res://entities/KeyFrame.gd"),
+	"Parameter": preload("res://entities/Parameter.gd"),
+	"Condition": preload("res://entities/Condition.gd"),
+}
+
+signal load_complete
+signal load_failure
+
+func query(tags: Array) -> Array:
+	var entities = get_children()
+	for tag in tags:
+		entities = entities.filter(func(e): return e.has_tag(tag))
+	return entities
+	
+func select(key: String) -> Entity:
+	var results = query([key])
+	if results.size() != 1:
+		Logger.warn("Repo select tag: [%s] yielded %s results..." % [key, results.size()])
+	return results.pop_front()
+	
+func extract_single_key_from_dict(dict: Dictionary, key_to_keep: String) -> Dictionary:
+	var copy := dict.duplicate(true)
+	var keys = copy.keys()
+	for key in keys:
+		if key != key_to_keep:
+			copy.erase(key)
+	return copy
+	
+func add_asset_as_entities_to_tree(asset: Dictionary):
+	for objtype in asset.keys(): # Loop through named types in asset
+		if objtype in _entities.keys(): # Becuase this is user generated content, ensure the type is valid
+			for objkey in asset[objtype].keys():
+				var objdata: Dictionary = asset[objtype]
+				var entity = _entities[objtype].new()
+				var params := Entity.FitParams.new()
+				params.type = objtype
+				params.key = objkey
+				params.data = extract_single_key_from_dict(objdata, objkey)
+				entity.fit(params)
+				if !has_node(entity.unique_node_name()):
+					Logger.info("Successfully created Entity: %s" % entity.unique_node_name())
+					add_child(entity)
+				else:
+					Logger.warn("Naming conflict detected in archive: [%s], resolve this or the map will contain missing data on load." % entity.unique_node_name())
+		else:
+			Logger.warn("Type [%s] is not recognized as a valid type and will be skipped, options are [%s]." % [objtype, _entities.keys()])
+
+func load_archive():
+	var archive: ZIPReader = ZIPReader.new()
+	var path: String = Path.builder()\
+		.root()\
+		.part(io.get_dir())\
+		.part(Cache.dir)\
+		.part(Cache.archive)\
+		.extension(".zip")\
+		.build()\
+		.render()
+	if archive.open(path) == OK:	
+		var all_assets: Array = archive.get_files()
+		archive.close()
+		Logger.info("Loading [%s] assets from campaign [%s]..." % [all_assets.size(), path])
+		for asset_filename in all_assets:
+			if asset_filename.ends_with(".json"):
+				var asset_key: String = asset_filename.split("/", true, 1)[-1]
+				var asset: Dictionary = AssetLoader.builder()\
+				.archive(Cache.archive)\
+				.key(asset_key)\
+				.type(AssetLoader.Type.OBJECT)\
+				.build()\
+				.pull()
+				add_asset_as_entities_to_tree(asset)
+		load_complete.emit.call_deferred()
+		return OK
+	load_failure.emit()
+	return FAILED

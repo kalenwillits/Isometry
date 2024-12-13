@@ -1,0 +1,76 @@
+[gd_scene load_steps=4 format=3 uid="uid://dl6t8dqsvo35i"]
+
+[ext_resource type="Script" path="res://scenes/actor.gd" id="1_y2kqt"]
+[ext_resource type="Script" path="res://scenes/synchronizer.gd" id="2_dd5io"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_bd4xq"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:heading")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:state")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:origin")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:destination")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:speed_mod")
+properties/5/spawn = true
+properties/5/replication_mode = 2
+properties/6/path = NodePath(".:sprite")
+properties/6/spawn = true
+properties/6/replication_mode = 2
+properties/7/path = NodePath(".:polygon")
+properties/7/spawn = true
+properties/7/replication_mode = 2
+properties/8/path = NodePath(".:actor")
+properties/8/spawn = true
+properties/8/replication_mode = 2
+properties/9/path = NodePath(".:map")
+properties/9/spawn = true
+properties/9/replication_mode = 2
+properties/10/path = NodePath(".:resources")
+properties/10/spawn = true
+properties/10/replication_mode = 2
+
+[node name="Actor" type="CharacterBody2D"]
+z_index = 1
+z_as_relative = false
+y_sort_enabled = true
+collision_layer = 2
+collision_mask = 2
+script = ExtResource("1_y2kqt")
+
+[node name="Synchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_bd4xq")
+script = ExtResource("2_dd5io")
+
+[node name="HitboxTriggerCooldownTimer" type="Timer" parent="."]
+wait_time = 0.1
+one_shot = true
+
+[node name="Label" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 8
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+y_sort_enabled = true
+centered = false
+
+[node name="HitBox" type="Area2D" parent="."]
+z_as_relative = false
+collision_mask = 15
+
+[connection signal="heading_change" from="." to="." method="_on_heading_change"]
+[connection signal="synchronized" from="Synchronizer" to="." method="_on_multiplayer_synchronizer_synchronized"]
+[connection signal="ready" from="Label" to="." method="_on_label_ready"]
+[connection signal="animation_changed" from="Sprite" to="." method="_on_sprite_animation_changed"]
+[connection signal="animation_finished" from="Sprite" to="." method="_on_sprite_animation_finished"]
+[connection signal="ready" from="Sprite" to="." method="_on_sprite_ready"]
+[connection signal="body_entered" from="HitBox" to="." method="_on_hit_box_body_entered"]
