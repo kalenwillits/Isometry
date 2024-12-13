@@ -10,21 +10,18 @@ class Dice : public Object {
     GDCLASS(Dice, Object)
 
 private:
-	String expr;
-	DiceAlgebra dice_algebra;
+	String expresion;
+	Node *p_target;
+	Node *p_caller;
 
 protected:
     static void _bind_methods();
 
 public:
 	Dice();
-    Dice(String expr);
     ~Dice();
-
-	int set_expr(String expr);
-	String get_expr();
-	void roll();
-	int get_result();
+	static DiceBuilder builder();
+	int evaluate();
 };
 
 }
