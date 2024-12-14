@@ -69,13 +69,15 @@ static func builder() -> ActorBuilder:
 
 func pack() -> Dictionary:
 	## Pack's the actor's data for transfer across peers
+	# TODO - Pack/load resources
 	return {
 		"peer_id": peer_id,
 		"name": name,
 		"location/x": position.x,
 		"location/y": position.y,
 		"actor": actor,
-		"map": map
+		"map": map,
+		"resources": resources
 	}
 	
 func get_actor_group_name() -> String:

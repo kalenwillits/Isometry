@@ -5,6 +5,8 @@ const KEY_ALIASES: Dictionary = {
 	"name": "name_",
 	"min": "min_",
 	"max": "max_",
+	"if": "if_", 
+	"else": "else_",
 }
 
 var _type: String

@@ -25,10 +25,8 @@ func make_params(action_ent: Entity) -> Dictionary:
 func eval_action_if(caller_peer_id: int, target_peer_id: int, key_ref_condition: KeyRef) -> bool:
 	if key_ref_condition == null: return true # if there is no condition set, automatically pass
 	var condition_ent = key_ref_condition.lookup()
-	var caller_actor = get_tree().get_first_node_in_group(str(caller_peer_id))
-	var target_actor = get_tree().get_first_node_in_group(str(target_peer_id))
-	var lvalue: int = Dice.builder().caller(caller_actor).target(target_actor).expression(condition_ent.left).build().evaluate()
-	var rvalue: int = Dice.builder().caller(caller_actor).target(target_actor).expression(condition_ent.right).build().evaluate()
+	var lvalue: int = Dice.builder().scene_tree(get_tree()).caller(caller_peer_id).target(target_peer_id).expression(condition_ent.left).build().evaluate()
+	var rvalue: int = Dice.builder().scene_tree(get_tree()).caller(caller_peer_id).target(target_peer_id).expression(condition_ent.right).build().evaluate()
 	match OperatorSymbolMap.get(condition_ent.operator):
 		OP_EQUAL:
 			return lvalue == rvalue
@@ -63,9 +61,9 @@ func invoke_action(action_key: String, caller_peer_id: int, target_peer_id: int)
 	if eval_action_if(caller_peer_id, target_peer_id, action_ent.if_):
 		var params := make_params(action_ent)
 		if action_ent.do != null: call(action_ent.do, caller_peer_id, target_peer_id, params)
+		if action_ent.then != null: invoke_action(action_ent.then.key(), caller_peer_id, target_peer_id)
 	else:
-		if action_ent.else != null: invoke_action(action_ent.else.key(), caller_peer_id, target_peer_id)
-	if action_ent.then != null: invoke_action(action_ent.then.key(), caller_peer_id, target_peer_id)
+		if action_ent.else_ != null: invoke_action(action_ent.else_.key(), caller_peer_id, target_peer_id)
 ## ACTION SIGNATURE... ------------------------------------------------------------- #
 
 func move_map(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> void:
@@ -93,7 +91,7 @@ func move_map(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> v
 
 func minus_resource_target(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> void:
 	## resource: 
-	## value: Dice algebra to be subtracted from the target's resource
+	## expression: Dice algebra to be subtracted from the target's resource
 	var target_actor: Actor = get_tree().get_first_node_in_group(str(target_peer_id))
-	# TODO
+	target_actor.resources[params.resource] = target_actor.resources[params.resource] - Dice.builder().expression(params.expression).build().evaluate()
 # ----------------------------------------------------------------------- Actions #
