@@ -1,4 +1,3 @@
-#include <dice/dice_builder.hpp>
 #include <dice/dice.hpp>
 
 #include <gdextension_interface.h>
@@ -13,8 +12,7 @@ void initialize_module(ModuleInitializationLevel p_level) {
         return;
     }
 
-    		ClassDB::register_class<DiceBuilder>();
-		ClassDB::register_class<Dice>();
+    		ClassDB::register_class<Dice>();
 
 }
 
