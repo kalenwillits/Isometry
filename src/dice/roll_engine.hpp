@@ -6,8 +6,8 @@
 
 namespace godot {
 
-class Dice : public Object {
-    GDCLASS(Dice, Object)
+class RollEngine : public Object {
+    GDCLASS(RollEngine, Object)
 
 private:
 	String expr;
@@ -17,16 +17,17 @@ protected:
     static void _bind_methods();
 
 public:
-	Dice();
-    Dice(String expr);
-    ~Dice();
+	RollEngine();
+    RollEngine(String expr);
+    ~RollEngine();
 
 	int set_expr(String expr);
 	String get_expr();
 	void roll();
 	int get_result();
+	
+	static int evaluate(String expr);
 };
-
 }
 
 #endif

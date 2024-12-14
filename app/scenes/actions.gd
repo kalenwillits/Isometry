@@ -60,7 +60,7 @@ func handle_move_actor(peer_id: int, map: String) -> void:
 @rpc("any_peer", "reliable", "call_local")
 func invoke_action(action_key: String, caller_peer_id: int, target_peer_id: int) -> void:
 	var action_ent = Repo.select(action_key)
-	if eval_action_if(caller_peer_id, target_peer_id, action_ent.condition):
+	if eval_action_if(caller_peer_id, target_peer_id, action_ent.if_):
 		var params := make_params(action_ent)
 		if action_ent.do != null: call(action_ent.do, caller_peer_id, target_peer_id, params)
 	else:
@@ -95,5 +95,5 @@ func minus_resource_target(caller_peer_id: int, target_peer_id: int, params: Dic
 	## resource: 
 	## value: Dice algebra to be subtracted from the target's resource
 	var target_actor: Actor = get_tree().get_first_node_in_group(str(target_peer_id))
-	params. 
+	# TODO
 # ----------------------------------------------------------------------- Actions #

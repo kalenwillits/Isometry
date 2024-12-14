@@ -1,4 +1,4 @@
-#include <dice/dice.hpp>
+#include <dice/roll_engine.hpp>
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -12,7 +12,7 @@ void initialize_module(ModuleInitializationLevel p_level) {
         return;
     }
 
-    		ClassDB::register_class<Dice>();
+    		ClassDB::register_class<RollEngine>();
 
 }
 
