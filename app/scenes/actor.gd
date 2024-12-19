@@ -10,7 +10,6 @@ const BASE_ACTOR_SPEED: float = 10.0
 const SPEED_NORMAL: float = 500.0
 const DESTINATION_PRECISION: float = 1.1
 
-
 @export var origin: Vector2
 @export var destination: Vector2
 @export var speed_mod: float = 1.0
@@ -51,6 +50,10 @@ class ActorBuilder extends Object:
 	func actor(value: String) -> ActorBuilder:
 		obj.actor = value
 		return self
+		
+	func resources(value: Dictionary) -> ActorBuilder:
+		obj.resources = value
+		return self
 
 	func build() -> Actor:
 		var actor_ent = Repo.query([obj.actor]).pop_front()
@@ -59,9 +62,10 @@ class ActorBuilder extends Object:
 			if actor_ent.hitbox: obj.hitbox = actor_ent.hitbox.key()
 			if actor_ent.polygon: obj.polygon = actor_ent.polygon.key()
 			if actor_ent.on_touch: obj.set_on_touch_action(actor_ent.on_touch.key())
-			if actor_ent.resources:
-				for resource_ent in actor_ent.resources.lookup():
-					obj.resources[resource_ent.key()] = resource_ent.default
+			if obj.resources.is_empty():
+				if actor_ent.resources:
+					for resource_ent in actor_ent.resources.lookup():
+						obj.resources[resource_ent.key()] = resource_ent.default
 		return obj
 		
 static func builder() -> ActorBuilder:
@@ -85,7 +89,6 @@ func get_actor_group_name() -> String:
 	
 func is_primary() -> bool:
 	return is_multiplayer_authority() and peer_id > 0 and multiplayer.get_unique_id() == peer_id
-	
 
 func _enter_tree():
 	add_to_group(get_actor_group_name())

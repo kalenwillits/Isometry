@@ -129,6 +129,7 @@ func spawn_actor(data: Dictionary) -> Actor:
 	.peer_id(data.get("peer_id", 0))\
 	.map(data.get("map"))\
 	.location(Vector2(data.get("position/x", 0.0), data.get("position/y", 0.0)))\
+	.resources(data.get("resources", {}))\
 	.build()
 
 @rpc("authority", "call_local", "reliable")
