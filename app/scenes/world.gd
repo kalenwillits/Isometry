@@ -152,10 +152,10 @@ func render_map(map: String) -> void:
 			actor_node.disable()
 
 func _on_connected_to_server() -> void:
-	Queue.enqueue(
-		Queue.Item.builder()
-			.comment("First time render of map")
-			.task(func(): render_map(get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())).map))
-			.condition(func(): return get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())))
-			.build()
-		)
+	pass
+	#Queue.enqueue(
+		#Queue.Item.builder()
+			#.task(func(): render_map(get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())).map))
+			#.condition(func(): return get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())))
+			#.build()
+		#)

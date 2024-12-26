@@ -112,8 +112,14 @@ func _ready() -> void:
 	$Label.set_text(name) # TODO - Replace label with real name
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	if is_primary():
-		get_parent().get_node("Camera").set_target(self)
-		
+			get_parent().get_node("Camera").set_target(self)
+			Queue.enqueue(
+				Queue.Item.builder()
+					.task(func(): get_parent().render_map(map))
+					.condition(func(): return get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())))
+					.build()
+				)
+
 func enable() -> void:
 	visible = true
 	collisions(true)
@@ -334,8 +340,7 @@ func use_move_directly(_delta) -> void:
 	if motion.length():
 		set_destination(new_destination)
 		look_at_point(new_destination)
-		
-	
+
 func set_destination(point: Vector2) -> void:
 	## Where the actor is headed to.
 	set_origin(position)
@@ -359,8 +364,7 @@ func use_animation():
 		$Sprite.animation = "default:%s" % heading
 	else:
 		$Sprite.animation = "default"
-		
-		
+
 func set_remote_transform_target(node: Node) -> void:
 	$RemoteTransform2D.remote_path = node.get_path()
 	
@@ -402,11 +406,20 @@ func _on_hit_box_body_entered(other):
 		
 func collisions(enabled: bool) -> void:
 	for node in get_children():
+		# TODO - Invisible boxes bug?
 		if node.is_class("CollisionPolygon2D"):
-			node.disabled = !enabled
+			Queue.enqueue(
+				Queue.Item.builder()
+				.task(func(): node.disabled = !enabled)
+				.build()
+			)
 	for node in $HitBox.get_children():
 		if node.is_class("CollisionPolygon2D"):
-			node.disabled = !enabled
+			Queue.enqueue(
+				Queue.Item.builder()
+				.task(func(): node.disabled = !enabled)
+				.build()
+			)
 
 func _on_sprite_animation_changed():
 	$Sprite.play()
