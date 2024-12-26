@@ -62,6 +62,7 @@ class ActorBuilder extends Object:
 			if actor_ent.hitbox: obj.hitbox = actor_ent.hitbox.key()
 			if actor_ent.polygon: obj.polygon = actor_ent.polygon.key()
 			if actor_ent.on_touch: obj.build_on_touch_action(actor_ent.on_touch.key())
+			if actor_ent.primary_action: obj.build_primary_action(actor_ent.primary_action.key())
 			if obj.resources.is_empty():
 				if actor_ent.resources:
 					for resource_ent in actor_ent.resources.lookup():
@@ -182,6 +183,20 @@ func _local_touch_handler(target: Actor, function: Callable) -> void:
 	if target.is_primary(): 
 		Logger.info("%s on_touch activated by %s" % [name, target.name])
 		function.call()
+		
+func build_primary_action(value: String) -> void:
+	var action_ent = Repo.select(value)
+	var params: Dictionary = {}
+	if action_ent.parameters:
+		for param_ent in action_ent.parameters.lookup():
+			params[param_ent.name_] = param_ent.value
+	primary.connect(func(target): _local_primary_handler(target, func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1,value, peer_id, target.peer_id)))
+
+func _local_primary_handler(target: Actor, function: Callable) -> void:
+	# Because only one client should allow the trigger, this acts as a filter
+	if target.is_primary(): 
+		Logger.info("%s primary activated by %s" % [name, target.name])
+		function.call(target)
 
 func build_polygon() -> void:
 	if !polygon: return
@@ -415,3 +430,26 @@ func collisions(enabled: bool) -> void:
 
 func _on_sprite_animation_changed():
 	$Sprite.play()
+
+func _on_mouse_entered() -> void:
+	print("mouse entered %d" % peer_id)
+
+
+func _on_mouse_exited() -> void:
+	print("mouse exited %d" % peer_id)
+
+
+func _on_hit_box_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
+	print("input %s on %d" % [event.to_string(), peer_id]) # TODO - remove
+	if event.is_action("primary_action"):
+		var primary_actor = get_tree().get_first_node_in_group(str(multiplayer.get_unique_id()))
+		Logger.info("primary action invoked on %s" % peer_id)
+		primary.emit(primary_actor)
+
+
+func _on_hit_box_mouse_entered() -> void:
+	print("mouse entered %d" % peer_id) # TODO remove
+
+
+func _on_hit_box_mouse_exited() -> void:
+	print("mouse exited %d" % peer_id) # TODO -remove
