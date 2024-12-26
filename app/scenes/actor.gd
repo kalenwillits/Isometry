@@ -19,13 +19,13 @@ const DESTINATION_PRECISION: float = 1.1
 @export var polygon: String = ""
 @export var actor: String = ""
 @export var hitbox: String = ""
-@export var on_touch_action: String = ""
 @export var map: String = ""
 @export var resources: Dictionary = {}
 
 var peer_id: int = 0
 
 signal on_touch(actor)
+signal primary(actor)
 signal heading_change(heading)
 
 class ActorBuilder extends Object:
@@ -61,7 +61,7 @@ class ActorBuilder extends Object:
 			if actor_ent.sprite: obj.sprite = actor_ent.sprite.key()
 			if actor_ent.hitbox: obj.hitbox = actor_ent.hitbox.key()
 			if actor_ent.polygon: obj.polygon = actor_ent.polygon.key()
-			if actor_ent.on_touch: obj.set_on_touch_action(actor_ent.on_touch.key())
+			if actor_ent.on_touch: obj.build_on_touch_action(actor_ent.on_touch.key())
 			if obj.resources.is_empty():
 				if actor_ent.resources:
 					for resource_ent in actor_ent.resources.lookup():
@@ -169,21 +169,13 @@ func set_hitbox(value: String) -> void:
 func set_actor(value: String) -> void:
 	actor = value
 
-func set_on_touch_action(value: String) -> void:
-	on_touch_action = value
-	Trigger.new().arm("on_touch_action").action(build_on_touch_action).deploy(self)
-
-func build_on_touch_action() -> void:
-	if on_touch_action:
-		for sig in on_touch.get_connections():
-			on_touch.disconnect(sig.callable)
-		var action_ent = Repo.select(on_touch_action)
-		if !action_ent: return Logger.warn("actor %s carries on_touch_action %s which does not exist." % [name, on_touch_action])
-		var params: Dictionary = {}
-		if action_ent.parameters:
-			for param_ent in action_ent.parameters.lookup():
-				params[param_ent.name_] = param_ent.value
-		on_touch.connect(func(target): _local_touch_handler(target, func(): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1,on_touch_action, peer_id, target.peer_id)))
+func build_on_touch_action(value: String) -> void:
+	var action_ent = Repo.select(value)
+	var params: Dictionary = {}
+	if action_ent.parameters:
+		for param_ent in action_ent.parameters.lookup():
+			params[param_ent.name_] = param_ent.value
+	on_touch.connect(func(target): _local_touch_handler(target, func(): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1,value, peer_id, target.peer_id)))
 
 func _local_touch_handler(target: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
