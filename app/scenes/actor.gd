@@ -20,12 +20,23 @@ const DESTINATION_PRECISION: float = 1.1
 @export var actor: String = ""
 @export var hitbox: String = ""
 @export var map: String = ""
+@export var target_id: int = 0 # TODO 
 @export var resources: Dictionary = {}
 
 var peer_id: int = 0
 
 signal on_touch(actor)
 signal primary(actor)
+signal action_1(actor)
+signal action_2(actor)
+signal action_3(actor)
+signal action_4(actor)
+signal action_5(actor)
+signal action_6(actor)
+signal action_7(actor)
+signal action_8(actor)
+signal action_9(actor)
+
 signal heading_change(heading)
 
 class ActorBuilder extends Object:
@@ -63,6 +74,9 @@ class ActorBuilder extends Object:
 			if actor_ent.polygon: obj.polygon = actor_ent.polygon.key()
 			if actor_ent.on_touch: obj.build_on_touch_action(actor_ent.on_touch.key())
 			if actor_ent.primary_action: obj.build_primary_action(actor_ent.primary_action.key())
+			for n in range(1, 10):
+				var action_name: String = "action_%d" % n
+				if actor_ent.get(action_name): obj.build_action(actor_ent.get(action_name).key(), n)
 			if obj.resources.is_empty():
 				if actor_ent.resources:
 					for resource_ent in actor_ent.resources.lookup():
@@ -140,6 +154,27 @@ func _physics_process(delta) -> void:
 		use_movement(delta)
 		click_to_move()
 		use_move_directly(delta)
+		use_actions()
+
+func use_actions() -> void:
+	if Input.is_action_just_released("action_1"):
+		emit_signal("action_1", get_tree().get_first_node_in_group(str(target_id)))
+	if Input.is_action_just_released("action_2"):
+		emit_signal("action_2", get_tree().get_first_node_in_group(str(target_id)))
+	if Input.is_action_just_released("action_3"):
+		emit_signal("action_3", get_tree().get_first_node_in_group(str(target_id)))
+	if Input.is_action_just_released("action_4"):
+		emit_signal("action_4", get_tree().get_first_node_in_group(str(target_id)))
+	if Input.is_action_just_released("action_5"):
+		emit_signal("action_5", get_tree().get_first_node_in_group(str(target_id)))
+	if Input.is_action_just_released("action_6"):
+		emit_signal("action_6", get_tree().get_first_node_in_group(str(target_id)))
+	if Input.is_action_just_released("action_7"):
+		emit_signal("action_7", get_tree().get_first_node_in_group(str(target_id)))
+	if Input.is_action_just_released("action_8"):
+		emit_signal("action_8", get_tree().get_first_node_in_group(str(target_id)))
+	if Input.is_action_just_released("action_9"):
+		emit_signal("action_9", get_tree().get_first_node_in_group(str(target_id)))
 
 func click_to_move() -> void:
 	if Input.is_action_pressed("action"):
@@ -155,12 +190,10 @@ func move(coordinates: Vector2) -> void:
 	origin = coordinates
 	destination = coordinates
 
-
 func clear_footprint():
 	for node in get_children().filter(func(node): return node.is_class("CollisionPolygon2D")):
 		node.queue_free()
 		
-
 func set_polygon(value: String) -> void:
 	polygon = value
 	
@@ -176,13 +209,28 @@ func build_on_touch_action(value: String) -> void:
 	if action_ent.parameters:
 		for param_ent in action_ent.parameters.lookup():
 			params[param_ent.name_] = param_ent.value
-	on_touch.connect(func(target): _local_touch_handler(target, func(): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1,value, peer_id, target.peer_id)))
+	on_touch.connect(func(target): _local_touch_handler(target, func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1,value, peer_id, target.peer_id)))
+
+func build_action(value: String, n: int) -> void:
+	var action_ent = Repo.select(value)
+	var params: Dictionary = {}
+	if action_ent.parameters:
+		for param_ent in action_ent.parameters.lookup():
+			params[param_ent.name_] = param_ent.value
+	connect("action_%d" % n, func(target): _local_action_handler(target, func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, peer_id, target.peer_id)))
 
 func _local_touch_handler(target: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
 	if target.is_primary(): 
 		Logger.info("%s on_touch activated by %s" % [name, target.name])
-		function.call()
+		function.call(target)
+		
+func _local_action_handler(target: Actor, function: Callable) -> void:
+	# Because only one client should allow the trigger, this acts as a filter
+	#if target.is_primary(): 
+		#breakpoint
+	Logger.info("%s action activated by %s" % [name, target.name])
+	function.call(target)
 		
 func build_primary_action(value: String) -> void:
 	var action_ent = Repo.select(value)

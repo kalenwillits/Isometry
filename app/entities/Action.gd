@@ -5,7 +5,7 @@ var parameters: KeyRefArray
 var if_: KeyRef # Condition
 var do: String # func name
 var else_: KeyRef # Action
-var then: KeyRef # ACtion
+var then: KeyRef # Action
 
 func _ready() -> void:
 	tag(Group.ACTION_ENTITY)

@@ -66,7 +66,7 @@ func invoke_action(action_key: String, caller_peer_id: int, target_peer_id: int)
 		if action_ent.else_ != null: invoke_action(action_ent.else_.key(), caller_peer_id, target_peer_id)
 ## ACTION SIGNATURE... ------------------------------------------------------------- #
 
-func move_map(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> void:
+func move_map_target(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> void:
 	## map: KeyRef to Map.
 	## location: KeyRef to Vertex where the target actor's new position will be.
 	var pack: Dictionary = get_tree().get_first_node_in_group(str(target_peer_id)).pack()
@@ -88,10 +88,39 @@ func move_map(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> v
 		.task(func(): get_parent().render_map.rpc_id(target_peer_id, params.map))
 		.build()
 	)
+	
+func move_map_self(self_peer_id: int, target_peer_id: int, params: Dictionary) -> void:
+	## map: KeyRef to Map.
+	## location: KeyRef to Vertex where the target actor's new position will be.
+	var pack: Dictionary = get_tree().get_first_node_in_group(str(self_peer_id)).pack()
+	pack["map"] = params.get("map")
+	pack["location"] = params.get("location")
+	Queue.enqueue(
+		Queue.Item.builder()
+		.task(func(): handle_move_actor(self_peer_id, pack.map))
+		.build()
+	)
+	Queue.enqueue(
+		Queue.Item.builder()
+		.condition(func(): return get_tree().get_first_node_in_group(str(self_peer_id)) == null)
+		.task(func(): get_tree().get_first_node_in_group(Group.SPAWNER).spawn(pack))
+		.build()
+	)
+	Queue.enqueue(
+		Queue.Item.builder()
+		.task(func(): get_parent().render_map.rpc_id(self_peer_id, params.map))
+		.build()
+	)
 
 func minus_resource_target(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> void:
 	## resource: 
 	## expression: Dice algebra to be subtracted from the target's resource
 	var target_actor: Actor = get_tree().get_first_node_in_group(str(target_peer_id))
 	target_actor.resources[params.resource] = target_actor.resources[params.resource] - Dice.builder().expression(params.expression).build().evaluate()
+	
+func minus_resource_self(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> void:
+	## resource: 
+	## expression: Dice algebra to be subtracted from the target's resource
+	var self_actor: Actor = get_tree().get_first_node_in_group(str(caller_peer_id))
+	self_actor.resources[params.resource] = self_actor.resources[params.resource] - Dice.builder().expression(params.expression).build().evaluate()
 # ----------------------------------------------------------------------- Actions #
