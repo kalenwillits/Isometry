@@ -1,6 +1,9 @@
 extends CharacterBody2D
 class_name Actor
 
+# TODO - actions pass peer_ids to the server to access target nodes. This MUST be refactored to node names or it won't work on NPCs because NPC peer_ids are always 0
+# TODO - actions should still be requested even if the target is null
+
 enum KeyFrames {
 	idle,
 	run
@@ -211,6 +214,7 @@ func find_prev_target() -> String:
 	return ""
 
 func isometric_distance_to(other: Actor) -> float:
+	if other == null: return 0.0
 	return position.distance_to(other.position) * std.isometric_factor(position.angle_to(other.position))
 
 func click_to_move() -> void:
@@ -256,7 +260,7 @@ func build_action(value: String, n: int) -> void:
 			params[param_ent.name_] = param_ent.value
 	connect("action_%d" % n, func(target): _local_action_handler(
 		target, 
-		func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, peer_id, target.peer_id),
+		func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, peer_id, target.peer_id), # TODO - peer id does not work on NPCs
 		action_ent.range_ * BASE_TILE_SIZE))
 
 func _local_touch_handler(target: Actor, function: Callable) -> void:
@@ -268,10 +272,10 @@ func _local_touch_handler(target: Actor, function: Callable) -> void:
 func _local_action_handler(target: Actor, function: Callable, range_: int) -> void:
 	var distance: float = isometric_distance_to(target)
 	if distance > range_:
-		Logger.info("%s action activated by %s but is out of range %d at %f" % [name, target.name, range_ / BASE_TILE_SIZE, distance / BASE_TILE_SIZE])
+		if target != null: Logger.info("%s action activated by %s but is out of range %d at %f" % [name, target.name, range_ / BASE_TILE_SIZE, distance / BASE_TILE_SIZE])
 		# TODO - alert user that it's out of range
 	else:
-		Logger.info("%s action activated by %s" % [name, target.name])
+		if target != null: Logger.info("%s action activated by %s" % [name, target.name])
 		function.call(target)
 		
 func build_primary_action(value: String) -> void:
@@ -280,7 +284,10 @@ func build_primary_action(value: String) -> void:
 	if action_ent.parameters:
 		for param_ent in action_ent.parameters.lookup():
 			params[param_ent.name_] = param_ent.value
-	primary.connect(func(target): _local_primary_handler(target, func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1,value, peer_id, target.peer_id)))
+	primary.connect(func(target): _local_action_handler(
+		target, 
+		func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, peer_id, target.peer_id),
+		action_ent.range_ * BASE_TILE_SIZE))
 
 func _local_primary_handler(target: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
