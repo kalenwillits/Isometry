@@ -115,6 +115,7 @@ func move_map_self(self_peer_id: int, target_peer_id: int, params: Dictionary) -
 func minus_resource_target(caller_peer_id: int, target_peer_id: int, params: Dictionary) -> void:
 	## resource: 
 	## expression: Dice algebra to be subtracted from the target's resource
+	if target_peer_id == 0: return
 	var target_actor: Actor = get_tree().get_first_node_in_group(str(target_peer_id))
 	target_actor.resources[params.resource] = target_actor.resources[params.resource] - Dice.builder().expression(params.expression).build().evaluate()
 	
