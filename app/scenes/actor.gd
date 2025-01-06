@@ -6,6 +6,7 @@ enum KeyFrames {
 	run
 }
 
+const BASE_TILE_SIZE: float = 32.0
 const BASE_ACTOR_SPEED: float = 10.0
 const SPEED_NORMAL: float = 500.0
 const DESTINATION_PRECISION: float = 1.1
@@ -182,11 +183,8 @@ func use_actions() -> void:
 func use_target() -> void:
 	if Input.is_action_just_pressed("next_target"):
 		target = find_next_target()
-		print(target)
 	elif Input.is_action_just_pressed("prev_target"):
 		target = find_prev_target()
-		print(target)
-
 
 func find_next_target() -> String:
 	var actors = get_tree().get_nodes_in_group(Group.ACTOR)
@@ -206,7 +204,7 @@ func find_prev_target() -> String:
 	if target_queue.size() >= actors.size():
 		target_queue.clear()
 	while !actors.is_empty():
-		var next_actor = actors.pop_front()
+		var next_actor = actors.pop_front()			
 		if !(next_actor.name in target_queue):
 			target_queue.append(next_actor.name)
 			return next_actor.name
@@ -256,7 +254,10 @@ func build_action(value: String, n: int) -> void:
 	if action_ent.parameters:
 		for param_ent in action_ent.parameters.lookup():
 			params[param_ent.name_] = param_ent.value
-	connect("action_%d" % n, func(target): _local_action_handler(target, func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, peer_id, target.peer_id)))
+	connect("action_%d" % n, func(target): _local_action_handler(
+		target, 
+		func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, peer_id, target.peer_id),
+		action_ent.range_ * BASE_TILE_SIZE))
 
 func _local_touch_handler(target: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
@@ -264,12 +265,14 @@ func _local_touch_handler(target: Actor, function: Callable) -> void:
 		Logger.info("%s on_touch activated by %s" % [name, target.name])
 		function.call(target)
 		
-func _local_action_handler(target: Actor, function: Callable) -> void:
-	# Because only one client should allow the trigger, this acts as a filter
-	#if target.is_primary(): 
-		#breakpoint
-	Logger.info("%s action activated by %s" % [name, target.name])
-	function.call(target)
+func _local_action_handler(target: Actor, function: Callable, range_: int) -> void:
+	var distance: float = isometric_distance_to(target)
+	if distance > range_:
+		Logger.info("%s action activated by %s but is out of range %d at %f" % [name, target.name, range_ / BASE_TILE_SIZE, distance / BASE_TILE_SIZE])
+		# TODO - alert user that it's out of range
+	else:
+		Logger.info("%s action activated by %s" % [name, target.name])
+		function.call(target)
 		
 func build_primary_action(value: String) -> void:
 	var action_ent = Repo.select(value)

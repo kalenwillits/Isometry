@@ -6,6 +6,7 @@ var if_: KeyRef # Condition
 var do: String # func name
 var else_: KeyRef # Action
 var then: KeyRef # Action
+var range_: int
 
 func _ready() -> void:
 	tag(Group.ACTION_ENTITY)

@@ -7,6 +7,7 @@ const KEY_ALIASES: Dictionary = {
 	"max": "max_",
 	"if": "if_", 
 	"else": "else_",
+	"range": "range_",
 }
 
 var _type: String
