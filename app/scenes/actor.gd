@@ -20,10 +20,11 @@ const DESTINATION_PRECISION: float = 1.1
 @export var actor: String = ""
 @export var hitbox: String = ""
 @export var map: String = ""
-@export var target_id: int = 0 # TODO 
+@export var target: String = "" # TODO 
 @export var resources: Dictionary = {}
 
 var peer_id: int = 0
+var target_queue: Array = []
 
 signal on_touch(actor)
 signal primary(actor)
@@ -110,6 +111,7 @@ func _enter_tree():
 	add_to_group(str(peer_id))
 	add_to_group(Group.ACTOR)
 	add_to_group(map)
+	add_to_group("%s%s" % [Group.ACTOR, map])
 	if peer_id > 0: # PLAYER
 		add_to_group(Group.PLAYER)
 		set_multiplayer_authority(str(name).to_int())
@@ -155,26 +157,63 @@ func _physics_process(delta) -> void:
 		click_to_move()
 		use_move_directly(delta)
 		use_actions()
+		use_target()
 
 func use_actions() -> void:
 	if Input.is_action_just_released("action_1"):
-		emit_signal("action_1", get_tree().get_first_node_in_group(str(target_id)))
+		emit_signal("action_1", get_parent().get_node_or_null(target))
 	if Input.is_action_just_released("action_2"):
-		emit_signal("action_2", get_tree().get_first_node_in_group(str(target_id)))
+		emit_signal("action_2", get_parent().get_node_or_null(target))
 	if Input.is_action_just_released("action_3"):
-		emit_signal("action_3", get_tree().get_first_node_in_group(str(target_id)))
+		emit_signal("action_3", get_parent().get_node_or_null(target))
 	if Input.is_action_just_released("action_4"):
-		emit_signal("action_4", get_tree().get_first_node_in_group(str(target_id)))
+		emit_signal("action_4", get_parent().get_node_or_null(target))
 	if Input.is_action_just_released("action_5"):
-		emit_signal("action_5", get_tree().get_first_node_in_group(str(target_id)))
+		emit_signal("action_5", get_parent().get_node_or_null(target))
 	if Input.is_action_just_released("action_6"):
-		emit_signal("action_6", get_tree().get_first_node_in_group(str(target_id)))
+		emit_signal("action_6", get_parent().get_node_or_null(target))
 	if Input.is_action_just_released("action_7"):
-		emit_signal("action_7", get_tree().get_first_node_in_group(str(target_id)))
+		emit_signal("action_7", get_parent().get_node_or_null(target))
 	if Input.is_action_just_released("action_8"):
-		emit_signal("action_8", get_tree().get_first_node_in_group(str(target_id)))
+		emit_signal("action_8", get_parent().get_node_or_null(target))
 	if Input.is_action_just_released("action_9"):
-		emit_signal("action_9", get_tree().get_first_node_in_group(str(target_id)))
+		emit_signal("action_9", get_parent().get_node_or_null(target))
+
+func use_target() -> void:
+	if Input.is_action_just_pressed("next_target"):
+		target = find_next_target()
+		print(target)
+	elif Input.is_action_just_pressed("prev_target"):
+		target = find_prev_target()
+		print(target)
+
+
+func find_next_target() -> String:
+	var actors = get_tree().get_nodes_in_group(Group.ACTOR)
+	actors.sort_custom(func(a, b): isometric_distance_to(a) > isometric_distance_to(b))
+	if target_queue.size() >= actors.size():
+		target_queue.clear()
+	while !actors.is_empty():
+		var next_actor = actors.pop_front()
+		if !(next_actor.name in target_queue):
+			target_queue.append(next_actor.name)
+			return next_actor.name
+	return ""
+
+func find_prev_target() -> String:
+	var actors = get_tree().get_nodes_in_group(Group.ACTOR)
+	actors.sort_custom(func(a, b): isometric_distance_to(a) < isometric_distance_to(b))
+	if target_queue.size() >= actors.size():
+		target_queue.clear()
+	while !actors.is_empty():
+		var next_actor = actors.pop_front()
+		if !(next_actor.name in target_queue):
+			target_queue.append(next_actor.name)
+			return next_actor.name
+	return ""
+
+func isometric_distance_to(other: Actor) -> float:
+	return position.distance_to(other.position) * std.isometric_factor(position.angle_to(other.position))
 
 func click_to_move() -> void:
 	if Input.is_action_pressed("action"):
@@ -188,7 +227,7 @@ func despawn() -> void:
 func move(coordinates: Vector2) -> void:
 	set_position(coordinates)
 	origin = coordinates
-	destination = coordinates
+	destination = coordinates 
 
 func clear_footprint():
 	for node in get_children().filter(func(node): return node.is_class("CollisionPolygon2D")):
@@ -494,10 +533,8 @@ func _on_hit_box_input_event(viewport: Node, event: InputEvent, shape_idx: int) 
 		Logger.info("primary action invoked on %s" % peer_id)
 		primary.emit(primary_actor)
 
-
 func _on_hit_box_mouse_entered() -> void:
 	print("mouse entered %d" % peer_id) # TODO remove
-
 
 func _on_hit_box_mouse_exited() -> void:
 	print("mouse exited %d" % peer_id) # TODO -remove
