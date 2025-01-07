@@ -185,8 +185,12 @@ func use_actions() -> void:
 func use_target() -> void:
 	if Input.is_action_just_pressed("next_target"):
 		target = find_next_target()
-	elif Input.is_action_just_pressed("prev_target"):
+	if Input.is_action_just_pressed("prev_target"):
 		target = find_prev_target()
+	if Input.is_action_just_pressed("clear_target"):
+		target = ""
+		target_queue.clear()
+	
 
 func find_next_target() -> String:
 	var actors = get_tree().get_nodes_in_group(Group.ACTOR)
