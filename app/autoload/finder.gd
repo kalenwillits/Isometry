@@ -10,3 +10,6 @@ func query(tags: Array) -> Array:
 			results = std.intersect(results, subquery)
 	Logger.info("Query %s yields %d results" % [tags, results.size()])
 	return results
+
+func get_primary_actor() -> Actor:
+	return get_tree().get_first_node_in_group(Group.PRIMARY)
