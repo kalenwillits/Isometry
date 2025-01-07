@@ -112,7 +112,6 @@ func is_primary() -> bool:
 func _enter_tree():
 	add_to_group(Group.ACTOR)
 	add_to_group(map)
-	add_to_group("%s%s" % [Group.ACTOR, map]) # TODO - remove, This should be query-able
 	add_to_group(get_actor_group_name()) # TODO - remove
 	add_to_group(name)
 	if peer_id > 0: # PLAYER
@@ -190,10 +189,9 @@ func use_target() -> void:
 	if Input.is_action_just_pressed("clear_target"):
 		target = ""
 		target_queue.clear()
-	
 
 func find_next_target() -> String:
-	var actors = get_tree().get_nodes_in_group(Group.ACTOR)
+	var actors = Finder.query([Group.ACTOR, map])
 	actors.sort_custom(func(a, b): isometric_distance_to(a) > isometric_distance_to(b))
 	if target_queue.size() >= actors.size():
 		target_queue.clear()
@@ -205,7 +203,7 @@ func find_next_target() -> String:
 	return ""
 
 func find_prev_target() -> String:
-	var actors = get_tree().get_nodes_in_group(Group.ACTOR)
+	var actors = Finder.query([Group.ACTOR, map])
 	actors.sort_custom(func(a, b): isometric_distance_to(a) < isometric_distance_to(b))
 	if target_queue.size() >= actors.size():
 		target_queue.clear()

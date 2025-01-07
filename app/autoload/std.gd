@@ -144,3 +144,10 @@ func isometric_factor(radians: float) -> float:
 	if radians > NORTH_RADIANS:
 		radians = NORTH_RADIANS - (radians - NORTH_RADIANS)
 	return 1.0 - ((radians / (NORTH_RADIANS) / ISOMETRIC_RATIO))
+	
+func intersect(array1: Array, array2: Array) -> Array:
+	var intersection: Array = []
+	for node1 in array1:
+		if node1 in array2:
+			intersection.append(node1)
+	return intersection

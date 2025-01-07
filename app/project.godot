@@ -29,6 +29,7 @@ Group="*res://autoload/group.gd"
 Repo="*res://autoload/repo.gd"
 Queue="*res://autoload/queue.tscn"
 Controller="*res://autoload/controller.gd"
+Finder="*res://autoload/finder.tscn"
 
 [debug]
 

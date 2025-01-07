@@ -87,7 +87,7 @@ func move_map_target(self_name: String, target_name: String, params: Dictionary)
 	)
 	Queue.enqueue(
 		Queue.Item.builder()
-		.task(func(): get_parent().render_map.rpc_id(target_name, params.map))
+		.task(func(): get_parent().render_map.rpc_id(target_name.to_int(), params.map))
 		.build()
 	)
 	
