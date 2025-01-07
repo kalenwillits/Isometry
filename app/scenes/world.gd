@@ -153,9 +153,3 @@ func render_map(map: String) -> void:
 
 func _on_connected_to_server() -> void:
 	pass
-	#Queue.enqueue(
-		#Queue.Item.builder()
-			#.task(func(): render_map(get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())).map))
-			#.condition(func(): return get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())))
-			#.build()
-		#)

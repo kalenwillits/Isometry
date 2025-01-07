@@ -1,8 +1,8 @@
 extends Node
 class_name Dice
 
-var caller_peer_id: int
-var target_peer_id: int
+var caller_name: String
+var target_name: String
 var scene_tree: SceneTree
 var expression: String
 
@@ -16,12 +16,12 @@ class Builder extends Object:
 		this.scene_tree = scene_tree
 		return self
 	
-	func caller(peer_id: int) -> Builder:
-		this.caller_peer_id = peer_id
+	func caller(self_name: String) -> Builder:
+		this.caller_name = self_name
 		return self
 	
-	func target(peer_id: int) -> Builder:
-		this.target_peer_id = peer_id
+	func target(target_name: String) -> Builder:
+		this.target_name = target_name
 		return self
 	
 	func expression(expr: String) -> Builder:
@@ -40,11 +40,11 @@ func evaluate() -> int:
 	return RollEngine.new().roll(expression)
 	
 func inject_resources() -> void:
-	var target_actor: Actor = scene_tree.get_first_node_in_group(str(target_peer_id))
+	var target_actor: Actor = scene_tree.get_first_node_in_group(target_name)
 	for resource_key in target_actor.resources.keys():
 		var target_resource_code: String = "%s%s" % [TARGET_MARKER, resource_key]
 		self.expression = self.expression.replacen(target_resource_code, str(target_actor.resources[resource_key]))
-	var caller_actor: Actor = scene_tree.get_first_node_in_group(str(caller_peer_id))
+	var caller_actor: Actor = scene_tree.get_first_node_in_group(target_name)
 	for resource_key in caller_actor.resources.keys():
 		var caller_resource_code: String = "%s%s" % [TARGET_MARKER, resource_key]
 		self.expression = self.expression.replacen(caller_resource_code, str(caller_actor.resources[resource_key]))

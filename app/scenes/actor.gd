@@ -24,7 +24,7 @@ const DESTINATION_PRECISION: float = 1.1
 @export var actor: String = ""
 @export var hitbox: String = ""
 @export var map: String = ""
-@export var target: String = "" # TODO 
+@export var target: String = ""
 @export var resources: Dictionary = {}
 
 var peer_id: int = 0
@@ -82,10 +82,9 @@ class ActorBuilder extends Object:
 			for n in range(1, 10):
 				var action_name: String = "action_%d" % n
 				if actor_ent.get(action_name): obj.build_action(actor_ent.get(action_name).key(), n)
-			if obj.resources.is_empty():
-				if actor_ent.resources:
-					for resource_ent in actor_ent.resources.lookup():
-						obj.resources[resource_ent.key()] = resource_ent.default
+			# Populate resources
+			for resource_ent in Repo.query([Group.RESOURCE_ENTITY]):
+				obj.resources[resource_ent.key()] = obj.resources.get(resource_ent.key(), resource_ent.default)
 		return obj
 		
 static func builder() -> ActorBuilder:
@@ -111,11 +110,11 @@ func is_primary() -> bool:
 	return is_multiplayer_authority() and peer_id > 0 and multiplayer.get_unique_id() == peer_id
 
 func _enter_tree():
-	add_to_group(get_actor_group_name())
-	add_to_group(str(peer_id))
 	add_to_group(Group.ACTOR)
 	add_to_group(map)
-	add_to_group("%s%s" % [Group.ACTOR, map])
+	add_to_group("%s%s" % [Group.ACTOR, map]) # TODO - remove, This should be query-able
+	add_to_group(get_actor_group_name()) # TODO - remove
+	add_to_group(name)
 	if peer_id > 0: # PLAYER
 		add_to_group(Group.PLAYER)
 		set_multiplayer_authority(str(name).to_int())
@@ -250,7 +249,7 @@ func build_on_touch_action(value: String) -> void:
 	if action_ent.parameters:
 		for param_ent in action_ent.parameters.lookup():
 			params[param_ent.name_] = param_ent.value
-	on_touch.connect(func(target): _local_touch_handler(target, func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1,value, peer_id, target.peer_id)))
+	on_touch.connect(func(target): _local_touch_handler(target, func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target.name)))
 
 func build_action(value: String, n: int) -> void:
 	var action_ent = Repo.select(value)
@@ -260,7 +259,10 @@ func build_action(value: String, n: int) -> void:
 			params[param_ent.name_] = param_ent.value
 	connect("action_%d" % n, func(target): _local_action_handler(
 		target, 
-		func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, peer_id, target.peer_id), # TODO - peer id does not work on NPCs
+		func(target): 
+			var target_name: String
+			if target != null: target_name = target.name
+			get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_name),
 		action_ent.range_ * BASE_TILE_SIZE))
 
 func _local_touch_handler(target: Actor, function: Callable) -> void:
@@ -529,22 +531,21 @@ func _on_sprite_animation_changed():
 	$Sprite.play()
 
 func _on_mouse_entered() -> void:
-	print("mouse entered %d" % peer_id)
+	print("mouse entered %s" % name)
 
 
 func _on_mouse_exited() -> void:
-	print("mouse exited %d" % peer_id)
+	print("mouse exited %s" % name)
 
 
 func _on_hit_box_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
-	print("input %s on %d" % [event.to_string(), peer_id]) # TODO - remove
 	if event.is_action("primary_action"):
 		var primary_actor = get_tree().get_first_node_in_group(str(multiplayer.get_unique_id()))
-		Logger.info("primary action invoked on %s" % peer_id)
+		Logger.info("primary action invoked on %s" % name)
 		primary.emit(primary_actor)
 
 func _on_hit_box_mouse_entered() -> void:
-	print("mouse entered %d" % peer_id) # TODO remove
+	print("mouse entered %s" % name) # TODO remove
 
 func _on_hit_box_mouse_exited() -> void:
-	print("mouse exited %d" % peer_id) # TODO -remove
+	print("mouse exited %s" % name) # TODO -remove
