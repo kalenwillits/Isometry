@@ -156,6 +156,11 @@ func disable() -> void:
 	collisions(false)
 	set_process(false)
 	set_physics_process(false)
+	
+func is_on_map(effect: bool) -> void:
+	collisions(effect)
+	set_process(effect)
+	set_physics_process(effect)
 
 func _physics_process(delta) -> void:
 	use_state()

@@ -147,9 +147,9 @@ func render_map(map: String) -> void:
 				)
 	for actor_node in get_tree().get_nodes_in_group(Group.ACTOR):
 		if actor_node.map == map:
-			actor_node.enable()
+			actor_node.is_on_map(true)
 		else:
-			actor_node.disable()
+			actor_node.is_on_map(false)
 
 func _on_connected_to_server() -> void:
 	pass
