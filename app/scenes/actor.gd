@@ -16,7 +16,7 @@ const DESTINATION_PRECISION: float = 1.1
 
 @export var origin: Vector2
 @export var destination: Vector2
-@export var speed_mod: float = 1.0
+@export var speed: float = 1.0
 @export var heading: String = "S"
 @export var state: String = "idle"
 @export var sprite: String = ""
@@ -28,6 +28,7 @@ const DESTINATION_PRECISION: float = 1.1
 @export var resources: Dictionary = {}
 
 var peer_id: int = 0
+var view: int = -1
 var target_queue: Array = []
 
 signal on_touch(actor)
@@ -58,6 +59,10 @@ class ActorBuilder extends Object:
 	func map(value: String) -> ActorBuilder:
 		obj.map = value
 		return self
+	
+	func view(value: String) -> ActorBuilder:
+		obj.view = value
+		return self
 
 	func location(value: Vector2) -> ActorBuilder:
 		obj.set_location(value)
@@ -74,6 +79,7 @@ class ActorBuilder extends Object:
 	func build() -> Actor:
 		var actor_ent = Repo.query([obj.actor]).pop_front()
 		if actor_ent:
+			obj.build_viewbox(actor_ent.view)
 			if actor_ent.sprite: obj.sprite = actor_ent.sprite.key()
 			if actor_ent.hitbox: obj.hitbox = actor_ent.hitbox.key()
 			if actor_ent.polygon: obj.polygon = actor_ent.polygon.key()
@@ -114,12 +120,16 @@ func _enter_tree():
 	add_to_group(map)
 	add_to_group(get_actor_group_name()) # TODO - remove
 	add_to_group(name)
+
 	if peer_id > 0: # PLAYER
+		hidden()
 		add_to_group(Group.PLAYER)
 		set_multiplayer_authority(str(name).to_int())
 		if is_primary():
+			detected()
 			add_to_group(Group.PRIMARY)
 	else: # NPC
+		hidden()
 		add_to_group(Group.NPC)
 
 func _ready() -> void:
@@ -140,13 +150,11 @@ func _ready() -> void:
 				)
 
 func enable() -> void:
-	visible = true
 	collisions(true)
 	set_process(true)
 	set_physics_process(true)
 	
 func disable() -> void:
-	visible = false
 	collisions(false)
 	set_process(false)
 	set_physics_process(false)
@@ -299,6 +307,15 @@ func _local_primary_handler(target: Actor, function: Callable) -> void:
 		Logger.info("%s primary activated by %s" % [name, target.name])
 		function.call(target)
 
+func build_viewbox(value: int) -> void:
+	if value > 0:
+		for node in $ViewBox.get_children(): node.queue_free()
+		var view_shape: CollisionShape2D = CollisionShape2D.new()
+		view_shape.name = "View"
+		view_shape.shape = CircleShape2D.new()
+		view_shape.apply_scale(Vector2(1 * value, 0.5 * value))
+		$ViewBox.add_child(view_shape)
+		
 func build_polygon() -> void:
 	if !polygon: return
 	var polygon_ent = Repo.select(polygon)
@@ -342,7 +359,7 @@ func set_heading(value: String) -> void:
 	heading = value
 
 func set_speed_mod(value: float) -> void:
-	speed_mod = value
+	speed = value
 	
 func set_sprite(value: String) -> void:
 	sprite = value
@@ -374,6 +391,12 @@ func get_sprite_margin() -> Vector2i:
 	var sprite_ent = Repo.select(sprite)
 	var sprite_margin_vertex = sprite_ent.margin.lookup()
 	return Vector2i(sprite_margin_vertex.x, sprite_margin_vertex.y)
+	
+func detected() -> void:
+	visible = true
+	
+func hidden() -> void:
+	visible = false
 
 func build_sprite() -> void:
 	var sprite_ent = Repo.select(sprite)
@@ -439,7 +462,7 @@ func snap_radial(radians: float) -> int:
 	return wrapi(snapped(radians, PI/4) / (PI/4), 0, 8)
 	
 func get_speed(delta: float) -> float:
-	return BASE_ACTOR_SPEED * delta * speed_mod * SPEED_NORMAL
+	return BASE_ACTOR_SPEED * delta * speed * SPEED_NORMAL
 	
 func use_move_directly(_delta) -> void:
 	var motion = Input.get_vector("left", "right", "up", "down")
@@ -551,3 +574,13 @@ func _on_hit_box_mouse_entered() -> void:
 
 func _on_hit_box_mouse_exited() -> void:
 	print("mouse exited %s" % name) # TODO -remove
+
+
+func _on_view_box_area_entered(area: Area2D) -> void:
+	if !is_primary():
+		detected()
+
+
+func _on_view_box_area_exited(area: Area2D) -> void:
+	if !is_primary():
+		hidden()

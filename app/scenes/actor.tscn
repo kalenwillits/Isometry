@@ -19,24 +19,24 @@ properties/3/replication_mode = 2
 properties/4/path = NodePath(".:destination")
 properties/4/spawn = true
 properties/4/replication_mode = 2
-properties/5/path = NodePath(".:speed_mod")
+properties/5/path = NodePath(".:sprite")
 properties/5/spawn = true
 properties/5/replication_mode = 2
-properties/6/path = NodePath(".:sprite")
+properties/6/path = NodePath(".:polygon")
 properties/6/spawn = true
 properties/6/replication_mode = 2
-properties/7/path = NodePath(".:polygon")
+properties/7/path = NodePath(".:actor")
 properties/7/spawn = true
 properties/7/replication_mode = 2
-properties/8/path = NodePath(".:actor")
+properties/8/path = NodePath(".:map")
 properties/8/spawn = true
 properties/8/replication_mode = 2
-properties/9/path = NodePath(".:map")
+properties/9/path = NodePath(".:resources")
 properties/9/spawn = true
 properties/9/replication_mode = 2
-properties/10/path = NodePath(".:resources")
+properties/10/path = NodePath(".:speed")
 properties/10/spawn = true
-properties/10/replication_mode = 2
+properties/10/replication_mode = 1
 
 [node name="Actor" type="CharacterBody2D"]
 z_index = 1
@@ -68,6 +68,8 @@ centered = false
 z_as_relative = false
 collision_mask = 2
 
+[node name="ViewBox" type="Area2D" parent="."]
+
 [connection signal="heading_change" from="." to="." method="_on_heading_change"]
 [connection signal="synchronized" from="Synchronizer" to="." method="_on_multiplayer_synchronizer_synchronized"]
 [connection signal="ready" from="Label" to="." method="_on_label_ready"]
@@ -78,3 +80,5 @@ collision_mask = 2
 [connection signal="input_event" from="HitBox" to="." method="_on_hit_box_input_event"]
 [connection signal="mouse_entered" from="HitBox" to="." method="_on_hit_box_mouse_entered"]
 [connection signal="mouse_exited" from="HitBox" to="." method="_on_hit_box_mouse_exited"]
+[connection signal="area_entered" from="ViewBox" to="." method="_on_view_box_area_entered"]
+[connection signal="area_exited" from="ViewBox" to="." method="_on_view_box_area_exited"]
