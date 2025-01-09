@@ -116,20 +116,18 @@ func is_primary() -> bool:
 	return is_multiplayer_authority() and peer_id > 0 and multiplayer.get_unique_id() == peer_id
 
 func _enter_tree():
+	use_view(false)
 	add_to_group(Group.ACTOR)
 	add_to_group(map)
 	add_to_group(get_actor_group_name()) # TODO - remove
 	add_to_group(name)
-
 	if peer_id > 0: # PLAYER
-		hidden()
 		add_to_group(Group.PLAYER)
 		set_multiplayer_authority(str(name).to_int())
 		if is_primary():
-			detected()
+			use_view(true)
 			add_to_group(Group.PRIMARY)
 	else: # NPC
-		hidden()
 		add_to_group(Group.NPC)
 
 func _ready() -> void:
@@ -392,11 +390,8 @@ func get_sprite_margin() -> Vector2i:
 	var sprite_margin_vertex = sprite_ent.margin.lookup()
 	return Vector2i(sprite_margin_vertex.x, sprite_margin_vertex.y)
 	
-func detected() -> void:
-	visible = true
-	
-func hidden() -> void:
-	visible = false
+func use_view(in_view: bool) -> void:
+	visible = in_view
 
 func build_sprite() -> void:
 	var sprite_ent = Repo.select(sprite)
@@ -575,12 +570,11 @@ func _on_hit_box_mouse_entered() -> void:
 func _on_hit_box_mouse_exited() -> void:
 	print("mouse exited %s" % name) # TODO -remove
 
-
 func _on_view_box_area_entered(area: Area2D) -> void:
-	if !is_primary():
-		detected()
+	var effect: bool = is_primary()
+	if !effect: use_view(!effect)
 
 
 func _on_view_box_area_exited(area: Area2D) -> void:
-	if !is_primary():
-		hidden()
+	var effect: bool = is_primary()
+	if !effect: use_view(effect)
