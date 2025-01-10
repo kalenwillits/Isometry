@@ -116,7 +116,7 @@ func is_primary() -> bool:
 	return is_multiplayer_authority() and peer_id > 0 and multiplayer.get_unique_id() == peer_id
 
 func _enter_tree():
-	is_in_view(false)
+	visible_to_primary(false)
 	add_to_group(Group.ACTOR)
 	add_to_group(map)
 	add_to_group(get_actor_group_name()) # TODO - remove
@@ -125,13 +125,13 @@ func _enter_tree():
 		add_to_group(Group.PLAYER)
 		set_multiplayer_authority(str(name).to_int())
 		if is_primary():
-			is_in_view(true)
+			visible_to_primary(true)
 			add_to_group(Group.PRIMARY)
 	else: # NPC
 		add_to_group(Group.NPC)
 
 func _ready() -> void:
-	disable()
+	same_map_as_primary(false)
 	Trigger.new().arm("heading").action(func(): heading_change.emit(heading)).deploy(self)
 	Trigger.new().arm("polygon").action(build_polygon).deploy(self)
 	Trigger.new().arm("hitbox").action(build_hitbox).deploy(self)
@@ -146,18 +146,8 @@ func _ready() -> void:
 					.condition(func(): return get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())))
 					.build()
 				)
-
-func enable() -> void:
-	collisions(true)
-	set_process(true)
-	set_physics_process(true)
 	
-func disable() -> void:
-	collisions(false)
-	set_process(false)
-	set_physics_process(false)
-	
-func is_on_map(effect: bool) -> void:
+func same_map_as_primary(effect: bool) -> void:
 	collisions(effect)
 	set_process(effect)
 	set_physics_process(effect)
@@ -395,7 +385,7 @@ func get_sprite_margin() -> Vector2i:
 	var sprite_margin_vertex = sprite_ent.margin.lookup()
 	return Vector2i(sprite_margin_vertex.x, sprite_margin_vertex.y)
 	
-func is_in_view(effect: bool) -> void:
+func visible_to_primary(effect: bool) -> void:
 	visible = effect
 
 func build_sprite() -> void:
@@ -577,9 +567,9 @@ func _on_hit_box_mouse_exited() -> void:
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var effect: bool = is_primary()
-	if !effect: is_in_view(!effect)
+	if !effect: visible_to_primary(!effect)
 
 
 func _on_view_box_area_exited(area: Area2D) -> void:
 	var effect: bool = is_primary()
-	if !effect: is_in_view(effect)
+	if !effect: visible_to_primary(effect)

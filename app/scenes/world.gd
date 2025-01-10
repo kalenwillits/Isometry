@@ -108,7 +108,7 @@ func build_deployments() -> void:
 				"position/y": deployment_ent.location.lookup().y,
 			}
 			get_tree().get_first_node_in_group(Group.SPAWNER).spawn(data)
-			
+
 func derive_actor_name(peer_id: int) -> String:
 	if peer_id > 0:
 		return str(peer_id)
@@ -147,9 +147,9 @@ func render_map(map: String) -> void:
 				)
 	for actor_node in get_tree().get_nodes_in_group(Group.ACTOR):
 		if actor_node.map == map:
-			actor_node.is_on_map(true)
+			actor_node.same_map_as_primary(true)
 		else:
-			actor_node.is_on_map(false)
+			actor_node.same_map_as_primary(false)
 
 func _on_connected_to_server() -> void:
 	pass
