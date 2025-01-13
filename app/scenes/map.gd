@@ -8,8 +8,8 @@ const TILESET_TILESHAPE: TileSet.TileShape = TileSet.TILE_SHAPE_ISOMETRIC
 const TILESET_LAYOUT: TileSet.TileLayout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
 const TILESET_OFFSET_AXIS: TileSet.TileOffsetAxis = TileSet.TILE_OFFSET_AXIS_HORIZONTAL
 
-const COLLISION_LAYER_ACTOR: int = 1
-const COLLISION_LAYER_WALL: int = 2
+#const COLLISION_LAYER_ACTOR: int = 1
+#const COLLISION_LAYER_WALL: int = 2
 
 const INVALID_TILE_SYMBOLS: Array[String] = ["", " ", "\t", "\n"]
 
@@ -53,7 +53,7 @@ func build_isometric_tilemap() -> void:
 	tileset.set_tile_layout(TILESET_LAYOUT)
 	tileset.set_tile_offset_axis(TILESET_OFFSET_AXIS)
 	tileset.add_physics_layer()
-	tileset.set_physics_layer_collision_layer(0, COLLISION_LAYER_WALL)  # set the second int as value, not bit or index.
+	tileset.set_physics_layer_collision_layer(0, Layer.WALL)  # set the second int as value, not bit or index.
 	var atlas: TileSetAtlasSource = TileSetAtlasSource.new()
 	var texture_bytes = AssetLoader.builder()\
 	.key(tileset_ent.texture)\

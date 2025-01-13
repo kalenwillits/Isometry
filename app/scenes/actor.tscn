@@ -42,8 +42,8 @@ properties/10/replication_mode = 1
 z_index = 1
 z_as_relative = false
 y_sort_enabled = true
-collision_layer = 2
-collision_mask = 2
+collision_layer = 0
+collision_mask = 0
 input_pickable = true
 script = ExtResource("1_y2kqt")
 
@@ -66,9 +66,12 @@ centered = false
 
 [node name="HitBox" type="Area2D" parent="."]
 z_as_relative = false
-collision_mask = 2
+collision_layer = 0
+collision_mask = 0
 
 [node name="ViewBox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 0
 
 [connection signal="heading_change" from="." to="." method="_on_heading_change"]
 [connection signal="synchronized" from="Synchronizer" to="." method="_on_multiplayer_synchronizer_synchronized"]

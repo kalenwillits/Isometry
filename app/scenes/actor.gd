@@ -148,7 +148,7 @@ func _ready() -> void:
 				)
 	
 func same_map_as_primary(effect: bool) -> void:
-	collisions(effect)
+	use_collisions(effect)
 	set_process(effect)
 	set_physics_process(effect)
 
@@ -525,37 +525,20 @@ func _on_hit_box_body_entered(other):
 		$HitboxTriggerCooldownTimer.start()
 		on_touch.emit(other)
 		
-func collisions(enabled: bool) -> void:
-	# TODO - This is going to have to be re-worked my enabling / disabling layers & masks
-	for node in get_children():
-		# TODO - Invisible boxes bug?
-		if node.is_class("CollisionPolygon2D"):
-			Queue.enqueue(
-				Queue.Item.builder()
-				.task(func(): node.disabled = !enabled)
-				.build()
-			)
-	for node in $HitBox.get_children():
-		if node.is_class("CollisionPolygon2D"):
-			Queue.enqueue(
-				Queue.Item.builder()
-				.task(func(): node.disabled = !enabled)
-				.build()
-			)
-	for node in $ViewBox.get_children():
-		if node.is_class("CollisionPolygon2D"):
-			Queue.enqueue(
-				Queue.Item.builder()
-				.task(func(): node.disabled = !enabled)
-				.build()
-			)
+func use_collisions(effect: bool) -> void:
+	set_collision_layer_value(Layer.BASE, effect)
+	set_collision_mask_value(Layer.BASE, effect)
+	set_collision_mask_value(Layer.WALL, effect)
+	$HitBox.set_collision_layer_value(Layer.HITBOX, effect)
+	$HitBox.set_collision_mask_value(Layer.BASE, effect)
+	$ViewBox.set_collision_layer_value(Layer.VIEWBOX, effect)
+	$ViewBox.set_collision_mask_value(Layer.HITBOX, effect)
 
 func _on_sprite_animation_changed():
 	$Sprite.play()
 
 func _on_mouse_entered() -> void:
 	print("mouse entered %s" % name)
-
 
 func _on_mouse_exited() -> void:
 	print("mouse exited %s" % name)
