@@ -526,6 +526,7 @@ func _on_hit_box_body_entered(other):
 		on_touch.emit(other)
 		
 func collisions(enabled: bool) -> void:
+	# TODO - This is going to have to be re-worked my enabling / disabling layers & masks
 	for node in get_children():
 		# TODO - Invisible boxes bug?
 		if node.is_class("CollisionPolygon2D"):
@@ -535,6 +536,13 @@ func collisions(enabled: bool) -> void:
 				.build()
 			)
 	for node in $HitBox.get_children():
+		if node.is_class("CollisionPolygon2D"):
+			Queue.enqueue(
+				Queue.Item.builder()
+				.task(func(): node.disabled = !enabled)
+				.build()
+			)
+	for node in $ViewBox.get_children():
 		if node.is_class("CollisionPolygon2D"):
 			Queue.enqueue(
 				Queue.Item.builder()
