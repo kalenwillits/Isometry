@@ -8,7 +8,8 @@ func broadcast_actor_render(peer_id: int, map: String) -> void:
 		if typeof(actor_node) == typeof(Actor):
 			var primary_actor = get_tree().get_first_node_in_group(str(multiplayer.get_unique_id()))
 			if primary_actor != null:
-				actor_node.same_map_as_primary(map == primary_actor.map)
+				pass # TODO - DO I need this? 
+				#actor_node.same_map_as_primary(map == primary_actor.map)
 				
 @rpc("reliable", "call_local", "any_peer")
 func despawn_actor_by_peer_id(peer_id) -> void:

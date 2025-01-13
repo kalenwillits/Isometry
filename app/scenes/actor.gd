@@ -30,6 +30,7 @@ const DESTINATION_PRECISION: float = 1.1
 var peer_id: int = 0
 var view: int = -1
 var target_queue: Array = []
+var view_box_has_been_built: bool = false
 
 signal on_touch(actor)
 signal primary(actor)
@@ -97,8 +98,6 @@ static func builder() -> ActorBuilder:
 	return ActorBuilder.new()
 
 func pack() -> Dictionary:
-	## Pack's the actor's data for transfer across peers
-	# TODO - Pack/load resources
 	return {
 		"peer_id": peer_id,
 		"name": name,
@@ -116,7 +115,6 @@ func is_primary() -> bool:
 	return is_multiplayer_authority() and peer_id > 0 and multiplayer.get_unique_id() == peer_id
 
 func _enter_tree():
-	visible_to_primary(false)
 	add_to_group(Group.ACTOR)
 	add_to_group(map)
 	add_to_group(get_actor_group_name()) # TODO - remove
@@ -125,13 +123,20 @@ func _enter_tree():
 		add_to_group(Group.PLAYER)
 		set_multiplayer_authority(str(name).to_int())
 		if is_primary():
-			visible_to_primary(true)
 			add_to_group(Group.PRIMARY)
 	else: # NPC
 		add_to_group(Group.NPC)
 
 func _ready() -> void:
-	same_map_as_primary(false)
+	#Queue.enqueue(
+		#Queue.Item.builder()
+			#.task(func(): 
+				#var effect: bool = Finder.get_primary_actor().map == map
+				#same_map_as_primary(effect)
+				#)
+			#.condition(func(): return Finder.get_primary_actor())
+			#.build()
+		#)
 	Trigger.new().arm("heading").action(func(): heading_change.emit(heading)).deploy(self)
 	Trigger.new().arm("polygon").action(build_polygon).deploy(self)
 	Trigger.new().arm("hitbox").action(build_hitbox).deploy(self)
@@ -139,14 +144,20 @@ func _ready() -> void:
 	$Label.set_text(name) # TODO - Replace label with real name
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	if is_primary():
-			get_parent().get_node("Camera").set_target(self)
-			Queue.enqueue(
-				Queue.Item.builder()
-					.task(func(): get_parent().render_map(map))
-					.condition(func(): return get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())))
-					.build()
-				)
-	
+		get_parent().get_node("Camera").set_target(self)
+		$HitBox.area_entered.connect(_on_hit_box_body_entered)
+		$ViewBox.area_entered.connect(_on_view_box_area_entered)
+		$ViewBox.area_exited.connect(_on_view_box_area_exited)
+		schedule_render_this_actors_map()
+
+func schedule_render_this_actors_map() -> void:
+	Queue.enqueue(
+		Queue.Item.builder()
+			.task(func(): get_parent().render_map(map))
+			.condition(func(): return get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())))
+			.build()
+		)
+
 func same_map_as_primary(effect: bool) -> void:
 	use_collisions(effect)
 	set_process(effect)
@@ -308,6 +319,7 @@ func build_viewbox(value: int) -> void:
 		view_shape.shape = CircleShape2D.new()
 		view_shape.apply_scale(Vector2(1 * value, 0.5 * value))
 		$ViewBox.add_child(view_shape)
+	view_box_has_been_built = true
 		
 func build_polygon() -> void:
 	if !polygon: return
@@ -523,16 +535,18 @@ func _on_heading_change(_radial):
 func _on_hit_box_body_entered(other):
 	if other != self and $HitboxTriggerCooldownTimer.is_stopped():
 		$HitboxTriggerCooldownTimer.start()
-		on_touch.emit(other)
+		other.get_parent().on_touch.emit(self)
 		
 func use_collisions(effect: bool) -> void:
 	set_collision_layer_value(Layer.BASE, effect)
 	set_collision_mask_value(Layer.BASE, effect)
 	set_collision_mask_value(Layer.WALL, effect)
 	$HitBox.set_collision_layer_value(Layer.HITBOX, effect)
-	$HitBox.set_collision_mask_value(Layer.BASE, effect)
+	#$HitBox.set_collision_mask_value(Layer.BASE, effect)
+	$HitBox.set_collision_mask_value(Layer.HITBOX, effect)
 	$ViewBox.set_collision_layer_value(Layer.VIEWBOX, effect)
 	$ViewBox.set_collision_mask_value(Layer.HITBOX, effect)
+	$ViewBox.set_collision_mask_value(Layer.BASE, effect)
 
 func _on_sprite_animation_changed():
 	$Sprite.play()
@@ -542,7 +556,6 @@ func _on_mouse_entered() -> void:
 
 func _on_mouse_exited() -> void:
 	print("mouse exited %s" % name)
-
 
 func _on_hit_box_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
 	if event.is_action("primary_action"):
@@ -557,10 +570,10 @@ func _on_hit_box_mouse_exited() -> void:
 	print("mouse exited %s" % name) # TODO -remove
 
 func _on_view_box_area_entered(area: Area2D) -> void:
-	var effect: bool = is_primary()
-	if !effect: visible_to_primary(!effect)
-
+	area.get_parent().visible_to_primary(true)
 
 func _on_view_box_area_exited(area: Area2D) -> void:
-	var effect: bool = is_primary()
-	if !effect: visible_to_primary(effect)
+	area.get_parent().visible_to_primary(false)
+	
+func is_npc() -> bool:
+	return is_in_group(Group.NPC)

@@ -29,6 +29,7 @@ func _on_server_disconnected() -> void:
 	#Route.to(Scene.splash) # TODO - route to error
 
 func _ready() -> void:
+	add_to_group(Group.WORLD)
 	get_tree().get_first_node_in_group(Group.SPAWNER).set_spawn_function(spawn_actor)
 	_handle_network_mode()
 	
@@ -145,11 +146,6 @@ func render_map(map: String) -> void:
 							layer.enabled = map_node.name == map
 						).build()
 				)
-	for actor_node in get_tree().get_nodes_in_group(Group.ACTOR):
-		if actor_node.map == map:
-			actor_node.same_map_as_primary(true)
-		else:
-			actor_node.same_map_as_primary(false)
 
 func _on_connected_to_server() -> void:
 	pass

@@ -1,5 +1,6 @@
 extends Node
 
+const WORLD: String = "WORLD"
 const MAP: String = "MAP"
 const RESOURCE: String = "RESOURCE"
 const ACTOR: String = "ACTOR"
