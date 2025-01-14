@@ -126,17 +126,18 @@ func _enter_tree():
 			add_to_group(Group.PRIMARY)
 	else: # NPC
 		add_to_group(Group.NPC)
+		
+func _exit_tree() -> void:
+	if is_primary():
+		Finder.query([Group.ACTOR]).map(
+			func(a): 
+				a.is_awake(false)
+				a.visible_to_primary(false)
+		)
 
 func _ready() -> void:
-	#Queue.enqueue(
-		#Queue.Item.builder()
-			#.task(func(): 
-				#var effect: bool = Finder.get_primary_actor().map == map
-				#same_map_as_primary(effect)
-				#)
-			#.condition(func(): return Finder.get_primary_actor())
-			#.build()
-		#)
+	is_awake(false)
+	visible_to_primary(false)
 	Trigger.new().arm("heading").action(func(): heading_change.emit(heading)).deploy(self)
 	Trigger.new().arm("polygon").action(build_polygon).deploy(self)
 	Trigger.new().arm("hitbox").action(build_hitbox).deploy(self)
@@ -144,11 +145,18 @@ func _ready() -> void:
 	$Label.set_text(name) # TODO - Replace label with real name
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	if is_primary():
+		is_awake(true)
+		visible_to_primary(true)
 		get_parent().get_node("Camera").set_target(self)
 		$HitBox.area_entered.connect(_on_hit_box_body_entered)
 		$ViewBox.area_entered.connect(_on_view_box_area_entered)
 		$ViewBox.area_exited.connect(_on_view_box_area_exited)
 		schedule_render_this_actors_map()
+		Queue.enqueue(
+			Queue.Item.builder()
+			.task(func(): Finder.query([Group.ACTOR, map]).map(func(a): a.is_awake(true)))
+			.build()
+		)
 
 func schedule_render_this_actors_map() -> void:
 	Queue.enqueue(
@@ -158,7 +166,7 @@ func schedule_render_this_actors_map() -> void:
 			.build()
 		)
 
-func same_map_as_primary(effect: bool) -> void:
+func is_awake(effect: bool) -> void:
 	use_collisions(effect)
 	set_process(effect)
 	set_physics_process(effect)
