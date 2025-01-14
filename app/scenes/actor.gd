@@ -211,7 +211,7 @@ func use_target() -> void:
 		target_queue.clear()
 
 func find_next_target() -> String:
-	var actors = Finder.query([Group.ACTOR, map])
+	var actors = Finder.query([Group.IS_VISIBLE, map]) # TODO - target groups
 	actors.sort_custom(func(a, b): isometric_distance_to(a) > isometric_distance_to(b))
 	if target_queue.size() >= actors.size():
 		target_queue.clear()
@@ -219,11 +219,12 @@ func find_next_target() -> String:
 		var next_actor = actors.pop_front()
 		if !(next_actor.name in target_queue):
 			target_queue.append(next_actor.name)
+			print("TARGET IS NOW %s" % next_actor.name)
 			return next_actor.name
 	return ""
 
 func find_prev_target() -> String:
-	var actors = Finder.query([Group.ACTOR, map])
+	var actors = Finder.query([Group.IS_VISIBLE					, map])
 	actors.sort_custom(func(a, b): isometric_distance_to(a) < isometric_distance_to(b))
 	if target_queue.size() >= actors.size():
 		target_queue.clear()
@@ -406,6 +407,10 @@ func get_sprite_margin() -> Vector2i:
 	return Vector2i(sprite_margin_vertex.x, sprite_margin_vertex.y)
 	
 func visible_to_primary(effect: bool) -> void:
+	if effect: 
+		add_to_group(Group.IS_VISIBLE)
+	else:
+		remove_from_group(Group.IS_VISIBLE)
 	visible = effect
 
 func build_sprite() -> void:
