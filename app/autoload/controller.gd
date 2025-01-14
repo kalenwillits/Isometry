@@ -10,12 +10,7 @@ func broadcast_actor_render(peer_id: int, map: String) -> void:
 		.condition(func(): return Finder.get_primary_actor() != null)
 		.build()
 	)
-	#if actor_node:
-		#if typeof(actor_node) == typeof(Actor):
-			#var primary_actor = get_tree().get_first_node_in_group(str(multiplayer.get_unique_id()))
-			#if primary_actor != null:
-				#actor_node.is_awake(map == primary_actor.map)
-				
+
 @rpc("reliable", "call_local", "any_peer")
 func despawn_actor_by_peer_id(peer_id) -> void:
 	var actor = get_tree().get_first_node_in_group(str(peer_id))
