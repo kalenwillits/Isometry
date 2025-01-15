@@ -18,6 +18,8 @@ const _entities: Dictionary = {
 	"KeyFrame": preload("res://entities/KeyFrame.gd"),
 	"Parameter": preload("res://entities/Parameter.gd"),
 	"Condition": preload("res://entities/Condition.gd"),
+	"Group": preload("res://entities/Group.gd"),
+	"Faction": preload("res://entities/Faction.gd"),
 }
 
 signal load_complete

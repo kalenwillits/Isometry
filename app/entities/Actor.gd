@@ -16,7 +16,9 @@ var action_7: KeyRef # Action
 var action_8: KeyRef # Action
 var action_9: KeyRef # Actiom
 var primary_action: KeyRef # Action
-var resources: KeyRefArray # Resources
+var resources: KeyRefArray # Resource
+var groups: KeyRefArray # Group
+var faction: KeyRef # Faction
 
 func _ready() -> void:
 	tag(Group.ACTOR_ENTITY)

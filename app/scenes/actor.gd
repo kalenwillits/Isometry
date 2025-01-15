@@ -29,7 +29,11 @@ const DESTINATION_PRECISION: float = 1.1
 
 var peer_id: int = 0
 var view: int = -1
+var faction: String = Group.DEFAULT_FACTION
 var target_queue: Array = []
+var target_groups: Array = []
+var target_group_index: int = 0
+var target_groups_counter: Dictionary
 var view_box_has_been_built: bool = false
 
 signal on_touch(actor)
@@ -81,6 +85,8 @@ class ActorBuilder extends Object:
 		var actor_ent = Repo.query([obj.actor]).pop_front()
 		if actor_ent:
 			obj.build_viewbox(actor_ent.view)
+			if actor_ent.faction: obj.faction = actor_ent.faction.key()
+			if actor_ent.groups: obj.build_target_groups(actor_ent.groups.lookup())
 			if actor_ent.sprite: obj.sprite = actor_ent.sprite.key()
 			if actor_ent.hitbox: obj.hitbox = actor_ent.hitbox.key()
 			if actor_ent.polygon: obj.polygon = actor_ent.polygon.key()
@@ -119,6 +125,8 @@ func _enter_tree():
 	add_to_group(map)
 	add_to_group(get_actor_group_name()) # TODO - remove
 	add_to_group(name)
+	add_to_group(Group.DEFAULT_TARGET_GROUP)
+	add_to_group(faction)
 	if peer_id > 0: # PLAYER
 		add_to_group(Group.PLAYER)
 		set_multiplayer_authority(str(name).to_int())
@@ -145,6 +153,7 @@ func _ready() -> void:
 	$Label.set_text(name) # TODO - Replace label with real name
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	if is_primary():
+		build_target_groups_counter()
 		is_awake(true)
 		visible_to_primary(true)
 		get_parent().get_node("Camera").set_target(self)
@@ -202,16 +211,39 @@ func use_actions() -> void:
 		emit_signal("action_9", get_parent().get_node_or_null(target))
 
 func use_target() -> void:
-	if Input.is_action_just_pressed("next_target"):
+	if Input.is_action_just_pressed("increment_target"):
 		target = find_next_target()
-	if Input.is_action_just_pressed("prev_target"):
+		print("TARGET: %s" % target)
+	if Input.is_action_just_pressed("decrement_target"):
 		target = find_prev_target()
+		print("TARGET: %s" % target)
 	if Input.is_action_just_pressed("clear_target"):
 		target = ""
 		target_queue.clear()
+	if Input.is_action_just_pressed("increment_target_group"):
+		target_group_index = increment_target_group()
+		print("TARGET_GROUP: %s" % get_target_group())
+	if Input.is_action_just_pressed("decrement_target_group"):
+		print("TARGET_GROUP: %s" % get_target_group())
+		target_group_index = decrement_target_group()
+		
+func get_targetable_groups() -> Array:
+	var targetable_keys: Array = []
+	for key in target_groups_counter.keys():
+		if target_groups_counter[key] > 0: targetable_keys.append(key)
+	return targetable_keys
+
+func increment_target_group() -> int:
+	return (target_group_index + 1) % get_targetable_groups().size()
+
+func decrement_target_group() -> int:
+	return max((target_group_index - 1), 0)
+	
+func get_target_group() -> String:
+	return get_targetable_groups()[target_group_index]
 
 func find_next_target() -> String:
-	var actors = Finder.query([Group.IS_VISIBLE, map]) # TODO - target groups
+	var actors = Finder.query([Group.IS_VISIBLE, get_target_group()])
 	actors.sort_custom(func(a, b): isometric_distance_to(a) > isometric_distance_to(b))
 	if target_queue.size() >= actors.size():
 		target_queue.clear()
@@ -219,12 +251,11 @@ func find_next_target() -> String:
 		var next_actor = actors.pop_front()
 		if !(next_actor.name in target_queue):
 			target_queue.append(next_actor.name)
-			print("TARGET IS NOW %s" % next_actor.name)
 			return next_actor.name
 	return ""
 
 func find_prev_target() -> String:
-	var actors = Finder.query([Group.IS_VISIBLE					, map])
+	var actors = Finder.query([Group.IS_VISIBLE, get_target_group()])
 	actors.sort_custom(func(a, b): isometric_distance_to(a) < isometric_distance_to(b))
 	if target_queue.size() >= actors.size():
 		target_queue.clear()
@@ -287,6 +318,17 @@ func build_action(value: String, n: int) -> void:
 			if target != null: target_name = target.name
 			get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_name),
 		action_ent.range_ * BASE_TILE_SIZE))
+
+func build_target_groups(groups: Array) -> void:
+	target_groups = [Group.DEFAULT_TARGET_GROUP]
+	for group in groups:
+		add_to_group(group.key())
+		target_groups.append(group.key())
+	
+func build_target_groups_counter() -> void:
+	target_groups_counter = { Group.DEFAULT_TARGET_GROUP: 1 }
+	for group_ent in Repo.query([Group.GROUP_ENTITY]):
+		target_groups_counter[group_ent.key()] = 0
 
 func _local_touch_handler(target: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
@@ -555,7 +597,6 @@ func use_collisions(effect: bool) -> void:
 	set_collision_mask_value(Layer.BASE, effect)
 	set_collision_mask_value(Layer.WALL, effect)
 	$HitBox.set_collision_layer_value(Layer.HITBOX, effect)
-	#$HitBox.set_collision_mask_value(Layer.BASE, effect)
 	$HitBox.set_collision_mask_value(Layer.HITBOX, effect)
 	$ViewBox.set_collision_layer_value(Layer.VIEWBOX, effect)
 	$ViewBox.set_collision_mask_value(Layer.HITBOX, effect)
@@ -583,10 +624,17 @@ func _on_hit_box_mouse_exited() -> void:
 	print("mouse exited %s" % name) # TODO -remove
 
 func _on_view_box_area_entered(area: Area2D) -> void:
-	area.get_parent().visible_to_primary(true)
+	var other = area.get_parent()
+	for target_group_key in other.target_groups:
+		target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
+
+	other.visible_to_primary(true)
 
 func _on_view_box_area_exited(area: Area2D) -> void:
-	area.get_parent().visible_to_primary(false)
+	var other = area.get_parent()
+	for target_group_key in other.target_groups:
+		target_groups_counter[target_group_key] = target_groups_counter[target_group_key] - 1
+	other.visible_to_primary(false)
 	
 func is_npc() -> bool:
 	return is_in_group(Group.NPC)
