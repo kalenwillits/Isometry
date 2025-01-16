@@ -20,6 +20,7 @@ const _entities: Dictionary = {
 	"Condition": preload("res://entities/Condition.gd"),
 	"Group": preload("res://entities/Group.gd"),
 	"Faction": preload("res://entities/Faction.gd"),
+	"Trigger": preload("res://entities/Trigger.gd"),
 }
 
 signal load_complete

@@ -19,6 +19,7 @@ var primary_action: KeyRef # Action
 var resources: KeyRefArray # Resource
 var groups: KeyRefArray # Group
 var faction: KeyRef # Faction
+var triggers: KeyRefArray # Trigger
 
 func _ready() -> void:
 	tag(Group.ACTOR_ENTITY)

@@ -45,9 +45,15 @@ func set_ref(value_ref: String) -> void:
 	
 func set_self_destruct(self_destruct: bool) -> void:
 	_self_destruct = self_destruct
-		
+	
+func _resolve_property_ref(ref: String) -> Variant:
+	var result = get_parent()
+	for part in ref.split("/"):
+		result = result.get(part)
+	return result
+
 func _physics_process(_delta) -> void:
-	var value = get_parent().get(_value_ref)
+	var value = _resolve_property_ref(_value_ref)
 	if value != null and value != _previous_value:
 		_previous_value = value
 		on_fire.emit()

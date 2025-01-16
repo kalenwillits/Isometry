@@ -68,6 +68,9 @@ func invoke_action(action_key: String, self_name: String, target_name: String) -
 		if action_ent.else_ != null: invoke_action(action_ent.else_.key(),self_name, target_name)
 ## ACTION SIGNATURE... ------------------------------------------------------------- #
 
+func echo(_self_name: String, _target_name: String, params: Dictionary) -> void:
+	Logger.info(params["message"])
+
 func move_map_target(self_name: String, target_name: String, params: Dictionary) -> void:
 	## map: KeyRef to Map.
 	## location: KeyRef to Vertex where the target actor's new position will be.

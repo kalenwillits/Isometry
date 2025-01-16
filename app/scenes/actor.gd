@@ -95,7 +95,7 @@ class ActorBuilder extends Object:
 			for n in range(1, 10):
 				var action_name: String = "action_%d" % n
 				if actor_ent.get(action_name): obj.build_action(actor_ent.get(action_name).key(), n)
-			# Populate resources
+			# Populate Resources
 			for resource_ent in Repo.query([Group.RESOURCE_ENTITY]):
 				obj.resources[resource_ent.key()] = obj.resources.get(resource_ent.key(), resource_ent.default)
 		return obj
@@ -127,6 +127,7 @@ func _enter_tree():
 	add_to_group(name)
 	add_to_group(Group.DEFAULT_TARGET_GROUP)
 	add_to_group(faction)
+	build_triggers()
 	if peer_id > 0: # PLAYER
 		add_to_group(Group.PLAYER)
 		set_multiplayer_authority(str(name).to_int())
@@ -318,6 +319,23 @@ func build_action(value: String, n: int) -> void:
 			if target != null: target_name = target.name
 			get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_name),
 		action_ent.range_ * BASE_TILE_SIZE))
+		
+func build_triggers() -> void:
+	if (Cache.network == Network.Mode.HOST) or (Cache.network == Network.Mode.SERVER):
+			var actor_ent: Entity = Repo.select(actor)
+			if actor_ent.triggers == null: return
+			for trigger_ent in actor_ent.triggers.lookup():
+				Trigger.new()\
+				.arm("resources/%s" % trigger_ent.resource.key())\
+				.action(
+					func():
+						_local_action_handler(
+							self,  # Both caller and target for triggers is always self
+							func(target):
+								Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, trigger_ent.action.key(), name, name),
+								trigger_ent.action.lookup().range_ * BASE_TILE_SIZE
+						)
+				).deploy(self)
 
 func build_target_groups(groups: Array) -> void:
 	target_groups = [Group.DEFAULT_TARGET_GROUP]
@@ -454,6 +472,10 @@ func visible_to_primary(effect: bool) -> void:
 	else:
 		remove_from_group(Group.IS_VISIBLE)
 	visible = effect
+	
+func handle_resource_change(resource: String) -> void:
+	print("%s resource change %s" % [name, resources.get(resource)])
+	pass
 
 func build_sprite() -> void:
 	var sprite_ent = Repo.select(sprite)

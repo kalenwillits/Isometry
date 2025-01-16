@@ -46,7 +46,7 @@ func spawn_primary_actor(peer_id: int) -> void:
 			Queue.Item.builder()
 			.comment("First time render of map")
 			.task(func(): render_map(actor_data.map))
-			.condition(build_world_complete)
+		 	.condition(build_world_complete)
 			.build()
 		)
 
