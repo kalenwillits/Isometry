@@ -360,7 +360,7 @@ func _local_action_handler(target: Actor, function: Callable, range_: int) -> vo
 		if target != null: Logger.info("%s action activated by %s but is out of range %d at %f" % [name, target.name, range_ / BASE_TILE_SIZE, distance / BASE_TILE_SIZE])
 		# TODO - alert user that it's out of range
 	else:
-		if target != null: Logger.info("%s action activated by %s" % [name, target.name])
+		if target != null: Logger.info("actor %s activated an action on target %s" % [name, target.name])
 		function.call(target)
 		
 func build_primary_action(value: String) -> void:
