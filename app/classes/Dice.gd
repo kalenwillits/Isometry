@@ -1,4 +1,4 @@
-extends Node
+extends Object
 class_name Dice
 
 var caller_name: String
