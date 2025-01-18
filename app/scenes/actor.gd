@@ -112,16 +112,12 @@ func pack() -> Dictionary:
 		"resources": resources
 	}
 	
-func get_actor_group_name() -> String:
-	return "%s_%s" % [Group.ACTOR, actor]
-	
 func is_primary() -> bool:
 	return is_multiplayer_authority() and peer_id > 0 and multiplayer.get_unique_id() == peer_id
 
 func _enter_tree():
 	add_to_group(Group.ACTOR)
 	add_to_group(map)
-	add_to_group(get_actor_group_name()) # TODO - remove
 	add_to_group(name)
 	add_to_group(Group.DEFAULT_TARGET_GROUP)
 	build_triggers()
