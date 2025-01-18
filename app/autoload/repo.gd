@@ -20,7 +20,6 @@ const _entities: Dictionary = {
 	"Parameter": preload("res://entities/Parameter.gd"),
 	"Condition": preload("res://entities/Condition.gd"),
 	"Group": preload("res://entities/Group.gd"),
-	"Faction": preload("res://entities/Faction.gd"),
 	"Trigger": preload("res://entities/Trigger.gd"),
 	"Timer": preload("res://entities/Timer.gd"),
 }

@@ -37,7 +37,7 @@ gdscript/warnings/integer_division=0
 
 [editor]
 
-run/main_run_args="--archive=default --uri=localhost --port=5001 --network=1 --dir=maps"
+run/main_run_args="--archive=default --uri=localhost --port=5001 --network=1 --dir=maps/target"
 
 [input]
 

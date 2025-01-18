@@ -29,7 +29,6 @@ const DESTINATION_PRECISION: float = 1.1
 
 var peer_id: int = 0
 var view: int = -1
-var faction: String = Group.DEFAULT_FACTION
 var target_queue: Array = []
 var target_groups: Array = []
 var target_group_index: int = 0
@@ -85,7 +84,6 @@ class ActorBuilder extends Object:
 		var actor_ent = Repo.query([obj.actor]).pop_front()
 		if actor_ent:
 			obj.build_viewbox(actor_ent.view)
-			if actor_ent.faction: obj.faction = actor_ent.faction.key()
 			if actor_ent.groups: obj.build_target_groups(actor_ent.groups.lookup())
 			if actor_ent.sprite: obj.sprite = actor_ent.sprite.key()
 			if actor_ent.hitbox: obj.hitbox = actor_ent.hitbox.key()
@@ -126,7 +124,6 @@ func _enter_tree():
 	add_to_group(get_actor_group_name()) # TODO - remove
 	add_to_group(name)
 	add_to_group(Group.DEFAULT_TARGET_GROUP)
-	add_to_group(faction)
 	build_triggers()
 	build_timers()
 	if peer_id > 0: # PLAYER

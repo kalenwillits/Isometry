@@ -18,7 +18,6 @@ var action_9: KeyRef # Actiom
 var primary_action: KeyRef # Action
 var resources: KeyRefArray # Resource
 var groups: KeyRefArray # Group
-var faction: KeyRef # Faction
 var triggers: KeyRefArray # Trigger
 var timers: KeyRefArray # Timer
 
