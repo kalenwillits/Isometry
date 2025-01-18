@@ -20,6 +20,7 @@ var resources: KeyRefArray # Resource
 var groups: KeyRefArray # Group
 var faction: KeyRef # Faction
 var triggers: KeyRefArray # Trigger
+var timers: KeyRefArray # Timer
 
 func _ready() -> void:
 	tag(Group.ACTOR_ENTITY)

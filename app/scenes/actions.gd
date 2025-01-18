@@ -129,4 +129,10 @@ func minus_resource_self(self_name: String, target_name: String, params: Diction
 	## expression: Dice algebra to be subtracted from the target's resource
 	var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
 	self_actor.resources[params.resource] = self_actor.resources[params.resource] - Dice.builder().expression(params.expression).build().evaluate()
+	
+func plus_resource_self(self_name: String, target_name: String, params: Dictionary) -> void:
+	## resource: 
+	## expression: Dice algebra to be subtracted from the target's resource
+	var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
+	self_actor.resources[params.resource] = self_actor.resources[params.resource] + Dice.builder().expression(params.expression).build().evaluate()
 # ----------------------------------------------------------------------- Actions #

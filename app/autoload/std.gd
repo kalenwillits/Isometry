@@ -151,3 +151,6 @@ func intersect(array1: Array, array2: Array) -> Array:
 		if node1 in array2:
 			intersection.append(node1)
 	return intersection
+	
+func is_host_or_server() -> bool:
+	return (Cache.network == Network.Mode.HOST) or (Cache.network == Network.Mode.SERVER)

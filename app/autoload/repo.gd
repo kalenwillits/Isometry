@@ -1,5 +1,6 @@
 extends Node
 
+# TODO - sort
 const _entities: Dictionary = {
 	"Main": preload("res://entities/Main.gd"),
 	"Action": preload("res://entities/Action.gd"),
@@ -21,12 +22,14 @@ const _entities: Dictionary = {
 	"Group": preload("res://entities/Group.gd"),
 	"Faction": preload("res://entities/Faction.gd"),
 	"Trigger": preload("res://entities/Trigger.gd"),
+	"Timer": preload("res://entities/Timer.gd"),
 }
 
 signal load_complete
 signal load_failure
 
 func query(tags: Array) -> Array:
+	# TODO - this could be optimized by using dicts of NodePath objects
 	var entities = get_children()
 	for tag in tags:
 		entities = entities.filter(func(e): return e.has_tag(tag))

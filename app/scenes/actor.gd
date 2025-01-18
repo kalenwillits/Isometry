@@ -128,6 +128,7 @@ func _enter_tree():
 	add_to_group(Group.DEFAULT_TARGET_GROUP)
 	add_to_group(faction)
 	build_triggers()
+	build_timers()
 	if peer_id > 0: # PLAYER
 		add_to_group(Group.PLAYER)
 		set_multiplayer_authority(str(name).to_int())
@@ -321,7 +322,7 @@ func build_action(value: String, n: int) -> void:
 		action_ent.range_ * BASE_TILE_SIZE))
 		
 func build_triggers() -> void:
-	if (Cache.network == Network.Mode.HOST) or (Cache.network == Network.Mode.SERVER):
+	if std.is_host_or_server():
 			var actor_ent: Entity = Repo.select(actor)
 			if actor_ent.triggers == null: return
 			for trigger_ent in actor_ent.triggers.lookup():
@@ -336,6 +337,25 @@ func build_triggers() -> void:
 								trigger_ent.action.lookup().range_ * BASE_TILE_SIZE
 						)
 				).deploy(self)
+				
+func build_timers() -> void:
+		if std.is_host_or_server():
+			var actor_ent: Entity = Repo.select(actor)
+			if actor_ent.triggers == null: return
+			for timer_ent in actor_ent.timers.lookup():
+				Queue.enqueue(
+					Queue.Item.builder()
+					.comment("Build resource timer %s on actor %s" % [timer_ent.key(), name])
+					.task(
+						func():
+							add_child(ResourceTimer.builder().total(timer_ent.total).interval(timer_ent.interval).action(
+								func(): _local_action_handler(
+										Optional.of_nullable(get_parent().get_node_or_null(target)).or_else(self), 
+										func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, timer_ent.action.key(), name, target.name),
+										timer_ent.action.lookup().range_ * BASE_TILE_SIZE)						
+							).build()))
+					.build()
+				)
 
 func build_target_groups(groups: Array) -> void:
 	target_groups = [Group.DEFAULT_TARGET_GROUP]
