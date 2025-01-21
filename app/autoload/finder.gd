@@ -16,3 +16,6 @@ func select(tag: String) -> Node:
 
 func get_primary_actor() -> Actor:
 	return get_tree().get_first_node_in_group(Group.PRIMARY)
+	
+func get_actor(actor_name: String) -> Actor:
+	return get_tree().get_first_node_in_group(Group.WORLD).get_node(actor_name)

@@ -33,7 +33,7 @@ var target_queue: Array = []
 var target_groups: Array = []
 var target_group_index: int = 0
 var target_groups_counter: Dictionary
-var view_box_has_been_built: bool = false
+var strategy: Strategy
 
 signal on_touch(actor)
 signal primary(actor)
@@ -145,6 +145,7 @@ func _ready() -> void:
 	Trigger.new().arm("polygon").action(build_polygon).deploy(self)
 	Trigger.new().arm("hitbox").action(build_hitbox).deploy(self)
 	Trigger.new().arm("sprite").action(build_sprite).deploy(self)
+	Trigger.new().arm("strategy").action(build_strategy).deploy(self)
 	$Label.set_text(name) # TODO - Replace label with real name
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	if is_primary():
@@ -178,12 +179,22 @@ func is_awake(effect: bool) -> void:
 func _physics_process(delta) -> void:
 	use_state()
 	use_animation()
+	use_strategy()
 	if is_primary():
 		use_movement(delta)
 		click_to_move()
 		use_move_directly(delta)
 		use_actions()
 		use_target()
+		
+func use_strategy() -> void:
+	if strategy == null: return
+	if std.is_host_or_server():
+		strategy.use(
+			ActorInteraction.builder()
+			.caller(self)
+			.target(Finder.select(target))
+			.build())
 
 func use_actions() -> void:
 	if Input.is_action_just_released("action_1"):
@@ -314,6 +325,17 @@ func build_action(value: String, n: int) -> void:
 			get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_name),
 		action_ent.range_ * BASE_TILE_SIZE))
 		
+func build_strategy() -> void:
+	if std.is_host_or_server():
+		Optional.of(Repo.select(actor))\
+			.map(func(e): e.strategy)\
+			.map(func(e): e.lookup())\
+			.if_present(func(s):
+				self.strategy = Strategy.builder()\
+					.behaviors(s.behaviors.lookup())\
+					.build()
+				)
+
 func build_triggers() -> void:
 	if std.is_host_or_server():
 			var actor_ent: Entity = Repo.select(actor)
@@ -401,8 +423,7 @@ func build_viewbox(value: int) -> void:
 		view_shape.shape = CircleShape2D.new()
 		view_shape.apply_scale(Vector2(1 * value, 0.5 * value))
 		$ViewBox.add_child(view_shape)
-	view_box_has_been_built = true
-		
+
 func build_polygon() -> void:
 	if !polygon: return
 	var polygon_ent = Repo.select(polygon)

@@ -9,7 +9,7 @@ class Builder extends Object:
 	var this: ResourceOperator = ResourceOperator.new()
 
 	func resource(entity: Entity) -> Builder:
-		this.resource_entity = entity
+		this.resource = entity
 		return self
 
 	func actor(actor: Actor) -> Builder:
@@ -17,6 +17,8 @@ class Builder extends Object:
 		return self
 
 	func build() -> ResourceOperator: 
+		assert(this.resource != null)
+		assert(this.actor != null)
 		return this
 
 static func builder() -> Builder:

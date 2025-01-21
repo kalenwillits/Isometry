@@ -24,29 +24,7 @@ func make_params(action_ent: Entity) -> Dictionary:
 		for param_ent in action_ent.parameters.lookup():
 			params[param_ent.name_] = param_ent.value
 	return params
-	
-func eval_action_if(self_name: String, target_name: String, key_ref_condition: KeyRef) -> bool:
-	if key_ref_condition == null: return true # if there is no condition set, automatically pass
-	var condition_ent = key_ref_condition.lookup()
-	var lvalue: int = Dice.builder().scene_tree(get_tree()).caller(self_name).target(target_name).expression(condition_ent.left).build().evaluate()
-	var rvalue: int = Dice.builder().scene_tree(get_tree()).caller(self_name).target(target_name).expression(condition_ent.right).build().evaluate()
-	match OperatorSymbolMap.get(condition_ent.operator):
-		OP_EQUAL:
-			return lvalue == rvalue
-		OP_NOT_EQUAL:
-			return lvalue != rvalue
-		OP_GREATER:
-			return lvalue > rvalue
-		OP_LESS:
-			return lvalue < rvalue
-		OP_GREATER_EQUAL:
-			return lvalue >= rvalue
-		OP_LESS_EQUAL:
-			return lvalue <= rvalue
-		_:
-			Logger.warn("Condition [%s] evaluates to false due to invalid operator [%s] used -- options are: %s" % [condition_ent.key(), condition_ent.operator, OperatorSymbolMap.keys()])
-			return false
-	
+
 func handle_move_actor(actor_name: String, map: String) -> void:
 	var actor = get_tree().get_first_node_in_group(actor_name)
 	if actor: 
@@ -60,7 +38,17 @@ func handle_move_actor(actor_name: String, map: String) -> void:
 @rpc("any_peer", "reliable", "call_local")
 func invoke_action(action_key: String, self_name: String, target_name: String) -> void:
 	var action_ent = Repo.select(action_key)
-	if eval_action_if(self_name, target_name, action_ent.if_):
+	if ConditionEvaluator.evaluate(
+			ConditionEvaluator.EvaluateParams.builder()
+			.caller_name(self_name)
+			.target_name(target_name)
+			.condition_key(
+				Optional.of_nullable(action_ent.if_)
+				.map(func(key_ref): key_ref.key())
+				.or_else("")
+				)
+			.build()
+		):
 		var params := make_params(action_ent)
 		if action_ent.do != null: call(action_ent.do, self_name, target_name, params)
 		if action_ent.then != null: invoke_action(action_ent.then.key(), self_name, target_name)
@@ -121,18 +109,51 @@ func minus_resource_target(self_name: String, target_name: String, params: Dicti
 	## resource: 
 	## expression: Dice algebra to be subtracted from the target's resource
 	if target_name == "": return
-	var target_actor: Actor = get_tree().get_first_node_in_group(target_name)
-	target_actor.resources[params.resource] = target_actor.resources[params.resource] - Dice.builder().expression(params.expression).build().evaluate()
-	
+	Optional.of_nullable(
+		Repo.query([Group.RESOURCE_ENTITY])
+		.filter(
+	func(ent): 
+		return ent.key() == params.get("resource")
+	).pop_front()
+		).if_present(
+	func(resource: Entity):
+		var target_actor: Actor = get_tree().get_first_node_in_group(target_name)
+		var value: int = Dice.builder().expression(params.expression).build().evaluate()
+		var result: int = ResourceOperator.builder().actor(target_actor).resource(resource).build().minus(value).get_value()
+		Logger.debug("minus_resource_target(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])		
+	)
+
 func minus_resource_self(self_name: String, target_name: String, params: Dictionary) -> void:
 	## resource: 
 	## expression: Dice algebra to be subtracted from the target's resource
-	var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
-	self_actor.resources[params.resource] = self_actor.resources[params.resource] - Dice.builder().expression(params.expression).build().evaluate()
+	Optional.of_nullable(
+		Repo.query([Group.RESOURCE_ENTITY])
+		.filter(
+	func(ent): 
+		return ent.key() == params.get("resource")
+	).pop_front()
+		).if_present(
+	func(resource: Entity):
+		var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
+		var value: int = Dice.builder().expression(params.expression).build().evaluate()
+		var result: int = ResourceOperator.builder().actor(self_actor).resource(resource).build().minus(value).get_value()
+		Logger.debug("minus_resource_self(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])
+	)
 	
 func plus_resource_self(self_name: String, target_name: String, params: Dictionary) -> void:
 	## resource: 
 	## expression: Dice algebra to be subtracted from the target's resource
-	var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
-	self_actor.resources[params.resource] = self_actor.resources[params.resource] + Dice.builder().expression(params.expression).build().evaluate()
+	Optional.of_nullable(
+		Repo.query([Group.RESOURCE_ENTITY])
+		.filter(
+	func(ent): 
+		return ent.key() == params.get("resource")
+	).pop_front()
+		).if_present(
+	func(resource: Entity):
+		var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
+		var value: int = Dice.builder().expression(params.expression).build().evaluate()
+		var result: int = ResourceOperator.builder().actor(self_actor).resource(resource).build().plus(value).get_value()
+		Logger.debug("plus_resource_self(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])
+	)
 # ----------------------------------------------------------------------- Actions #

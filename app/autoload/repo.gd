@@ -1,4 +1,5 @@
 extends Node
+# TODO - We could use sqlite in memory to make this WAYYY more efficient. 
 
 # TODO - sort
 const _entities: Dictionary = {
@@ -22,6 +23,9 @@ const _entities: Dictionary = {
 	"Group": preload("res://entities/Group.gd"),
 	"Trigger": preload("res://entities/Trigger.gd"),
 	"Timer": preload("res://entities/Timer.gd"),
+	"Strategy": preload("res://entities/Strategy.gd"),
+	"Behavior": preload("res://entities/Behavior.gd"),
+	"Measure": preload("res://entities/Measure.gd"),
 }
 
 signal load_complete
