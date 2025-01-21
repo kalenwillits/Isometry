@@ -44,7 +44,7 @@ func invoke_action(action_key: String, self_name: String, target_name: String) -
 			.target_name(target_name)
 			.condition_key(
 				Optional.of_nullable(action_ent.if_)
-				.map(func(key_ref): key_ref.key())
+				.map(func(key_ref): return key_ref.key())
 				.or_else("")
 				)
 			.build()
@@ -58,6 +58,11 @@ func invoke_action(action_key: String, self_name: String, target_name: String) -
 
 func echo(_self_name: String, _target_name: String, params: Dictionary) -> void:
 	Logger.info(params["message"])
+	
+func set_destination_self(self_name: String, _target_name: String, params: Dictionary) -> void:
+	## destination: Vertex Key
+	var vertex_ent = Repo.select(params.destination)
+	Finder.get_actor(self_name).set_destination(Vector2(vertex_ent.x, vertex_ent.y))
 
 func move_map_target(self_name: String, target_name: String, params: Dictionary) -> void:
 	## map: KeyRef to Map.

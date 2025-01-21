@@ -29,7 +29,6 @@ func use(interaction: ActorInteraction) -> void:
 	var num_behaviors: int = behaviors.size()
 	if num_behaviors <= 0: return
 	var current_behavior: Behavior = behaviors[_index % num_behaviors]
-	current_behavior.evaluate_state()
 	current_behavior.use(interaction)
 	match current_behavior.get_state():
 		Behavior.State.IDLE:

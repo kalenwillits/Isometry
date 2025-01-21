@@ -1,7 +1,7 @@
 extends Object
 class_name Behavior
 
-var _state: State
+var _state: State = State.IDLE
 
 var criteria: String # Condition Key
 var action: Callable
@@ -32,22 +32,27 @@ class Builder extends Object:
 
 static func builder() -> Builder:
 	return Builder.new()
-
+	
 func get_state() -> State:
 	return _state
 	
 func promote_state() -> void:
 	match get_state():
-		Behavior.State.IDLE: _state = State.STARTING
-		Behavior.State.STARTING: _state = State.ACTIVE
-		Behavior.State.ACTIVE: _state = State.COMPLETED
-		Behavior.State.COMPLETED: _state = State.IDLE
+		Behavior.State.IDLE: 
+			_state = State.STARTING
+		Behavior.State.STARTING: 
+			_state = State.ACTIVE
+		Behavior.State.ACTIVE: 
+			_state = State.COMPLETED
+		Behavior.State.COMPLETED: 
+			_state = State.IDLE
 
 func use(interaction: ActorInteraction) -> void:
 	match get_state():
 		Behavior.State.IDLE:
 			promote_state()
 		Behavior.State.STARTING:
+			action.call(interaction)
 			promote_state()
 		Behavior.State.ACTIVE:
 			if ConditionEvaluator.evaluate(

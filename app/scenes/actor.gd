@@ -1,7 +1,6 @@
 extends CharacterBody2D
 class_name Actor
 
-# TODO - actions pass peer_ids to the server to access target nodes. This MUST be refactored to node names or it won't work on NPCs because NPC peer_ids are always 0
 # TODO - actions should still be requested even if the target is null
 
 enum KeyFrames {
@@ -33,6 +32,10 @@ var target_queue: Array = []
 var target_groups: Array = []
 var target_group_index: int = 0
 var target_groups_counter: Dictionary
+var measures: Dictionary = {
+	"distance_to_target": _built_in_measure__distance_to_target,
+	"distance_to_destination": _built_in_measure__distance_to_destination,
+}
 var strategy: Strategy
 
 signal on_touch(actor)
@@ -93,9 +96,12 @@ class ActorBuilder extends Object:
 			for n in range(1, 10):
 				var action_name: String = "action_%d" % n
 				if actor_ent.get(action_name): obj.build_action(actor_ent.get(action_name).key(), n)
-			# Populate Resources
+			# build resources
 			for resource_ent in Repo.query([Group.RESOURCE_ENTITY]):
 				obj.resources[resource_ent.key()] = obj.resources.get(resource_ent.key(), resource_ent.default)
+			# build measures
+			for measure_ent in Repo.query([Group.MEASURE_ENTITY]):
+				obj.measure[measure_ent.key()] = obj.build_measure(measure_ent)
 		return obj
 		
 static func builder() -> ActorBuilder:
@@ -122,6 +128,7 @@ func _enter_tree():
 	add_to_group(Group.DEFAULT_TARGET_GROUP)
 	build_triggers()
 	build_timers()
+	build_strategy()
 	if peer_id > 0: # PLAYER
 		add_to_group(Group.PLAYER)
 		set_multiplayer_authority(str(name).to_int())
@@ -145,7 +152,6 @@ func _ready() -> void:
 	Trigger.new().arm("polygon").action(build_polygon).deploy(self)
 	Trigger.new().arm("hitbox").action(build_hitbox).deploy(self)
 	Trigger.new().arm("sprite").action(build_sprite).deploy(self)
-	Trigger.new().arm("strategy").action(build_strategy).deploy(self)
 	$Label.set_text(name) # TODO - Replace label with real name
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	if is_primary():
@@ -173,8 +179,6 @@ func schedule_render_this_actors_map() -> void:
 
 func is_awake(effect: bool) -> void:
 	use_collisions(effect)
-	set_process(effect)
-	set_physics_process(effect)
 
 func _physics_process(delta) -> void:
 	use_state()
@@ -186,7 +190,18 @@ func _physics_process(delta) -> void:
 		use_move_directly(delta)
 		use_actions()
 		use_target()
-		
+	if is_npc() and std.is_host_or_server():
+		use_movement(delta)
+
+func _built_in_measure__distance_to_target() -> int:
+	Optional.of_nullable(Finder.select(target))\
+		.map(func(t): return isometric_distance_to_actor(t) * BASE_TILE_SIZE)\
+		.get_value()
+	return -1
+	
+func _built_in_measure__distance_to_destination() -> int:
+	return isometric_distance_to_point(destination) * BASE_TILE_SIZE
+
 func use_strategy() -> void:
 	if strategy == null: return
 	if std.is_host_or_server():
@@ -250,7 +265,7 @@ func get_target_group() -> String:
 
 func find_next_target() -> String:
 	var actors = Finder.query([Group.IS_VISIBLE, get_target_group()])
-	actors.sort_custom(func(a, b): isometric_distance_to(a) > isometric_distance_to(b))
+	actors.sort_custom(func(a, b): isometric_distance_to_actor(a) > isometric_distance_to_actor(b))
 	if target_queue.size() >= actors.size():
 		target_queue.clear()
 	while !actors.is_empty():
@@ -262,7 +277,7 @@ func find_next_target() -> String:
 
 func find_prev_target() -> String:
 	var actors = Finder.query([Group.IS_VISIBLE, get_target_group()])
-	actors.sort_custom(func(a, b): isometric_distance_to(a) < isometric_distance_to(b))
+	actors.sort_custom(func(a, b): isometric_distance_to_actor(a) < isometric_distance_to_actor(b))
 	if target_queue.size() >= actors.size():
 		target_queue.clear()
 	while !actors.is_empty():
@@ -272,9 +287,12 @@ func find_prev_target() -> String:
 			return next_actor.name
 	return ""
 
-func isometric_distance_to(other: Actor) -> float:
+func isometric_distance_to_actor(other: Actor) -> float:
 	if other == null: return 0.0
 	return position.distance_to(other.position) * std.isometric_factor(position.angle_to(other.position))
+	
+func isometric_distance_to_point(point: Vector2) -> float:
+	return position.distance_to(point) * std.isometric_factor(position.angle_to(point))
 
 func click_to_move() -> void:
 	if Input.is_action_pressed("action"):
@@ -324,17 +342,27 @@ func build_action(value: String, n: int) -> void:
 			if target != null: target_name = target.name
 			get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_name),
 		action_ent.range_ * BASE_TILE_SIZE))
+
+func build_measure(value: String) -> void:
+	return Optional.of(Repo.select(value))\
+		.map(func(e): return func(interaction): _local_measure_handler(name, target, e.expression))\
+		.get_value()
 		
 func build_strategy() -> void:
 	if std.is_host_or_server():
+		# TODO WIP - This chain is not completing
 		Optional.of(Repo.select(actor))\
-			.map(func(e): e.strategy)\
-			.map(func(e): e.lookup())\
-			.if_present(func(s):
-				self.strategy = Strategy.builder()\
-					.behaviors(s.behaviors.lookup())\
-					.build()
-				)
+			.map(func(e): return e.strategy)\
+			.map(func(e): return e.lookup())\
+			.if_present(set_strategy)
+
+func set_strategy(value: Entity) -> void:
+	var behaviors: Array[Behavior] = []
+	for behavior_ent in value.behaviors.lookup():
+		behaviors.append(
+			Behavior.builder().criteria(behavior_ent.criteria.key()).action(func(interaction): _local_action_handler(interaction.target, func(t): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, behavior_ent.action.key(), name, Optional.of_nullable(t).map(func(t): return t.get_name()).or_else("")), behavior_ent.action.lookup().range_)).build()
+		)
+	strategy = Strategy.builder().behaviors(behaviors).build()
 
 func build_triggers() -> void:
 	if std.is_host_or_server():
@@ -382,6 +410,14 @@ func build_target_groups_counter() -> void:
 	target_groups_counter = { Group.DEFAULT_TARGET_GROUP: 1 }
 	for group_ent in Repo.query([Group.GROUP_ENTITY]):
 		target_groups_counter[group_ent.key()] = 0
+		
+func _local_measure_handler(caller_name: String, target_name: String, expression: String) -> int:
+	return Dice.builder()\
+		.scene_tree(get_tree())\
+		.target_name(target_name)\
+		.caller_name(caller_name)\
+		.build()\
+		.evaluate()
 
 func _local_touch_handler(target: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
@@ -390,7 +426,7 @@ func _local_touch_handler(target: Actor, function: Callable) -> void:
 		function.call(target)
 		
 func _local_action_handler(target: Actor, function: Callable, range_: int) -> void:
-	var distance: float = isometric_distance_to(target)
+	var distance: float = isometric_distance_to_actor(target)
 	if distance > range_:
 		if target != null: Logger.info("%s action activated by %s but is out of range %d at %f" % [name, target.name, range_ / BASE_TILE_SIZE, distance / BASE_TILE_SIZE])
 		# TODO - alert user that it's out of range
@@ -667,7 +703,7 @@ func _on_mouse_entered() -> void:
 func _on_mouse_exited() -> void:
 	print("mouse exited %s" % name)
 
-func _on_hit_box_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
+func _on_hit_box_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 	if event.is_action("primary_action"):
 		var primary_actor = get_tree().get_first_node_in_group(str(multiplayer.get_unique_id()))
 		Logger.info("primary action invoked on %s" % name)
