@@ -32,6 +32,7 @@ func handle_move_actor(actor_name: String, map: String) -> void:
 			Logger.warn("Attempting to move actor to the same map...")
 		else:
 			actor.queue_free()
+
 #  ------------------------------------------------------------------------ Utils #
 # Actions ----------------------------------------------------------------------- #
 ## ACTION SIGNATURE MUST ALWAYS BE (String action_key, int caller_peer_id, int target_peer_id, Dict...params)
@@ -75,15 +76,15 @@ func move_map_target(self_name: String, target_name: String, params: Dictionary)
 		.task(func(): handle_move_actor(target_name, pack.map))
 		.build()
 	)
+	#Queue.enqueue(
+		#Queue.Item.builder()
+		#.condition(func(): return get_tree().get_first_node_in_group(target_name) == null)
+		#.task(func(): get_tree().get_first_node_in_group(Group.SPAWNER).spawn(pack))
+		#.build()
+	#)
 	Queue.enqueue(
 		Queue.Item.builder()
-		.condition(func(): return get_tree().get_first_node_in_group(target_name) == null)
-		.task(func(): get_tree().get_first_node_in_group(Group.SPAWNER).spawn(pack))
-		.build()
-	)
-	Queue.enqueue(
-		Queue.Item.builder()
-		.task(func(): get_parent().render_map.rpc_id(target_name.to_int(), params.map))
+		.task(func(): Controller.fade_and_render_map.rpc_id(target_name.to_int(), params.map))
 		.build()
 	)
 	

@@ -455,7 +455,7 @@ func build_viewbox(value: int) -> void:
 	if value > 0:
 		for node in $ViewBox.get_children(): node.queue_free()
 		var view_shape: CollisionShape2D = CollisionShape2D.new()
-		view_shape.name = "View"
+		view_shape.name = "PrimaryViewShape"
 		view_shape.shape = CircleShape2D.new()
 		view_shape.apply_scale(Vector2(1 * value, 0.5 * value))
 		$ViewBox.add_child(view_shape)
@@ -615,7 +615,7 @@ func get_speed(delta: float) -> float:
 	
 func use_move_directly(_delta) -> void:
 	var motion = Input.get_vector("left", "right", "up", "down")
-	var new_destination: Vector2 = position + motion
+	var new_destination: Vector2 = position + motion * DESTINATION_PRECISION
 
 	if motion.length():
 		set_destination(new_destination)
