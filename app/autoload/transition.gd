@@ -1,99 +1,17 @@
 extends CanvasLayer
 
-const TRANSITION_TIME: float = 1.1
-const RED: int = 0.5
-const GREEN: int = 0.5
-const BLUE: int = 0.5
-
-enum State {
-	IS_FADING,
-	IS_APPEARING
-}
-
-var state: State = State.IS_APPEARING
-var previous_state: State = State.IS_FADING
-var is_idle: bool = true
-
-var fade_queue: Array = []
-var appear_queue: Array = []
 
 func _ready() -> void:
-	$Timer.wait_time = TRANSITION_TIME
-	$VBoxContainer/HBoxContainer/DarkScreen.color = Color(RED, GREEN, BLUE)
-	visible = true
-
-func _process(_delta: float) -> void:
-	if $Timer.time_left:
-		match state:
-			State.IS_FADING:
-				adjust_alpha_color(1.0 - ($Timer.time_left / TRANSITION_TIME))
-			State.IS_APPEARING:
-				adjust_alpha_color(($Timer.time_left / TRANSITION_TIME))
-
+	Fader.builder().target($VBoxContainer/HBoxContainer/DarkScreen).build().deploy(self)
+	
 func at_next_fade(callable: Callable) -> void:
-	fade_queue.append(callable)
+	get_node("Fader").at_next_fade(callable)
 	
 func at_next_appear(callable: Callable) -> void:
-	appear_queue.append(callable)
-
+	get_node("Fader").at_next_appear(callable)
+	
 func fade() -> void:
-	Queue.enqueue(
-		Queue.Item.builder()
-		.task(func():
-				is_idle = false
-				visible = true
-				previous_state = state
-				state = State.IS_FADING
-				$Timer.start(TRANSITION_TIME)
-				)
-		.condition(func(): return is_idle)
-		.build()
-	)
-
+	get_node("Fader").fade()
 	
 func appear() -> void:
-	Queue.enqueue(
-		Queue.Item.builder()
-		.task(func():
-				is_idle = false
-				visible = true
-				previous_state = state
-				state = State.IS_APPEARING
-				$Timer.start(TRANSITION_TIME)
-				)
-		.condition(func(): return is_idle)
-		.build()
-	)
-
-	
-func adjust_alpha_color(delta: float) -> void:
-	var current_a: float = $VBoxContainer/HBoxContainer/DarkScreen.modulate.a
-	var diff = current_a - (current_a - delta)
-	$VBoxContainer/HBoxContainer/DarkScreen.modulate = Color(RED, GREEN, BLUE, diff)
-	
-func exec_queue() -> void:
-	match state:
-		State.IS_FADING:
-			while fade_queue:
-				Queue.enqueue(
-					Queue.Item.builder()
-					.task(fade_queue.pop_front())
-					.build()
-				)
-		State.IS_APPEARING:
-			while appear_queue:
-				Queue.enqueue(
-					Queue.Item.builder()
-					.task(appear_queue.pop_front())
-					.build()
-				)
-
-func _on_timer_timeout() -> void:
-	is_idle = true
-	match state:
-		State.IS_FADING:
-			visible = true
-			exec_queue()
-		State.IS_APPEARING:
-			visible = false
-			exec_queue()
+	get_node("Fader").appear()

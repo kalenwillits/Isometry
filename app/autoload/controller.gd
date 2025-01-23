@@ -5,6 +5,7 @@ extends Node
 func broadcast_actor_render(peer_id: int, map: String) -> void:
 	Queue.enqueue(
 		Queue.Item.builder()
+		.comment("broadcast_actor_render")
 		.task(func(): Finder.get_actor(str(peer_id)).map == map)
 		.condition(func(): return (Finder.get_primary_actor() != null) and (Finder.get_actor(str(peer_id)) != null))
 		.build()
@@ -14,6 +15,7 @@ func broadcast_actor_render(peer_id: int, map: String) -> void:
 func request_spawn_actor(peer_id: int) -> void:
 	Queue.enqueue(
 		Queue.Item.builder()
+		.comment("request_spawn_actor")
 		.condition(func(): return Finder.get_actor(str(peer_id)) == null)
 		.task(func(): Finder.select(Group.SPAWNER).spawn(Cache.unpack_actor(peer_id)))
 		.build()
@@ -26,7 +28,8 @@ func fade_and_render_map(peer_id: int, map: String) -> void:
 			for map_node in get_tree().get_nodes_in_group(Group.MAP):
 				Queue.enqueue(
 				Queue.Item.builder()
-				.condition(map_node.build_complete)
+				.comment("Enable map layer in fade_and_render_map for map %s" % map_node.name)
+				.condition(func(): return map_node.build_complete())
 				.task(
 					func():
 						for layer in map_node.get_children():

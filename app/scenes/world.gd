@@ -9,6 +9,7 @@ func _on_peer_connected(peer_id) -> void:
 	Logger.info("Peer %s connected..." % peer_id )
 	Queue.enqueue(
 		Queue.Item.builder()
+				.comment("spawn_primary_actor when peer is connected")
 				.task(func(): spawn_primary_actor(peer_id))
 				.build()
 			)
@@ -49,20 +50,23 @@ func _handle_network_mode() -> void:
 			Network.peer_disconnected.connect(_on_peer_disconnected)
 			Queue.enqueue(
 				Queue.Item.builder()
+				.comment("Building world for host or server")
 				.task(build_world)
-				.condition(Repo.get_child_count)
+				.condition(func(): return Repo.get_child_count() != 0)
 				.build()
 			)
 			Queue.enqueue(
 				Queue.Item.builder()
+				.comment("Spawning host or server actor")
 				.task(func(): spawn_primary_actor(1))
-				.condition(build_world_complete)
+				.condition(func(): return build_world_complete())
 				.build()
 			)
 			Queue.enqueue(
 				Queue.Item.builder()
+				.comment("Deploying all other actors for host or server")
 				.task(build_deployments)
-				.condition(build_world_complete)
+				.condition(func(): return build_world_complete())
 				.build()
 			)
 		Network.Mode.CLIENT:
@@ -71,8 +75,9 @@ func _handle_network_mode() -> void:
 			Network.server_disconnected.connect(_on_server_disconnected)
 			Queue.enqueue(
 				Queue.Item.builder()
+				.comment("Build world for client")
 				.task(build_world)
-				.condition(Repo.get_child_count)
+				.condition(func(): return Repo.get_child_count() != 0)
 				.build()
 			)
 			Network.start_client()
@@ -111,6 +116,7 @@ func spawn_actor(data: Dictionary) -> Actor:
 	if data.get("peer_id", 0) > 0:
 		Queue.enqueue(
 			Queue.Item.builder()
+			.comment("Spawn actor")
 			.condition(func(): return get_node_or_null(derive_actor_name(data.get("peer_id", 0))) != null)
 			.task(func(): Controller.broadcast_actor_render(data.peer_id, data.get("map")))
 			.build()
@@ -131,7 +137,8 @@ func render_map(map: String) -> void:
 			for map_node in get_tree().get_nodes_in_group(Group.MAP):
 				Queue.enqueue(
 				Queue.Item.builder()
-				.condition(map_node.build_complete)
+				.comment("render map")
+				.condition(func(): return map_node.build_complete())
 				.task(
 					func():
 						for layer in map_node.get_children():

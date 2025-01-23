@@ -26,6 +26,7 @@ const DESTINATION_PRECISION: float = 1.1
 @export var target: String = ""
 @export var resources: Dictionary = {}
 
+var fader: Fader
 var peer_id: int = 0
 var view: int = -1
 var target_queue: Array = []
@@ -146,6 +147,7 @@ func _exit_tree() -> void:
 		)
 
 func _ready() -> void:
+	build_fader()
 	is_awake(false)
 	visible_to_primary(false)
 	Trigger.new().arm("heading").action(func(): heading_change.emit(heading)).deploy(self)
@@ -166,6 +168,7 @@ func _ready() -> void:
 		schedule_render_this_actors_map()
 		Queue.enqueue(
 			Queue.Item.builder()
+			.comment("Set actor to awake %s" % name)
 			.task(func(): Finder.query([Group.ACTOR, map]).map(func(a): a.is_awake(true)))
 			.build()
 		)
@@ -173,8 +176,9 @@ func _ready() -> void:
 func schedule_render_this_actors_map() -> void:
 	Queue.enqueue(
 		Queue.Item.builder()
+			.comment("schedule render actors called by %s" % name)
 			.task(func(): get_parent().render_map(map))
-			.condition(func(): return get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())))
+			.condition(func(): return get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())) != null)
 			.build()
 		)
 
@@ -545,8 +549,11 @@ func visible_to_primary(effect: bool) -> void:
 	visible = effect
 	
 func handle_resource_change(resource: String) -> void:
-	print("%s resource change %s" % [name, resources.get(resource)])
 	pass
+
+func build_fader() -> void:
+	Fader.builder().target(self).build().deploy(self)
+	fader = get_node("Fader")
 
 func build_sprite() -> void:
 	var sprite_ent = Repo.select(sprite)
@@ -717,17 +724,33 @@ func _on_hit_box_mouse_exited() -> void:
 	print("mouse exited %s" % name) # TODO -remove
 
 func _on_view_box_area_entered(area: Area2D) -> void:
+	print("VIEWBOX ENTERED %s 0.0 %s" % [name, area.get_parent().name])
 	var other = area.get_parent()
 	for target_group_key in other.target_groups:
 		target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
-
 	other.visible_to_primary(true)
+	other.fader.fade()
 
 func _on_view_box_area_exited(area: Area2D) -> void:
+	print("VIEWBOX EXITED %s 0.0 %s" % [name, area.get_parent().name])
 	var other = area.get_parent()
-	for target_group_key in other.target_groups:
-		target_groups_counter[target_group_key] = target_groups_counter[target_group_key] - 1
-	other.visible_to_primary(false)
+	var other_name: String = other.get_name()
+	var this_actor_name: String = get_name()
+	other.fader.at_next_appear(
+		func(): 
+			Optional.of_nullable(Finder.get_actor(other_name))\
+			.if_present(
+				func(other_actor):
+					for target_group_key in other.target_groups:
+						Optional.of_nullable(Finder.get_actor(this_actor_name))\
+						.if_present(
+							func(this_actor):
+								this_actor.target_groups_counter[target_group_key] = this_actor.target_groups_counter[target_group_key] - 1
+						)
+					other_actor.visible_to_primary(false)
+					)
+			)
+	other.fader.appear()
 	
 func is_npc() -> bool:
 	return is_in_group(Group.NPC)

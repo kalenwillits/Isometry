@@ -37,7 +37,7 @@ func _ready() -> void:
 		Queue.Item.builder()
 		.comment("build isometric tilemap in map %s" % name)
 		.task(build_isometric_tilemap)
-		.condition(Repo.get_child_count)
+		.condition(func(): return Repo.get_child_count() != 0)
 		.build()
 	)
 	
@@ -106,6 +106,7 @@ func build_isometric_tilemap() -> void:
 		add_child(tilemap_layer)
 	Queue.enqueue(
 		Queue.Item.builder()
+		.comment("Set build complete in map")
 		.task(func(): _build_complete = true)
 		.build()
 	)

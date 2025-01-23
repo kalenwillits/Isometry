@@ -7,10 +7,17 @@ class Item extends Object:
 	var expiry: float = -1.0
 	var condition: Callable = func(): return true
 	var task: Callable
+	var target: Node
+	var _target_is_set: bool = false
 	
 	class Builder extends Object:
 		var obj: Item = Item.new()
 		var _expire_time_input: float = 0
+		
+		func target(value: Node) -> Builder:
+			obj._target_is_set = true
+			obj.target = value
+			return self
 		
 		func comment(value: String) -> Builder:
 			obj.comment = value
@@ -46,12 +53,30 @@ var items: Array[Item] = []
 func enqueue(item: Item) -> void:
 	items.append(item)
 
+func _target_is_now_null(item: Item) -> bool:
+	if item._target_is_set:
+		return item.target == null 
+	return false
+	
+func _call_condition_safe(item: Item) -> bool:
+	if item.condition == null: return true
+	if item.condition.is_valid():
+		return item.condition.call()
+	return true
+		
+func _call_task_safe(item: Item) -> void:
+	if item.task == null: return
+	if item.task.is_valid():
+		item.task.call()
+
 func _process(_delta: float) -> void:
 	if items.size() > 0:
 		if items[0].is_expired(): 
 			items.pop_at(0)
-		elif items[0].condition.call():
-			items[0].task.call()
+		elif _target_is_now_null(items[0]):
+			items.pop_at(0)
+		elif _call_condition_safe(items[0]):
+			_call_task_safe(items[0])
 			items.pop_at(0)
 		else:
 			items.append(items.pop_at(0))
