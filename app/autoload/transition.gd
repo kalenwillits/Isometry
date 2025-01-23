@@ -42,6 +42,7 @@ func fade() -> void:
 		.task(func():
 				is_idle = false
 				visible = true
+				previous_state = state
 				state = State.IS_FADING
 				$Timer.start(TRANSITION_TIME)
 				)
@@ -56,6 +57,7 @@ func appear() -> void:
 		.task(func():
 				is_idle = false
 				visible = true
+				previous_state = state
 				state = State.IS_APPEARING
 				$Timer.start(TRANSITION_TIME)
 				)
@@ -64,8 +66,10 @@ func appear() -> void:
 	)
 
 	
-func adjust_alpha_color(alpha: float) -> void:
-	$VBoxContainer/HBoxContainer/DarkScreen.modulate = Color(RED, GREEN, BLUE, alpha)
+func adjust_alpha_color(delta: float) -> void:
+	var current_a: float = $VBoxContainer/HBoxContainer/DarkScreen.modulate.a
+	var diff = current_a - (current_a - delta)
+	$VBoxContainer/HBoxContainer/DarkScreen.modulate = Color(RED, GREEN, BLUE, diff)
 	
 func exec_queue() -> void:
 	match state:
