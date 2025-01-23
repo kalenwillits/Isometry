@@ -14,6 +14,15 @@ var archive: String = ""
 var dir: String = ""
 var textures: Dictionary  # Storage of already loaded textures
 var camera_zoom: int = 3
+var packed_actors: Dictionary = {}  # used to store actors server-side that are being transistioned
+
+func pack_actor(peer_id: int, pack: Dictionary) -> void:
+	packed_actors[peer_id] = pack
+	
+func unpack_actor(peer_id: int) -> Dictionary:
+	var result = packed_actors.get(peer_id, {}).duplicate()
+	packed_actors.erase(peer_id)
+	return result
 
 func _parse_command_line_args() -> Dictionary:
 	var args = OS.get_cmdline_args()  # Get the command line arguments

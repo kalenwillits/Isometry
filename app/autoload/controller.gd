@@ -3,26 +3,24 @@ extends Node
 
 @rpc("authority", "call_local", "reliable")
 func broadcast_actor_render(peer_id: int, map: String) -> void:
-	var actor_node = get_tree().get_first_node_in_group(str(peer_id))
 	Queue.enqueue(
 		Queue.Item.builder()
-		.task(func(): actor_node.is_awake(Finder.get_primary_actor().map == map))
-		.condition(func(): return Finder.get_primary_actor() != null)
+		.task(func(): Finder.get_actor(str(peer_id)).map == map)
+		.condition(func(): return (Finder.get_primary_actor() != null) and (Finder.get_actor(str(peer_id)) != null))
 		.build()
 	)
 
-@rpc("any_peer", "reliable")
+@rpc("any_peer", "call_local", "reliable")
 func request_spawn_actor(peer_id: int) -> void:
-	pass # TODO, this requires the actor to get written to disk
-		#Queue.enqueue(
-		#Queue.Item.builder()
-		#.condition(func(): return get_tree().get_first_node_in_group(str(peer_id)) == null)
-		#.task(func(): get_tree().get_first_node_in_group(Group.SPAWNER).spawn(pack))
-		#.build()
-	#)
+	Queue.enqueue(
+		Queue.Item.builder()
+		.condition(func(): return Finder.get_actor(str(peer_id)) == null)
+		.task(func(): Finder.select(Group.SPAWNER).spawn(Cache.unpack_actor(peer_id)))
+		.build()
+	)
 
 @rpc("authority", "call_local", "reliable")
-func fade_and_render_map(map: String) -> void:
+func fade_and_render_map(peer_id: int, map: String) -> void:
 	## Turns on visiblity and collisions for this actor's map layer
 	Transition.at_next_fade(func():
 			for map_node in get_tree().get_nodes_in_group(Group.MAP):
@@ -36,7 +34,7 @@ func fade_and_render_map(map: String) -> void:
 						).build()
 				)
 			)
-	#Transition.at_next_fade(Controller.request_spawn_actor.rpc_id(1)) # TODO
+	Transition.at_next_fade(func(): Controller.request_spawn_actor.rpc_id(1, peer_id))
 	Transition.fade()
 
 

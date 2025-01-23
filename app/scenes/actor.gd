@@ -155,6 +155,7 @@ func _ready() -> void:
 	$Label.set_text(name) # TODO - Replace label with real name
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	if is_primary():
+		Transition.appear()
 		build_target_groups_counter()
 		is_awake(true)
 		visible_to_primary(true)

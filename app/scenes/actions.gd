@@ -71,20 +71,15 @@ func move_map_target(self_name: String, target_name: String, params: Dictionary)
 	var pack: Dictionary = get_tree().get_first_node_in_group(target_name).pack()
 	pack["map"] = params.get("map")
 	pack["location"] = params.get("location")
+	Cache.pack_actor(target_name.to_int(), pack)
 	Queue.enqueue(
 		Queue.Item.builder()
 		.task(func(): handle_move_actor(target_name, pack.map))
 		.build()
 	)
-	#Queue.enqueue(
-		#Queue.Item.builder()
-		#.condition(func(): return get_tree().get_first_node_in_group(target_name) == null)
-		#.task(func(): get_tree().get_first_node_in_group(Group.SPAWNER).spawn(pack))
-		#.build()
-	#)
 	Queue.enqueue(
 		Queue.Item.builder()
-		.task(func(): Controller.fade_and_render_map.rpc_id(target_name.to_int(), params.map))
+		.task(func(): Controller.fade_and_render_map.rpc_id(target_name.to_int(), target_name.to_int(), params.map))
 		.build()
 	)
 	

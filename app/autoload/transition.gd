@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-const TRANSITION_TIME: float = 3.3
+const TRANSITION_TIME: float = 1.1
 const RED: int = 0.5
 const GREEN: int = 0.5
 const BLUE: int = 0.5
@@ -11,6 +11,7 @@ enum State {
 }
 
 var state: State = State.IS_APPEARING
+var previous_state: State = State.IS_FADING
 var is_idle: bool = true
 
 var fade_queue: Array = []

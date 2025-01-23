@@ -29,7 +29,6 @@ func _on_server_disconnected() -> void:
 	#Route.to(Scene.splash) # TODO - route to error
 
 func _ready() -> void:
-	Transition.appear()
 	add_to_group(Group.WORLD)
 	get_tree().get_first_node_in_group(Group.SPAWNER).set_spawn_function(spawn_actor)
 	_handle_network_mode()
@@ -42,14 +41,6 @@ func spawn_primary_actor(peer_id: int) -> void:
 		"actor": main_ent.actor.lookup().key()
 		}
 	get_tree().get_first_node_in_group(Group.SPAWNER).spawn(actor_data)
-	#if Cache.network == Network.Mode.HOST:
-		#Queue.enqueue(
-			#Queue.Item.builder()
-			#.comment("First time render of map")
-			#.task(func(): render_map(actor_data.map))
-		 	#.condition(build_world_complete)
-			#.build()
-		#)
 
 func _handle_network_mode() -> void:
 	match Cache.network:
