@@ -1,16 +1,6 @@
 extends Node
 ## Holds controller rpc_id endpoints to allow the server to manipulate clients.
 
-@rpc("authority", "call_local", "reliable")
-func broadcast_actor_render(peer_id: int, map: String) -> void:
-	Queue.enqueue(
-		Queue.Item.builder()
-		.comment("broadcast_actor_render")
-		.task(func(): Finder.get_actor(str(peer_id)).map == map)
-		.condition(func(): return (Finder.get_primary_actor() != null) and (Finder.get_actor(str(peer_id)) != null))
-		.build()
-	)
-
 @rpc("any_peer", "call_local", "reliable")
 func request_spawn_actor(peer_id: int) -> void:
 	Queue.enqueue(
@@ -39,12 +29,3 @@ func fade_and_render_map(peer_id: int, map: String) -> void:
 			)
 	Transition.at_next_fade(func(): Controller.request_spawn_actor.rpc_id(1, peer_id))
 	Transition.fade()
-
-
-@rpc("authority", "call_local", "reliable")
-func fade() -> void:
-	Transition.fade()
-	
-@rpc("authority", "call_local", "reliable")
-func appear() -> void:
-	Transition.appear()

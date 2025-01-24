@@ -154,6 +154,7 @@ func _ready() -> void:
 	Trigger.new().arm("polygon").action(build_polygon).deploy(self)
 	Trigger.new().arm("hitbox").action(build_hitbox).deploy(self)
 	Trigger.new().arm("sprite").action(build_sprite).deploy(self)
+	Trigger.new().arm("map").action(update_client_visibility).deploy(self)
 	$Label.set_text(name) # TODO - Replace label with real name
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	if is_primary():
@@ -184,6 +185,9 @@ func schedule_render_this_actors_map() -> void:
 
 func is_awake(effect: bool) -> void:
 	use_collisions(effect)
+	
+func update_client_visibility() -> void:
+	Optional.of_nullable(Finder.get_primary_actor()).map(func(primary_actor: Actor): return primary_actor.get("map")).if_present(func(primary_map: String): is_awake(primary_map == map))
 
 func _physics_process(delta) -> void:
 	use_state()
@@ -239,18 +243,14 @@ func use_actions() -> void:
 func use_target() -> void:
 	if Input.is_action_just_pressed("increment_target"):
 		target = find_next_target()
-		print("TARGET: %s" % target)
 	if Input.is_action_just_pressed("decrement_target"):
 		target = find_prev_target()
-		print("TARGET: %s" % target)
 	if Input.is_action_just_pressed("clear_target"):
 		target = ""
 		target_queue.clear()
 	if Input.is_action_just_pressed("increment_target_group"):
 		target_group_index = increment_target_group()
-		print("TARGET_GROUP: %s" % get_target_group())
 	if Input.is_action_just_pressed("decrement_target_group"):
-		print("TARGET_GROUP: %s" % get_target_group())
 		target_group_index = decrement_target_group()
 		
 func get_targetable_groups() -> Array:
@@ -355,7 +355,6 @@ func build_measure(value: String) -> void:
 		
 func build_strategy() -> void:
 	if std.is_host_or_server():
-		# TODO WIP - This chain is not completing
 		Optional.of(Repo.select(actor))\
 			.map(func(e): return e.strategy)\
 			.map(func(e): return e.lookup())\
@@ -543,8 +542,10 @@ func get_sprite_margin() -> Vector2i:
 	
 func visible_to_primary(effect: bool) -> void:
 	if effect: 
+		modulate.a = 0.0
 		add_to_group(Group.IS_VISIBLE)
 	else:
+		modulate.a = 1.0
 		remove_from_group(Group.IS_VISIBLE)
 	visible = effect
 	
@@ -718,13 +719,12 @@ func _on_hit_box_input_event(_viewport: Node, event: InputEvent, _shape_idx: int
 		primary.emit(primary_actor)
 
 func _on_hit_box_mouse_entered() -> void:
-	print("mouse entered %s" % name) # TODO remove
+	pass
 
 func _on_hit_box_mouse_exited() -> void:
-	print("mouse exited %s" % name) # TODO -remove
+	pass
 
 func _on_view_box_area_entered(area: Area2D) -> void:
-	print("VIEWBOX ENTERED %s 0.0 %s" % [name, area.get_parent().name])
 	var other = area.get_parent()
 	for target_group_key in other.target_groups:
 		target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
@@ -732,7 +732,6 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 	other.fader.fade()
 
 func _on_view_box_area_exited(area: Area2D) -> void:
-	print("VIEWBOX EXITED %s 0.0 %s" % [name, area.get_parent().name])
 	var other = area.get_parent()
 	var other_name: String = other.get_name()
 	var this_actor_name: String = get_name()

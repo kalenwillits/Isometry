@@ -113,14 +113,6 @@ func derive_actor_name(peer_id: int) -> String:
 	return str(-get_tree().get_node_count_in_group(Group.ACTOR))
 	
 func spawn_actor(data: Dictionary) -> Actor:
-	if data.get("peer_id", 0) > 0:
-		Queue.enqueue(
-			Queue.Item.builder()
-			.comment("Spawn actor")
-			.condition(func(): return get_node_or_null(derive_actor_name(data.get("peer_id", 0))) != null)
-			.task(func(): Controller.broadcast_actor_render(data.peer_id, data.get("map")))
-			.build()
-		)
 	return Actor\
 	.builder()\
 	.name(derive_actor_name(data.get("peer_id", 0)))\
@@ -134,17 +126,17 @@ func spawn_actor(data: Dictionary) -> Actor:
 @rpc("authority", "call_local", "reliable")
 func render_map(map: String) -> void:
 	## Turns on visiblity and collisions for this actor's map layer
-			for map_node in get_tree().get_nodes_in_group(Group.MAP):
-				Queue.enqueue(
-				Queue.Item.builder()
-				.comment("render map")
-				.condition(func(): return map_node.build_complete())
-				.task(
-					func():
-						for layer in map_node.get_children():
-							layer.enabled = map_node.name == map
-						).build()
-				)
+	for map_node in get_tree().get_nodes_in_group(Group.MAP):
+		Queue.enqueue(
+		Queue.Item.builder()
+		.comment("render map")
+		.condition(func(): return map_node.build_complete())
+		.task(
+			func():
+				for layer in map_node.get_children():
+					layer.enabled = map_node.name == map
+				).build()
+		)
 
 func _on_connected_to_server() -> void:
 	pass
