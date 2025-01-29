@@ -135,7 +135,6 @@ func is_class_inherited(classname: String, parentclassname: String) -> bool:
 func path(parts: Array[String]) -> String:
 	return "/".join(parts.map(func(p): return p.strip_edges("/")))
 
-
 const NORTH_RADIANS: float = PI / 2.0
 const ISOMETRIC_RATIO: float = 2.0
 

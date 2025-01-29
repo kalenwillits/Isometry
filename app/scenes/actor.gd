@@ -12,6 +12,7 @@ const BASE_TILE_SIZE: float = 32.0
 const BASE_ACTOR_SPEED: float = 10.0
 const SPEED_NORMAL: float = 500.0
 const DESTINATION_PRECISION: float = 1.1
+const VIEW_SHAPE_SPEED: float = 33883.3
 
 @export var origin: Vector2
 @export var destination: Vector2
@@ -120,7 +121,7 @@ func pack() -> Dictionary:
 	}
 	
 func is_primary() -> bool:
-	return is_multiplayer_authority() and peer_id > 0 and multiplayer.get_unique_id() == peer_id
+	return peer_id > 0 and is_multiplayer_authority() and multiplayer.get_unique_id() == peer_id
 
 func _enter_tree():
 	add_to_group(Group.ACTOR)
@@ -158,11 +159,11 @@ func _ready() -> void:
 	$Label.set_text(name) # TODO - Replace label with real name
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	if is_primary():
+		set_camera_target()
 		Transition.appear()
 		build_target_groups_counter()
 		is_awake(true)
 		visible_to_primary(true)
-		get_parent().get_node("Camera").set_target(self)
 		$HitBox.area_entered.connect(_on_hit_box_body_entered)
 		$ViewBox.area_entered.connect(_on_view_box_area_entered)
 		$ViewBox.area_exited.connect(_on_view_box_area_exited)
@@ -193,6 +194,7 @@ func _physics_process(delta) -> void:
 	use_state()
 	use_animation()
 	use_strategy()
+	use_move_primary_viewbox_shape(delta)
 	if is_primary():
 		use_movement(delta)
 		click_to_move()
@@ -210,6 +212,18 @@ func _built_in_measure__distance_to_target() -> int:
 	
 func _built_in_measure__distance_to_destination() -> int:
 	return isometric_distance_to_point(destination) * BASE_TILE_SIZE
+
+func use_move_primary_viewbox_shape(delta: float) -> void:
+	var primary_view_shape: CollisionShape2D = $ViewBox.get_node_or_null("PrimaryViewShape")
+	if primary_view_shape and origin.distance_to(destination) > 0:
+		var direction: Vector2 = destination.direction_to(position) 
+		var radius: float = view * 5 * BASE_TILE_SIZE
+		var distance: float = std.isometric_factor(direction.angle()) * radius
+		var viewpoint: Vector2 = direction * distance
+		var viewshape_distance_to_viewpoint: float = primary_view_shape.position.distance_to(viewpoint)
+		var acceleration: float = viewshape_distance_to_viewpoint * delta
+		primary_view_shape.position.x = move_toward(primary_view_shape.position.x, viewpoint.x, acceleration)
+		primary_view_shape.position.y = move_toward(primary_view_shape.position.y, viewpoint.y, acceleration)
 
 func use_strategy() -> void:
 	if strategy == null: return
@@ -463,6 +477,9 @@ func build_viewbox(value: int) -> void:
 		view_shape.shape = CircleShape2D.new()
 		view_shape.apply_scale(Vector2(1 * value, 0.5 * value))
 		$ViewBox.add_child(view_shape)
+
+func set_camera_target():
+	Finder.select(Group.CAMERA).set_target(self)
 
 func build_polygon() -> void:
 	if !polygon: return

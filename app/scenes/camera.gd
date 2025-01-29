@@ -29,6 +29,7 @@ func smooth_pan_to(vec: Vector2, delta: float) -> void:
 	position += (direction.normalized() * delta * CAMERA_SPEED / zoom_level)
 
 func set_target(node: Node2D) -> void:
+	clear_target()
 	_has_target = true
 	_target = weakref(node)
 	
@@ -75,7 +76,7 @@ func handle_zoom_events() -> void:
 
 func use_target(delta: float) -> void:
 	if get_target():
-		pan_to(get_target().get_position(), delta)
+		pan_to(get_target().get_global_position(), delta)
 	
 func handle_camera_lock() -> void:
 	if Input.is_action_just_pressed("camera_lock"):
