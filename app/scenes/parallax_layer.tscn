@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3 uid="uid://coergeq78kamt"]
+
+[ext_resource type="Script" path="res://scenes/parallax_layer.gd" id="1_wmfaj"]
+
+[node name="Parallax" type="ParallaxBackground"]
+script = ExtResource("1_wmfaj")
+
+[node name="Layer" type="ParallaxLayer" parent="."]
+
+[node name="Sprite" type="Sprite2D" parent="Layer"]
+texture_repeat = 2
+centered = false

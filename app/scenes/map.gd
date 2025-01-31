@@ -35,6 +35,12 @@ func _ready() -> void:
 	add_to_group(name)
 	Queue.enqueue(
 		Queue.Item.builder()
+		.comment("build parallax layers for map %s" % name)
+		.task(build_parallax_layers)
+		.build()
+	)
+	Queue.enqueue(
+		Queue.Item.builder()
 		.comment("build isometric tilemap in map %s" % name)
 		.task(build_isometric_tilemap)
 		.condition(func(): return Repo.get_child_count() != 0)
@@ -43,6 +49,18 @@ func _ready() -> void:
 	
 func build_complete() -> bool:
 	return _build_complete
+	
+func build_parallax_layers() -> void:
+	var map_ent = Repo.query([name]).pop_front()
+	Optional.of_nullable(map_ent.parallaxes).if_present(
+		func(key_ref_array):
+			for parallax_ent in key_ref_array.lookup():
+				var parallax_scene = Scene.parralax.instantiate()
+				parallax_scene.load_texture(parallax_ent.texture)
+				parallax_scene.set_effect(parallax_ent.effect)
+				parallax_scene.add_to_group(name) # Add to this map's group
+				add_child(parallax_scene)
+	)
 
 func build_isometric_tilemap() -> void:
 	var map_ent = Repo.query([name]).pop_front()
@@ -80,6 +98,8 @@ func build_isometric_tilemap() -> void:
 	var layers_ent_array = tilemap_ent.layers.lookup()
 	for layer_index in range(layers_ent_array.size()):
 		var tilemap_layer := TileMapLayer.new()
+		tilemap_layer.add_to_group(Group.MAP_LAYER)
+		tilemap_layer.add_to_group(name)
 		tilemap_layer.enabled = false # Sets visibilty and collisions off by default
 		var layer_ent = layers_ent_array[layer_index]
 		tilemap_layer.name = layer_ent.key()

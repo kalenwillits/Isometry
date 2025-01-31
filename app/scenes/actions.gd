@@ -107,7 +107,7 @@ func move_map_self(self_name: String, target_name: String, params: Dictionary) -
 	Queue.enqueue(
 		Queue.Item.builder()
 		.comment("Move map self")
-		.task(func(): get_parent().render_map.rpc_id(self_name.to_int(), params.map))
+		.task(func(): Controller.render_map.rpc_id(self_name.to_int(), params.map))
 		.build()
 	)
 

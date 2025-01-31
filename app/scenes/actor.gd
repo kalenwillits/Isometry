@@ -180,7 +180,7 @@ func schedule_render_this_actors_map() -> void:
 	Queue.enqueue(
 		Queue.Item.builder()
 			.comment("schedule render actors called by %s" % name)
-			.task(func(): get_parent().render_map(map))
+			.task(func(): Controller.render_map(map))
 			.condition(func(): return get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())) != null)
 			.build()
 		)

@@ -123,20 +123,5 @@ func spawn_actor(data: Dictionary) -> Actor:
 	.resources(data.get("resources", {}))\
 	.build()
 
-@rpc("authority", "call_local", "reliable")
-func render_map(map: String) -> void:
-	## Turns on visiblity and collisions for this actor's map layer
-	for map_node in get_tree().get_nodes_in_group(Group.MAP):
-		Queue.enqueue(
-		Queue.Item.builder()
-		.comment("render map")
-		.condition(func(): return map_node.build_complete())
-		.task(
-			func():
-				for layer in map_node.get_children():
-					layer.enabled = map_node.name == map
-				).build()
-		)
-
 func _on_connected_to_server() -> void:
 	pass

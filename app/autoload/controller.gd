@@ -10,22 +10,25 @@ func request_spawn_actor(peer_id: int) -> void:
 		.task(func(): Finder.select(Group.SPAWNER).spawn(Cache.unpack_actor(peer_id)))
 		.build()
 	)
+	
+@rpc("authority", "call_local", "reliable")
+func render_map(map: String) -> void:
+	## Turns on visiblity and collisions for this actor's map layer
+	for map_node in Finder.query([Group.MAP]):
+		Queue.enqueue(
+		Queue.Item.builder()
+		.comment("render map")
+		.condition(func(): return map_node.build_complete())
+		.task(
+			func():
+				for map_layer in Finder.query([Group.MAP_LAYER, map_node.name]):
+					map_layer.enabled = map_node.name == map
+				).build()
+		)
 
 @rpc("authority", "call_local", "reliable")
 func fade_and_render_map(peer_id: int, map: String) -> void:
 	## Turns on visiblity and collisions for this actor's map layer
-	Transition.at_next_fade(func():
-			for map_node in get_tree().get_nodes_in_group(Group.MAP):
-				Queue.enqueue(
-				Queue.Item.builder()
-				.comment("Enable map layer in fade_and_render_map for map %s" % map_node.name)
-				.condition(func(): return map_node.build_complete())
-				.task(
-					func():
-						for layer in map_node.get_children():
-							layer.enabled = map_node.name == map
-						).build()
-				)
-			)
+	Transition.at_next_fade(func(): Controller.render_map(map))
 	Transition.at_next_fade(func(): Controller.request_spawn_actor.rpc_id(1, peer_id))
 	Transition.fade()

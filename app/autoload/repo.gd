@@ -26,6 +26,7 @@ const _entities: Dictionary = {
 	"Strategy": preload("res://entities/Strategy.gd"),
 	"Behavior": preload("res://entities/Behavior.gd"),
 	"Measure": preload("res://entities/Measure.gd"),
+	"Parallax": preload("res://entities/Parallax.gd"),
 }
 
 signal load_complete
