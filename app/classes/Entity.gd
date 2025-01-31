@@ -105,6 +105,7 @@ func fit(params: FitParams) -> void:
 
 func tag(value: String) -> void:
 	_tags.append(value)
+	add_to_group(value)
 
 func has_tag(value: String) -> bool:
 	return value in _tags

@@ -8,7 +8,6 @@ func query(tags: Array) -> Array:
 			results = subquery
 		else:
 			results = std.intersect(results, subquery)
-	Logger.info("Query %s yields %d results" % [tags, results.size()])
 	return results
 	
 func select(tag: String) -> Node:

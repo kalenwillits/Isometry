@@ -32,11 +32,9 @@ signal load_complete
 signal load_failure
 
 func query(tags: Array) -> Array:
-	# TODO - this could be optimized by using dicts of NodePath objects
-	var entities = get_children()
-	for tag in tags:
-		entities = entities.filter(func(e): return e.has_tag(tag))
-	return entities
+	var query_tags: Array = [Group.ENTITY]
+	query_tags.append_array(tags)
+	return Finder.query(query_tags)
 	
 func select(key: String) -> Entity:
 	var results = query([key])
