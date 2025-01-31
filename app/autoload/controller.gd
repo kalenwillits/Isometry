@@ -13,7 +13,6 @@ func request_spawn_actor(peer_id: int) -> void:
 	
 @rpc("authority", "call_local", "reliable")
 func render_map(map: String) -> void:
-	## Turns on visiblity and collisions for this actor's map layer
 	for map_node in Finder.query([Group.MAP]):
 		Queue.enqueue(
 		Queue.Item.builder()
@@ -23,12 +22,13 @@ func render_map(map: String) -> void:
 			func():
 				for map_layer in Finder.query([Group.MAP_LAYER, map_node.name]):
 					map_layer.enabled = map_node.name == map
+				for parallax_layer in Finder.query([Group.PARALLAX, map_node.name]):
+					parallax_layer.set_visibility(map_node.name == map)
 				).build()
 		)
 
 @rpc("authority", "call_local", "reliable")
 func fade_and_render_map(peer_id: int, map: String) -> void:
-	## Turns on visiblity and collisions for this actor's map layer
 	Transition.at_next_fade(func(): Controller.render_map(map))
 	Transition.at_next_fade(func(): Controller.request_spawn_actor.rpc_id(1, peer_id))
 	Transition.fade()

@@ -40,6 +40,8 @@ gdscript/warnings/integer_division=0
 
 window/size/viewport_width=800
 window/size/viewport_height=600
+window/size/extend_to_title=true
+window/stretch/mode="canvas_items"
 
 [editor]
 
