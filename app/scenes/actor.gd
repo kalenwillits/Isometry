@@ -12,8 +12,7 @@ const BASE_TILE_SIZE: float = 32.0
 const BASE_ACTOR_SPEED: float = 10.0
 const SPEED_NORMAL: float = 500.0
 const DESTINATION_PRECISION: float = 1.1
-const VIEW_SHAPE_SPEED: float = 33883.3
-const VIEW_RADIUS_CORRECTION: float = 5.0 # The view ellipse inputs a percent input. This corrects it to grid units
+const VIEW_SPEED: float = 0.83 # percent value to controll the amount of acceleration to the actor's view shape.
 
 @export var origin: Vector2
 @export var destination: Vector2
@@ -40,6 +39,9 @@ var measures: Dictionary = {
 	"distance_to_destination": _built_in_measure__distance_to_destination,
 }
 var strategy: Strategy
+# Without these, the viewshape only moves while the actor is moving.
+var last_viewshape_destination: Vector2 
+var last_viewshape_origin: Vector2
 
 signal on_touch(actor)
 signal primary(actor)
@@ -195,7 +197,7 @@ func _physics_process(delta) -> void:
 	use_state()
 	use_animation()
 	use_strategy()
-	use_move_primary_viewbox_shape(delta)
+	use_move_view(delta)
 	if is_primary():
 		use_movement(delta)
 		click_to_move()
@@ -214,15 +216,18 @@ func _built_in_measure__distance_to_target() -> int:
 func _built_in_measure__distance_to_destination() -> int:
 	return isometric_distance_to_point(destination) * BASE_TILE_SIZE
 
-func use_move_primary_viewbox_shape(delta: float) -> void:
+func use_move_view(delta: float) -> void:
 	var primary_view_shape: CollisionShape2D = $ViewBox.get_node_or_null("PrimaryViewShape")
-	if primary_view_shape and origin.distance_to(destination) > 0:
-		var direction: Vector2 = destination.direction_to(position) 
-		var radius: float = view * VIEW_RADIUS_CORRECTION * BASE_TILE_SIZE
+	if origin.distance_to(destination) > 0: 
+		last_viewshape_destination = destination
+		last_viewshape_origin = origin
+	if primary_view_shape:
+		var direction: Vector2 = last_viewshape_destination.direction_to(last_viewshape_origin) 
+		var radius: float = view * PI * BASE_TILE_SIZE
 		var distance: float = std.isometric_factor(direction.angle()) * radius
 		var viewpoint: Vector2 = direction * distance
 		var viewshape_distance_to_viewpoint: float = primary_view_shape.position.distance_to(viewpoint)
-		var acceleration: float = viewshape_distance_to_viewpoint * delta
+		var acceleration: float = viewshape_distance_to_viewpoint * delta * VIEW_SPEED
 		primary_view_shape.position.x = move_toward(primary_view_shape.position.x, viewpoint.x, acceleration)
 		primary_view_shape.position.y = move_toward(primary_view_shape.position.y, viewpoint.y, acceleration)
 
