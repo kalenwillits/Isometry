@@ -13,6 +13,7 @@ const BASE_ACTOR_SPEED: float = 10.0
 const SPEED_NORMAL: float = 500.0
 const DESTINATION_PRECISION: float = 1.1
 const VIEW_SHAPE_SPEED: float = 33883.3
+const VIEW_RADIUS_CORRECTION: float = 5.0 # The view ellipse inputs a percent input. This corrects it to grid units
 
 @export var origin: Vector2
 @export var destination: Vector2
@@ -217,7 +218,7 @@ func use_move_primary_viewbox_shape(delta: float) -> void:
 	var primary_view_shape: CollisionShape2D = $ViewBox.get_node_or_null("PrimaryViewShape")
 	if primary_view_shape and origin.distance_to(destination) > 0:
 		var direction: Vector2 = destination.direction_to(position) 
-		var radius: float = view * 5 * BASE_TILE_SIZE
+		var radius: float = view * VIEW_RADIUS_CORRECTION * BASE_TILE_SIZE
 		var distance: float = std.isometric_factor(direction.angle()) * radius
 		var viewpoint: Vector2 = direction * distance
 		var viewshape_distance_to_viewpoint: float = primary_view_shape.position.distance_to(viewpoint)
@@ -314,7 +315,7 @@ func isometric_distance_to_point(point: Vector2) -> float:
 	return position.distance_to(point) * std.isometric_factor(position.angle_to(point))
 
 func click_to_move() -> void:
-	if Input.is_action_pressed("action"):
+	if Input.is_action_pressed("interact"):
 		set_destination(get_global_mouse_position())
 
 func despawn() -> void:
