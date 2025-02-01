@@ -123,6 +123,12 @@ func pack() -> Dictionary:
 		"resources": resources
 	}
 	
+func get_outline_color() -> Color:
+	return $Sprite.material.get_shader_parameter("color")
+
+func set_outline_color(value: Color) -> void:
+	$Sprite.material.set_shader_parameter("color", value)
+	
 func is_primary() -> bool:
 	return peer_id > 0 and is_multiplayer_authority() and multiplayer.get_unique_id() == peer_id
 
@@ -262,16 +268,37 @@ func use_actions() -> void:
 
 func use_target() -> void:
 	if Input.is_action_just_pressed("increment_target"):
-		target = find_next_target()
+		set_target(find_next_target())
 	if Input.is_action_just_pressed("decrement_target"):
-		target = find_prev_target()
+		set_target(find_prev_target())
 	if Input.is_action_just_pressed("clear_target"):
-		target = ""
+		set_target("")
 		target_queue.clear()
 	if Input.is_action_just_pressed("increment_target_group"):
 		target_group_index = increment_target_group()
 	if Input.is_action_just_pressed("decrement_target_group"):
 		target_group_index = decrement_target_group()
+		
+func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
+	Optional.of_nullable(Finder.get_actor(old_target_name)).if_present(
+		func(old_actor):
+			old_actor.set_outline_color(Palette.OUTLINE_CLEAR)
+	)
+	
+func _handle_new_target(new_target_name: String) -> void:
+	Optional.of_nullable(Finder.get_actor(new_target_name)).if_present(
+		func(new_actor):
+			new_actor.set_outline_color(Palette.OUTLINE_SELECT)
+	)
+	
+func get_target() -> String:
+	return target
+		
+func set_target(value: String) -> void:
+	_handle_target_is_no_longer_targeted(target)
+	target = value
+	_handle_new_target(value)	
+	
 		
 func get_targetable_groups() -> Array:
 	var targetable_keys: Array = []
@@ -574,7 +601,14 @@ func visible_to_primary(effect: bool) -> void:
 	
 func handle_resource_change(resource: String) -> void:
 	pass
-
+	
+func handle_target() -> void:
+	Optional.of_nullable(Finder.get_actor(target))\
+	.if_present(
+		func(target_actor): 
+			target_actor.set_outline_color(Palette.OUTLINE_SELECT)
+	)
+	
 func build_fader() -> void:
 	Fader.builder().target(self).build().deploy(self)
 	fader = get_node("Fader")
@@ -614,6 +648,7 @@ func setup_sprite(sprite_frames: SpriteFrames) -> void:
 		$Sprite.offset = _calculate_sprite_offset()
 		$Sprite.set_sprite_frames(sprite_frames)
 		$Sprite.set_animation("default")
+		set_outline_color(Color(0, 0, 0, 0))
 
 func _calculate_sprite_offset() -> Vector2i:
 	var full_size: Vector2i = get_sprite_size()
@@ -730,22 +765,14 @@ func _on_sprite_animation_changed():
 	$Sprite.play()
 
 func _on_mouse_entered() -> void:
-	print("mouse entered %s" % name)
+	if get_outline_color().a < Palette.OUTLINE_SELECT.a: set_outline_color(Palette.OUTLINE_HOVER)
 
 func _on_mouse_exited() -> void:
-	print("mouse exited %s" % name)
-
-func _on_hit_box_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
+	if get_outline_color().a < Palette.OUTLINE_SELECT.a: set_outline_color(Palette.OUTLINE_CLEAR)
+	
+func _on_act(_viweport: Node, event: InputEvent, _shape_idx: int) -> void:
 	if event.is_action("primary_action"):
-		var primary_actor = get_tree().get_first_node_in_group(str(multiplayer.get_unique_id()))
-		Logger.info("primary action invoked on %s" % name)
-		primary.emit(primary_actor)
-
-func _on_hit_box_mouse_entered() -> void:
-	pass
-
-func _on_hit_box_mouse_exited() -> void:
-	pass
+		primary.emit(Finder.get_primary_actor())
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
@@ -768,11 +795,12 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 						.if_present(
 							func(this_actor):
 								this_actor.target_groups_counter[target_group_key] = this_actor.target_groups_counter[target_group_key] - 1
+								if other_actor.name == this_actor.get_target(): this_actor.set_target("")
 						)
 					other_actor.visible_to_primary(false)
 					)
 			)
 	other.fader.appear()
-	
+
 func is_npc() -> bool:
 	return is_in_group(Group.NPC)

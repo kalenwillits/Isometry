@@ -1,8 +1,31 @@
-[gd_scene load_steps=3 format=3 uid="uid://coe0cn47twvwr"]
+[gd_scene load_steps=4 format=3 uid="uid://coe0cn47twvwr"]
 
-[ext_resource type="Material" uid="uid://dkqndbkbbwj6a" path="res://materials/viewshape.tres" id="1_exofg"]
 [ext_resource type="Script" path="res://scenes/viewshape.gd" id="1_pjc53"]
 
+[sub_resource type="Shader" id="Shader_7y3y3"]
+code = "shader_type canvas_item;
+uniform vec2 player_position;
+uniform vec4 color = vec4(0.305, 0.298, 0.341, 0.5);
+
+uniform float MULTIPLIER = 0.56;
+uniform float SCALE = 0.5;
+uniform float SOFTNESS = 0.45;
+
+void fragment(){
+	float val = distance(vec2(UV.x , UV.y * MULTIPLIER), vec2(player_position.x , player_position.y * MULTIPLIER));
+	val = val / SCALE;
+	float vignette = smoothstep(0.2, SOFTNESS, val);
+	COLOR = vec4(color.rgb , vignette );
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_5mcp4"]
+shader = SubResource("Shader_7y3y3")
+shader_parameter/player_position = null
+shader_parameter/color = Vector4(0.305, 0.298, 0.341, 1)
+shader_parameter/MULTIPLIER = 0.56
+shader_parameter/SCALE = 0.5
+shader_parameter/SOFTNESS = 0.45
+
 [node name="ViewShape" type="Node2D"]
-material = ExtResource("1_exofg")
+material = SubResource("ShaderMaterial_5mcp4")
 script = ExtResource("1_pjc53")

@@ -52,7 +52,7 @@ func build_complete() -> bool:
 	
 func build_parallax_layers() -> void:
 	var map_ent = Repo.query([name]).pop_front()
-	Optional.of_nullable(map_ent.parallaxes).if_present(
+	Optional.of_nullable(map_ent.background).if_present(
 		func(key_ref_array):
 			for parallax_ent in key_ref_array.lookup():
 				var parallax_scene = Scene.parralax.instantiate()
@@ -60,6 +60,25 @@ func build_parallax_layers() -> void:
 				parallax_scene.set_effect(parallax_ent.effect)
 				parallax_scene.add_to_group(name) # Add to this map's group
 				add_child(parallax_scene)
+	)
+	
+func build_audio() -> void:
+	var map_ent = Repo.query([name]).pop_front()
+	Optional.of_nullable(map_ent.audio).if_present(
+		func(key_ref_array):
+			for sound_ent in key_ref_array.lookup():
+				var audio: AudioStreamPlayer = AudioStreamPlayer.new()
+				audio.add_to_group(name) # Add to this map's group
+				audio.add_to_group(Group.AUDIO)
+				# TODO - select type based on extension
+				audio.set_stream(
+					AssetLoader.builder()
+					.key(sound_ent.source)
+					.type(AssetLoader.Type.WAV)
+					.archive(Cache.archive)
+					.build()
+					.pull())
+				add_child(audio)
 	)
 
 func build_isometric_tilemap() -> void:

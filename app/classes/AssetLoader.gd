@@ -3,7 +3,9 @@ class_name AssetLoader
 enum Type {
 	OBJECT, # JSON is already in Godot's namespace
 	IMAGE,
-	TEXT
+	TEXT,
+	MP3,
+	WAV
 }
 
 var key: String
@@ -68,6 +70,14 @@ func _load_record_as_image_texture() -> ImageTexture:
 	if img.load_png_from_buffer(data) != OK:
 		Logger.error("Failed to load image from archive %s" % key)
 	return ImageTexture.create_from_image(img)
+	
+func _load_record_as_mp3() -> void:
+	# TODO WIP
+	pass
+
+func _load_record_as_wav() -> void:
+	# TODO WIP
+	pass
 	
 func _load_record_as_string() -> String:
 	var data: PackedByteArray = _load_record_as_bytes()

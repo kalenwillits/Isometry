@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://dl6t8dqsvo35i"]
+[gd_scene load_steps=5 format=3 uid="uid://dl6t8dqsvo35i"]
 
 [ext_resource type="Script" path="res://scenes/actor.gd" id="1_y2kqt"]
 [ext_resource type="Script" path="res://scenes/synchronizer.gd" id="2_dd5io"]
+[ext_resource type="Material" uid="uid://dlvv5616hqn0x" path="res://materials/actor_sprite.tres" id="3_vyb2n"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_bd4xq"]
 properties/0/path = NodePath(".:position")
@@ -62,6 +63,7 @@ theme_override_font_sizes/font_size = 8
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 y_sort_enabled = true
+material = ExtResource("3_vyb2n")
 centered = false
 
 [node name="HitBox" type="Area2D" parent="."]
@@ -74,12 +76,14 @@ collision_layer = 0
 collision_mask = 0
 
 [connection signal="heading_change" from="." to="." method="_on_heading_change"]
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]
 [connection signal="synchronized" from="Synchronizer" to="." method="_on_multiplayer_synchronizer_synchronized"]
 [connection signal="ready" from="Label" to="." method="_on_label_ready"]
 [connection signal="animation_changed" from="Sprite" to="." method="_on_sprite_animation_changed"]
 [connection signal="animation_finished" from="Sprite" to="." method="_on_sprite_animation_finished"]
 [connection signal="ready" from="Sprite" to="." method="_on_sprite_ready"]
 [connection signal="body_entered" from="HitBox" to="." method="_on_hit_box_body_entered"]
-[connection signal="input_event" from="HitBox" to="." method="_on_hit_box_input_event"]
-[connection signal="mouse_entered" from="HitBox" to="." method="_on_hit_box_mouse_entered"]
-[connection signal="mouse_exited" from="HitBox" to="." method="_on_hit_box_mouse_exited"]
+[connection signal="input_event" from="HitBox" to="." method="_on_act"]
+[connection signal="mouse_entered" from="HitBox" to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="HitBox" to="." method="_on_mouse_exited"]
