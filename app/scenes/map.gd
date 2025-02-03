@@ -74,7 +74,7 @@ func build_audio() -> void:
 	Optional.of_nullable(map_ent.audio).if_present(
 		func(key_ref_array):
 			for sound_ent in key_ref_array.lookup():
-				var audio: AudioStreamPlayer = AudioStreamPlayer.new()
+				var audio: AudioStreamFader = AudioStreamFader.new()
 				audio.name = sound_ent.key()
 				audio.add_to_group(name) # Add to this map's group
 				audio.add_to_group(Group.AUDIO)
