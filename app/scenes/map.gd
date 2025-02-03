@@ -46,6 +46,12 @@ func _ready() -> void:
 		.condition(func(): return Repo.get_child_count() != 0)
 		.build()
 	)
+	Queue.enqueue(
+		Queue.Item.builder()
+		.comment("build sound on map %s audio stream" % name)
+		.task(build_audio)
+		.build()
+	)
 	
 func build_complete() -> bool:
 	return _build_complete
@@ -56,6 +62,7 @@ func build_parallax_layers() -> void:
 		func(key_ref_array):
 			for parallax_ent in key_ref_array.lookup():
 				var parallax_scene = Scene.parralax.instantiate()
+				parallax_scene.name = parallax_ent.name
 				parallax_scene.load_texture(parallax_ent.texture)
 				parallax_scene.set_effect(parallax_ent.effect)
 				parallax_scene.add_to_group(name) # Add to this map's group
@@ -68,16 +75,17 @@ func build_audio() -> void:
 		func(key_ref_array):
 			for sound_ent in key_ref_array.lookup():
 				var audio: AudioStreamPlayer = AudioStreamPlayer.new()
+				audio.name = sound_ent.key()
 				audio.add_to_group(name) # Add to this map's group
 				audio.add_to_group(Group.AUDIO)
-				# TODO - select type based on extension
-				audio.set_stream(
-					AssetLoader.builder()
-					.key(sound_ent.source)
-					.type(AssetLoader.Type.WAV)
-					.archive(Cache.archive)
-					.build()
-					.pull())
+				var stream: AudioStream = AssetLoader.builder()\
+					.key(sound_ent.source)\
+					.type(AssetLoader.derive_type_from_path(sound_ent.source).get_value())\
+					.archive(Cache.archive)\
+					.loop(true)\
+					.build()\
+					.pull()
+				audio.set_stream(stream)
 				add_child(audio)
 	)
 

@@ -17,5 +17,3 @@ spawn_path = NodePath("..")
 script = ExtResource("2_g1itt")
 
 [node name="Camera" parent="." instance=ExtResource("2_lvei0")]
-
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
