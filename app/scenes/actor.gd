@@ -523,10 +523,12 @@ func _local_touch_handler(target: Actor, function: Callable) -> void:
 		function.call(target)
 		
 func _local_action_handler(target_actor: Actor, function: Callable, action_ent: Entity) -> void:
-	function.call(target_actor)
-	look_at_target()
-	root(action_ent.time)
-	get_tree().create_timer(action_ent.time).timeout.connect(func(): substate = SubState.END)
+	match substate:
+		SubState.IDLE, SubState.START:
+			function.call(target_actor)
+			look_at_target()
+			root(action_ent.time)
+			get_tree().create_timer(action_ent.time).timeout.connect(func(): substate = SubState.END)
 
 func build_primary_action(value: String) -> void:
 	var action_ent = Repo.select(value)
