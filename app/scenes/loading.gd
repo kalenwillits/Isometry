@@ -6,6 +6,7 @@ func _ready() -> void:
 func handle_load_archive() -> void:
 	if Repo.get_child_count() == 0:
 		Repo.load_complete.connect(func(): Route.to(Scene.world))
+		Repo.load_complete.connect(Cache.pack_audio)
 		Queue.enqueue(
 			Queue.Item.builder()
 			.comment("Load from archive.")

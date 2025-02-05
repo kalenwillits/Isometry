@@ -7,7 +7,7 @@ func request_spawn_actor(peer_id: int) -> void:
 		Queue.Item.builder()
 		.comment("request_spawn_actor")
 		.condition(func(): return Finder.get_actor(str(peer_id)) == null)
-		.task(func(): Finder.select(Group.SPAWNER).spawn(Cache.unpack_actor(peer_id)))
+		.task(func(): Finder.select(Group.SPAWNER).spawn(Cache.unpack(str(peer_id))))
 		.build()
 	)
 	

@@ -75,6 +75,8 @@ func build_audio() -> void:
 		func(key_ref_array):
 			for sound_ent in key_ref_array.lookup():
 				var audio: AudioStreamFader = AudioStreamFader.new()
+				Optional.of_nullable(sound_ent.scale)\
+					.if_present(func(scale): audio.set_scale_expression(scale))
 				audio.name = sound_ent.key()
 				audio.add_to_group(name) # Add to this map's group
 				audio.add_to_group(Group.AUDIO)
@@ -82,7 +84,7 @@ func build_audio() -> void:
 					.key(sound_ent.source)\
 					.type(AssetLoader.derive_type_from_path(sound_ent.source).get_value())\
 					.archive(Cache.archive)\
-					.loop(true)\
+					.loop(sound_ent.loop)\
 					.build()\
 					.pull()
 				audio.set_stream(stream)

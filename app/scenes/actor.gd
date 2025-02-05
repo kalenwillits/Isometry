@@ -3,9 +3,11 @@ class_name Actor
 
 # TODO - actions should still be requested even if the target is null
 
-enum KeyFrames {
-	idle,
-	run
+enum SubState {
+	IDLE,
+	START,
+	USE,
+	END
 }
 
 const BASE_TILE_SIZE: float = 32.0
@@ -19,6 +21,7 @@ const VIEW_SPEED: float = 0.83 # percent value to controll the amount of acceler
 @export var speed: float = 1.0
 @export var heading: String = "S"
 @export var state: String = "idle"
+@export var substate: SubState  # TODO - use to get status of current state loop
 @export var sprite: String = ""
 @export var polygon: String = ""
 @export var actor: String = ""
@@ -33,6 +36,7 @@ var view: int = -1
 var target_queue: Array = []
 var target_groups: Array = []
 var target_group_index: int = 0
+var speed_cache_value: float # Used to store speed value inbetween temporary changes
 var target_groups_counter: Dictionary
 var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
@@ -92,6 +96,7 @@ class ActorBuilder extends Object:
 		var actor_ent = Repo.query([obj.actor]).pop_front()
 		if actor_ent:
 			obj.build_viewbox(actor_ent.view)
+			# TODO - these are all dependant on if the actor changes
 			if actor_ent.groups: obj.build_target_groups(actor_ent.groups.lookup())
 			if actor_ent.sprite: obj.sprite = actor_ent.sprite.key()
 			if actor_ent.hitbox: obj.hitbox = actor_ent.hitbox.key()
@@ -131,6 +136,46 @@ func set_outline_color(value: Color) -> void:
 	
 func is_primary() -> bool:
 	return peer_id > 0 and is_multiplayer_authority() and multiplayer.get_unique_id() == peer_id
+	
+func add_sound_as_child_node(sound_ent: Entity, state_key: String) -> void:
+	if sound_ent == null: return
+	var audio: AudioStreamFader2D = AudioStreamFader2D.new()
+	Optional.of_nullable(sound_ent.scale).if_present(func(scale): audio.set_scale_expression(scale))
+	audio.name = state_key
+	audio.add_to_group(sound_ent.key())
+	audio.add_to_group(name) # Add to this actor's group
+	audio.add_to_group(Group.AUDIO)
+	var stream: AudioStream = AssetLoader.builder()\
+								.key(sound_ent.source)\
+								.type(AssetLoader.derive_type_from_path(sound_ent.source).get_value())\
+								.archive(Cache.archive)\
+								.loop(sound_ent.loop)\
+								.build()\
+								.pull()
+	audio.set_stream(stream)
+	add_child(audio)
+
+func build_audio() -> void:
+	Finder.query([Group.AUDIO, name]).map(func(audio): audio.queue_free())
+	Optional.of_nullable(Repo.select(actor))\
+		.map(func(actor_ent): return actor_ent.sprite)\
+		.map(func(sprite_key): return sprite_key.lookup())\
+		.map(func(sprite_ent): return sprite_ent.animation)\
+		.map(func(animation_key): return animation_key.lookup())\
+		.if_present(
+			func(animation_ent):
+				for state_name in KeyFrames.list():
+					Optional.of_nullable(animation_ent.get(state_name))\
+					.map(func(key_frame_key): return key_frame_key.lookup())\
+					.map(func(key_frame_ent): return key_frame_ent.sound)\
+					.map(func(sound_key): return sound_key.lookup()
+				).if_present(func(sound_ent): add_sound_as_child_node(sound_ent, state_name)))
+
+func promote_substate() -> void:
+	substate = clamp(SubState.IDLE, SubState.END, substate + 1)
+	
+#func reset_substate() -> void:
+	#substate = SubState.S
 
 func _enter_tree():
 	add_to_group(Group.ACTOR)
@@ -165,6 +210,7 @@ func _ready() -> void:
 	Trigger.new().arm("hitbox").action(build_hitbox).deploy(self)
 	Trigger.new().arm("sprite").action(build_sprite).deploy(self)
 	Trigger.new().arm("map").action(update_client_visibility).deploy(self)
+	Trigger.new().arm("state").action(_on_state_change).deploy(self)
 	$Label.set_text(name) # TODO - Replace label with real name
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	if is_primary():
@@ -248,6 +294,7 @@ func use_strategy() -> void:
 
 func use_actions() -> void:
 	if Input.is_action_just_released("action_1"):
+		set_state(KeyFrames.ACTION_1)
 		emit_signal("action_1", get_parent().get_node_or_null(target))
 	if Input.is_action_just_released("action_2"):
 		emit_signal("action_2", get_parent().get_node_or_null(target))
@@ -393,7 +440,7 @@ func build_action(value: String, n: int) -> void:
 			var target_name: String
 			if target != null: target_name = target.name
 			get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_name),
-		action_ent.range_ * BASE_TILE_SIZE))
+		action_ent))
 
 func build_measure(value: String) -> void:
 	return Optional.of(Repo.select(value))\
@@ -411,7 +458,7 @@ func set_strategy(value: Entity) -> void:
 	var behaviors: Array[Behavior] = []
 	for behavior_ent in value.behaviors.lookup():
 		behaviors.append(
-			Behavior.builder().criteria(behavior_ent.criteria.key()).action(func(interaction): _local_action_handler(interaction.target, func(t): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, behavior_ent.action.key(), name, Optional.of_nullable(t).map(func(t): return t.get_name()).or_else("")), behavior_ent.action.lookup().range_)).build()
+			Behavior.builder().criteria(behavior_ent.criteria.key()).action(func(interaction): _local_action_handler(interaction.target, func(t): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, behavior_ent.action.key(), name, Optional.of_nullable(t).map(func(t): return t.get_name()).or_else("")), behavior_ent.action.lookup())).build()
 		)
 	strategy = Strategy.builder().behaviors(behaviors).build()
 
@@ -428,10 +475,10 @@ func build_triggers() -> void:
 							self,  # Both caller and target for triggers is always self
 							func(target):
 								Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, trigger_ent.action.key(), name, name),
-								trigger_ent.action.lookup().range_ * BASE_TILE_SIZE
+								trigger_ent.action.lookup()
 						)
 				).deploy(self)
-				
+
 func build_timers() -> void:
 		if std.is_host_or_server():
 			var actor_ent: Entity = Repo.select(actor)
@@ -446,7 +493,7 @@ func build_timers() -> void:
 								func(): _local_action_handler(
 										Optional.of_nullable(get_parent().get_node_or_null(target)).or_else(self), 
 										func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, timer_ent.action.key(), name, target.name),
-										timer_ent.action.lookup().range_ * BASE_TILE_SIZE)						
+										timer_ent.action.lookup())
 							).build()))
 					.build()
 				)
@@ -473,18 +520,14 @@ func _local_measure_handler(caller_name: String, target_name: String, expression
 func _local_touch_handler(target: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
 	if target.is_primary(): 
-		Logger.info("%s on_touch activated by %s" % [name, target.name])
 		function.call(target)
 		
-func _local_action_handler(target: Actor, function: Callable, range_: int) -> void:
-	var distance: float = isometric_distance_to_actor(target)
-	if distance > range_:
-		if target != null: Logger.info("%s action activated by %s but is out of range %d at %f" % [name, target.name, range_ / BASE_TILE_SIZE, distance / BASE_TILE_SIZE])
-		# TODO - alert user that it's out of range
-	else:
-		if target != null: Logger.info("actor %s activated an action on target %s" % [name, target.name])
-		function.call(target)
-		
+func _local_action_handler(target_actor: Actor, function: Callable, action_ent: Entity) -> void:
+	function.call(target_actor)
+	look_at_target()
+	root(action_ent.time)
+	get_tree().create_timer(action_ent.time).timeout.connect(func(): substate = SubState.END)
+
 func build_primary_action(value: String) -> void:
 	var action_ent = Repo.select(value)
 	var params: Dictionary = {}
@@ -494,7 +537,7 @@ func build_primary_action(value: String) -> void:
 	primary.connect(func(target): _local_action_handler(
 		target, 
 		func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, peer_id, target.peer_id),
-		action_ent.range_ * BASE_TILE_SIZE))
+		action_ent))
 
 func _local_primary_handler(target: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
@@ -556,9 +599,24 @@ func set_peer_id(value) -> void:
 func set_heading(value: String) -> void:
 	heading = value
 
-func set_speed_mod(value: float) -> void:
+func set_speed(value: float) -> void:
 	speed = value
 	
+func root(time: float) -> void:
+	for dict in $ActionTimer.timeout.get_connections():
+		$ActionTimer.timeout.disconnect(dict.callable)
+	if time <= 0.0: return
+	speed_cache_value = speed
+	set_speed(0)
+	$ActionTimer.wait_time = time
+	$ActionTimer.timeout.connect(unroot)
+	$ActionTimer.start()
+
+func unroot() -> void:
+	$ActionTimer.stop()
+	set_speed(speed_cache_value)
+	speed_cache_value = 0
+
 func set_sprite(value: String) -> void:
 	sprite = value
 	
@@ -626,7 +684,8 @@ func build_sprite() -> void:
 	var texture = Cache.textures.get(sprite_ent.texture)
 	var sprite_frames: SpriteFrames = SpriteFrames.new()
 	var animation_ent = sprite_ent.animation.lookup()
-	for key_frame_name in KeyFrames.keys():
+	sprite_frames.remove_animation("default") # default has no meaning in isometric space
+	for key_frame_name in KeyFrames.list():
 		if animation_ent.get(key_frame_name) == null: continue
 		var key_frame_ent = animation_ent.get(key_frame_name).lookup()
 		for radial in std.RADIALS.keys():
@@ -642,12 +701,17 @@ func build_sprite() -> void:
 						)
 					);
 		setup_sprite.call_deferred(sprite_frames)
+		Queue.enqueue(
+			Queue.Item.builder()
+			.comment("Build audio tracks for actor %s" % name)
+			.task(build_audio)
+			.build()
+		)
 
 func setup_sprite(sprite_frames: SpriteFrames) -> void:
 		## Setting up a sprite sheet dynamically is a touchy thing. It must be started in this order.
 		$Sprite.offset = _calculate_sprite_offset()
 		$Sprite.set_sprite_frames(sprite_frames)
-		$Sprite.set_animation("default")
 		set_outline_color(Color(0, 0, 0, 0))
 
 func _calculate_sprite_offset() -> Vector2i:
@@ -662,14 +726,19 @@ func use_movement(delta: float) -> void:
 	if position.distance_squared_to(destination) > DESTINATION_PRECISION:
 		var motion = position.direction_to(destination)
 		velocity = motion * get_speed(delta) * std.isometric_factor(motion.angle())
-		look_at_point(destination)
 		move_and_slide()
+		match substate:
+			SubState.IDLE, SubState.START, SubState.END:
+				look_at_point(destination)
 	else:
 		set_destination(position)
 		velocity = Vector2.ZERO
 
+func look_at_target() -> void:
+	Optional.of_nullable(Finder.get_actor(target)).if_present(func(target_actor): look_at_point(target_actor.position))
+
 func look_at_point(point: Vector2) -> void:
-	heading = map_radial(point.angle_to_point(position))
+	set_heading(map_radial(point.angle_to_point(position)))
 	
 func map_radial(radians: float) -> String:
 	return std.RADIALS.keys()[snap_radial(radians)]
@@ -683,10 +752,11 @@ func get_speed(delta: float) -> float:
 func use_move_directly(_delta) -> void:
 	var motion = Input.get_vector("left", "right", "up", "down")
 	var new_destination: Vector2 = position + motion * DESTINATION_PRECISION
-
 	if motion.length():
 		set_destination(new_destination)
-		look_at_point(new_destination)
+		match substate:
+			SubState.IDLE, SubState.START, SubState.END:
+				look_at_point(new_destination)
 
 func set_destination(point: Vector2) -> void:
 	## Where the actor is headed to.
@@ -706,11 +776,6 @@ func set_location(point: Vector2) -> void:
 func use_animation():
 	if $Sprite.sprite_frames.has_animation("%s:%s" % [state, heading]):
 		$Sprite.animation = "%s:%s" % [state, heading]
-#		$Outline.animation = animation
-	elif $Sprite.sprite_frames.has_animation("default:%s" % heading):
-		$Sprite.animation = "default:%s" % heading
-	else:
-		$Sprite.animation = "default"
 
 func set_remote_transform_target(node: Node) -> void:
 	$RemoteTransform2D.remote_path = node.get_path()
@@ -725,26 +790,38 @@ func set_animation_speed(value: float) -> void:
 	$Sprite.speed_scale = value
 	
 func use_state() -> void:
+	match substate:
+		SubState.IDLE:
+			pass
+		SubState.START:
+			Optional.of_nullable(get_node_or_null(state)).if_present(
+				func(audio_fader): 
+					audio_fader.play()
+					promote_substate()
+			)
+		SubState.USE:
+			if $ActionTimer.is_stopped():
+				promote_substate()
+		SubState.END:
+			set_state(KeyFrames.IDLE)
+			set_animation_speed(1.0)
+			substate = SubState.IDLE
+
 	match state:
-		"idle":
+		KeyFrames.IDLE:
 			if !position.is_equal_approx(destination):
 				set_animation_speed(std.isometric_factor(velocity.angle()))
-				set_state("run")
+				set_state(KeyFrames.RUN)
 		# TODO -- add walking
-		"run": 
+		KeyFrames.RUN: 
 			if position.is_equal_approx(destination):
-				set_state("idle")
-
-func _on_sprite_animation_finished() -> void:
-	match state:
-		"idle", "run", "dead":  # These are states that do not automatically resolve to idle.
-			pass
-		_:
-			set_state("idle")
-			set_animation_speed(1.0)
+				set_state(KeyFrames.IDLE)
 
 func _on_heading_change(_radial):
 	pass
+
+func _on_state_change() -> void:
+	substate = SubState.START
 
 func _on_hit_box_body_entered(other):
 	if other != self and $HitboxTriggerCooldownTimer.is_stopped():
@@ -762,7 +839,7 @@ func use_collisions(effect: bool) -> void:
 	$ViewBox.set_collision_mask_value(Layer.BASE, effect)
 
 func _on_sprite_animation_changed():
-	$Sprite.play()
+	$Sprite.play()  # Without this, the animation freezes
 
 func _on_mouse_entered() -> void:
 	if get_outline_color().a < Palette.OUTLINE_SELECT.a: set_outline_color(Palette.OUTLINE_HOVER)

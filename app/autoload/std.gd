@@ -27,6 +27,8 @@ class SelfDestructingTimer extends Timer:
 		target.call()
 		queue_free()
 
+func enum_name(enum_type: Object, value: int) -> String:
+	return enum_type.get_string_list()[value]
 
 func unique_id() -> String:
 	randomize()

@@ -34,3 +34,5 @@ config.log
 .sconf_temp
 
 env/*
+
+tmp/

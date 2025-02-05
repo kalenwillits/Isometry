@@ -44,15 +44,15 @@ static func builder() -> Builder:
 func pull():
 	match type:
 		Type.OBJECT:
-			return _load_record_as_dict()
+			return Cache.pack(Cache.Pack.builder().key(key).ref(_load_record_as_dict).build())
 		Type.IMAGE:
-			return _load_record_as_image_texture()
+			return Cache.pack(Cache.Pack.builder().key(key).ref(_load_record_as_image_texture).build())
 		Type.TEXT:
-			return _load_record_as_string()
+			return Cache.pack(Cache.Pack.builder().key(key).ref(_load_record_as_string).build())
 		Type.WAV:
-			return _load_record_as_wav()
+			return Cache.pack(Cache.Pack.builder().key(key).ref(_load_record_as_wav).build())
 		Type.MP3:
-			return _load_record_as_mp3()
+			return Cache.pack(Cache.Pack.builder().key(key).ref(_load_record_as_mp3).build())
 	
 func _load_record_as_bytes() -> PackedByteArray:
 	var archive_zip_reader := ZIPReader.new()

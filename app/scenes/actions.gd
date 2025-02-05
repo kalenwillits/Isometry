@@ -68,10 +68,10 @@ func set_destination_self(self_name: String, _target_name: String, params: Dicti
 func move_map_target(self_name: String, target_name: String, params: Dictionary) -> void:
 	## map: KeyRef to Map.
 	## location: KeyRef to Vertex where the target actor's new position will be.
-	var pack: Dictionary = get_tree().get_first_node_in_group(target_name).pack()
+	var pack: Dictionary = Finder.get_actor(target_name).pack()
 	pack["map"] = params.get("map")
 	pack["location"] = params.get("location")
-	Cache.pack_actor(target_name.to_int(), pack)
+	Cache.pack(Cache.Pack.builder().key(target_name).ref(func(): return pack).expiry(60).build())
 	Queue.enqueue(
 		Queue.Item.builder()
 		.comment("move_map_target -> handle_move_actor")
@@ -88,9 +88,10 @@ func move_map_target(self_name: String, target_name: String, params: Dictionary)
 func move_map_self(self_name: String, target_name: String, params: Dictionary) -> void:
 	## map: KeyRef to Map.
 	## location: KeyRef to Vertex where the target actor's new position will be.
-	var pack: Dictionary = get_tree().get_first_node_in_group(self_name).pack()
+	var pack: Dictionary = Finder.get_actor(self_name).pack()
 	pack["map"] = params.get("map")
 	pack["location"] = params.get("location")
+	Cache.pack(Cache.Pack.builder().key(self_name).ref(func(): return pack).expiry(60).build())
 	Queue.enqueue(
 		Queue.Item.builder()
 		.comment("move map self -> ")

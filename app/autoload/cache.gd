@@ -14,11 +14,75 @@ var archive: String = ""
 var dir: String = ""
 var textures: Dictionary  # Storage of already loaded textures
 var camera_zoom: int = 3
+
+# TODO - swap this over to the other cache system
 var packed_actors: Dictionary = {}  # used to store actors server-side that are being transistioned
+
+var packs: Dictionary = {} # Cached objects
+var expiry: Dictionary = {}
+
+class Pack extends Object:
+	var key: String
+	var ref: Callable
+	var expiry: float = -1
+
+	class Builder extends Object:
+		var this: Pack = Pack.new()
+		
+		func key(value: String) -> Builder:
+			this.key = value
+			return self
+			
+		func ref(value: Callable) -> Builder:
+			this.ref = value
+			return self
+			
+		func expiry(value: float) -> Builder:
+			this.expiry = value
+			return self
+		
+		func build() -> Pack:
+			this.expiry = this.expiry + Time.get_unix_time_from_system()
+			return this
+
+	static func builder() -> Pack.Builder:
+		return Builder.new()
+		
+func pack_audio() -> void:
+	## Pre-packs ALL audio files into the cache.
+	for sound_ent in Repo.query([Group.SOUND_ENTITY]):
+		Cache.pack(
+			Cache.Pack.builder()
+				.key(sound_ent.source)
+				.ref(func(): return AssetLoader.builder().archive(Cache.archive).loop(sound_ent.loop).key(sound_ent.source).type(AssetLoader.derive_type_from_path(sound_ent.source).get_value()).build().pull())
+				.build()
+		)
+
+		
+func _handle_expiry() -> void:
+	var now: float = Time.get_unix_time_from_system()
+	var keys: Array = expiry.keys().duplicate()
+	for key in expiry.keys():
+		if expiry[key] < 0:
+			continue
+		if expiry[key] < now:
+			expiry.erase(key)
+			packs.erase(key)
+
+func pack(pack: Pack) -> Variant:
+	var object: Variant = Optional.of_nullable(packs.get(pack.key)).or_else(pack.ref.call())
+	packs[pack.key] = object
+	return object
+	
+func unpack(key: String) -> Variant:
+	var object: Variant = packs.get(key)
+	packs.erase(key)
+	return object
+
 
 func pack_actor(peer_id: int, pack: Dictionary) -> void:
 	packed_actors[peer_id] = pack
-	
+
 func unpack_actor(peer_id: int) -> Dictionary:
 	var result = packed_actors.get(peer_id, {}).duplicate()
 	packed_actors.erase(peer_id)

@@ -1,5 +1,5 @@
-extends AudioStreamPlayer
-class_name AudioStreamFader
+extends AudioStreamPlayer2D
+class_name AudioStreamFader2D
 
 const TRANSITION_TIME: float = 1.1
 const FADE_IN_DB: int = 0
@@ -35,3 +35,8 @@ func _calculate_scale() -> void:
 	if scale_expression != "":
 		var result: float = Dice.builder().expression(scale_expression).build().evaluate() / SCALE_EXPRESSION_NORMAL
 		set_pitch_scale(result)
+		
+func play_if_not_playing() -> void:
+	if !playing: 
+		play()
+	
