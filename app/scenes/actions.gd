@@ -58,6 +58,7 @@ func invoke_action(action_key: String, self_name: String, target_name: String) -
 ## ACTION SIGNATURE... ------------------------------------------------------------- #
 
 func echo(_self_name: String, _target_name: String, params: Dictionary) -> void:
+	## message: String
 	Logger.info(params["message"])
 	
 func set_destination_self(self_name: String, _target_name: String, params: Dictionary) -> void:
@@ -127,7 +128,7 @@ func minus_resource_target(self_name: String, target_name: String, params: Dicti
 		var target_actor: Actor = get_tree().get_first_node_in_group(target_name)
 		var value: int = Dice.builder().expression(params.expression).build().evaluate()
 		var result: int = ResourceOperator.builder().actor(target_actor).resource(resource).build().minus(value).get_value()
-		Logger.debug("minus_resource_target(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])		
+		#Logger.debug("minus_resource_target(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])		
 	)
 
 func minus_resource_self(self_name: String, target_name: String, params: Dictionary) -> void:
@@ -144,7 +145,7 @@ func minus_resource_self(self_name: String, target_name: String, params: Diction
 		var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
 		var value: int = Dice.builder().expression(params.expression).build().evaluate()
 		var result: int = ResourceOperator.builder().actor(self_actor).resource(resource).build().minus(value).get_value()
-		Logger.debug("minus_resource_self(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])
+		#Logger.debug("minus_resource_self(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])
 	)
 	
 func plus_resource_self(self_name: String, target_name: String, params: Dictionary) -> void:
@@ -161,6 +162,6 @@ func plus_resource_self(self_name: String, target_name: String, params: Dictiona
 		var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
 		var value: int = Dice.builder().expression(params.expression).build().evaluate()
 		var result: int = ResourceOperator.builder().actor(self_actor).resource(resource).build().plus(value).get_value()
-		Logger.debug("plus_resource_self(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])
+		#Logger.debug("plus_resource_self(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])
 	)
 # ----------------------------------------------------------------------- Actions #

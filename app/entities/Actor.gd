@@ -6,6 +6,7 @@ var polygon: KeyRef # Polygon
 var hitbox: KeyRef # Polygon
 var view: int
 var on_touch: KeyRef # Action
+var on_view: KeyRef # Action
 var action_1: KeyRef # Action
 var action_2: KeyRef # Action
 var action_3: KeyRef # Action

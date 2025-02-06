@@ -48,6 +48,7 @@ var last_viewshape_destination: Vector2
 var last_viewshape_origin: Vector2
 
 signal on_touch(actor)
+signal on_view(actor)
 signal primary(actor)
 signal action_1(actor)
 signal action_2(actor)
@@ -62,57 +63,58 @@ signal action_9(actor)
 signal heading_change(heading)
 
 class ActorBuilder extends Object:
-	var obj: = Scene.actor.instantiate()
+	var this: Actor = Scene.actor.instantiate()
 	
 	func peer_id(value: int) -> ActorBuilder:
-		obj.peer_id = value
+		this.peer_id = value
 		return self
 		
 	func name(value: String) -> ActorBuilder:
-		obj.name = value
+		this.name = value
 		return self
 
 	func map(value: String) -> ActorBuilder:
-		obj.map = value
+		this.map = value
 		return self
 	
-	func view(value: String) -> ActorBuilder:
-		obj.view = value
+	func view(value: int) -> ActorBuilder:
+		this.view = value
 		return self
 
 	func location(value: Vector2) -> ActorBuilder:
-		obj.set_location(value)
+		this.set_location(value)
 		return self
 
 	func actor(value: String) -> ActorBuilder:
-		obj.actor = value
+		this.actor = value
 		return self
 		
 	func resources(value: Dictionary) -> ActorBuilder:
-		obj.resources = value
+		this.resources = value
 		return self
 
 	func build() -> Actor:
-		var actor_ent = Repo.query([obj.actor]).pop_front()
+		var actor_ent = Repo.query([this.actor]).pop_front()
 		if actor_ent:
-			obj.build_viewbox(actor_ent.view)
+			this.build_viewbox(actor_ent.view)
 			# TODO - these are all dependant on if the actor changes
-			if actor_ent.groups: obj.build_target_groups(actor_ent.groups.lookup())
-			if actor_ent.sprite: obj.sprite = actor_ent.sprite.key()
-			if actor_ent.hitbox: obj.hitbox = actor_ent.hitbox.key()
-			if actor_ent.polygon: obj.polygon = actor_ent.polygon.key()
-			if actor_ent.on_touch: obj.build_on_touch_action(actor_ent.on_touch.key())
-			if actor_ent.primary_action: obj.build_primary_action(actor_ent.primary_action.key())
+			if actor_ent.groups: this.build_target_groups(actor_ent.groups.lookup())
+			if actor_ent.sprite: this.sprite = actor_ent.sprite.key()
+			if actor_ent.hitbox: this.hitbox = actor_ent.hitbox.key()
+			if actor_ent.polygon: this.polygon = actor_ent.polygon.key()
+			if actor_ent.on_touch: this.build_on_touch_action(actor_ent.on_touch.key())
+			if actor_ent.on_view: this.build_on_view_action(actor_ent.on_view.key())
+			if actor_ent.primary_action: this.build_primary_action(actor_ent.primary_action.key())
 			for n in range(1, 10):
 				var action_name: String = "action_%d" % n
-				if actor_ent.get(action_name): obj.build_action(actor_ent.get(action_name).key(), n)
+				if actor_ent.get(action_name): this.build_action(actor_ent.get(action_name).key(), n)
 			# build resources
 			for resource_ent in Repo.query([Group.RESOURCE_ENTITY]):
-				obj.resources[resource_ent.key()] = obj.resources.get(resource_ent.key(), resource_ent.default)
+				this.resources[resource_ent.key()] = this.resources.get(resource_ent.key(), resource_ent.default)
 			# build measures
 			for measure_ent in Repo.query([Group.MEASURE_ENTITY]):
-				obj.measure[measure_ent.key()] = obj.build_measure(measure_ent)
-		return obj
+				this.measure[measure_ent.key()] = this.build_measure(measure_ent)
+		return this
 		
 static func builder() -> ActorBuilder:
 	return ActorBuilder.new()
@@ -428,7 +430,17 @@ func build_on_touch_action(value: String) -> void:
 	if action_ent.parameters:
 		for param_ent in action_ent.parameters.lookup():
 			params[param_ent.name_] = param_ent.value
-	on_touch.connect(func(target): _local_touch_handler(target, func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target.name)))
+	on_touch.connect(func(target): _local_passive_action_handler(target, func(target): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target.name)))
+
+
+func build_on_view_action(value: String) -> void:
+	var action_ent = Repo.select(value)
+	var params: Dictionary = {}
+	if action_ent.parameters:
+		for param_ent in action_ent.parameters.lookup():
+			params[param_ent.name_] = param_ent.value
+	on_view.connect(func(target_actor): _local_passive_action_handler(target_actor, func(target_actor): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_actor.name)))
+
 
 func build_action(value: String, n: int) -> void:
 	var action_ent = Repo.select(value)
@@ -444,9 +456,9 @@ func build_action(value: String, n: int) -> void:
 			get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_name),
 		action_ent))
 
-func build_measure(value: String) -> void:
+func build_measure(value: String) -> Callable:
 	return Optional.of(Repo.select(value))\
-		.map(func(e): return func(interaction): _local_measure_handler(name, target, e.expression))\
+		.map(func(e): return func(interaction: ActorInteraction): _local_measure_handler(interaction.get_caller().get_name(), interaction.get_target().get_name(), e.expression))\
 		.get_value()
 		
 func build_strategy() -> void:
@@ -519,7 +531,8 @@ func _local_measure_handler(caller_name: String, target_name: String, expression
 		.build()\
 		.evaluate()
 
-func _local_touch_handler(target: Actor, function: Callable) -> void:
+func _local_passive_action_handler(target: Actor, function: Callable) -> void:
+	# Passive becuase this will not "snap" the caller to the attention of it's target
 	# Because only one client should allow the trigger, this acts as a filter
 	if target.is_primary(): 
 		function.call(target)
@@ -857,6 +870,7 @@ func _on_act(_viweport: Node, event: InputEvent, _shape_idx: int) -> void:
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
+	other.on_view.emit(self)
 	for target_group_key in other.target_groups:
 		target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
 	other.visible_to_primary(true)
