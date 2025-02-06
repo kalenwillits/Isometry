@@ -172,10 +172,12 @@ func build_audio() -> void:
 				).if_present(func(sound_ent): add_sound_as_child_node(sound_ent, state_name)))
 
 func promote_substate() -> void:
-	substate = clamp(SubState.IDLE, SubState.END, substate + 1)
-	
-#func reset_substate() -> void:
-	#substate = SubState.S
+	if is_multiplayer_authority() or (is_npc() and (Cache.network == Network.Mode.SERVER or Cache.network == Network.Mode.HOST)):
+		substate = clamp(SubState.IDLE, SubState.END, substate + 1)
+		
+func set_substate(value: SubState) -> void:
+	if is_multiplayer_authority() or (is_npc() and (Cache.network == Network.Mode.SERVER or Cache.network == Network.Mode.HOST)):
+		substate = value
 
 func _enter_tree():
 	add_to_group(Group.ACTOR)
@@ -528,7 +530,7 @@ func _local_action_handler(target_actor: Actor, function: Callable, action_ent: 
 			function.call(target_actor)
 			look_at_target()
 			root(action_ent.time)
-			get_tree().create_timer(action_ent.time).timeout.connect(func(): substate = SubState.END)
+			get_tree().create_timer(action_ent.time).timeout.connect(func(): set_substate(SubState.END))
 
 func build_primary_action(value: String) -> void:
 	var action_ent = Repo.select(value)
@@ -807,7 +809,7 @@ func use_state() -> void:
 		SubState.END:
 			set_state(KeyFrames.IDLE)
 			set_animation_speed(1.0)
-			substate = SubState.IDLE
+			set_substate(SubState.IDLE)
 
 	match state:
 		KeyFrames.IDLE:
@@ -823,7 +825,7 @@ func _on_heading_change(_radial):
 	pass
 
 func _on_state_change() -> void:
-	substate = SubState.START
+	set_substate(SubState.START)
 
 func _on_hit_box_body_entered(other):
 	if other != self and $HitboxTriggerCooldownTimer.is_stopped():

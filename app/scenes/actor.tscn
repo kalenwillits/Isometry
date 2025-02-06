@@ -38,6 +38,9 @@ properties/9/replication_mode = 2
 properties/10/path = NodePath(".:speed")
 properties/10/spawn = true
 properties/10/replication_mode = 1
+properties/11/path = NodePath(".:substate")
+properties/11/spawn = true
+properties/11/replication_mode = 1
 
 [node name="Actor" type="CharacterBody2D"]
 z_index = 1
