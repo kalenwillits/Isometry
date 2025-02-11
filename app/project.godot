@@ -31,6 +31,7 @@ Queue="*res://autoload/queue.tscn"
 Controller="*res://autoload/controller.gd"
 Finder="*res://autoload/finder.tscn"
 Transition="*res://autoload/transition.tscn"
+Secrets="*res://autoload/secrets.gd"
 
 [debug]
 

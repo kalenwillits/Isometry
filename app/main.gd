@@ -3,7 +3,6 @@ extends Node
 func _ready() -> void:
 	ArgParse.parse()
 	DisplayServer.window_set_title(get_window_title())
-	await get_tree().create_timer(Cache.delay).timeout
 	start()
 
 func get_window_title() -> String:

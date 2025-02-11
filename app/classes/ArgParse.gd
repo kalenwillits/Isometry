@@ -7,9 +7,10 @@ static func parse() -> void:
 		"uri", 
 		"port", 
 		"archive", 
-		"delay", 
 		"network", 
-		"dir"
+		"dir",
+		"username",
+		"password",
 		]:
 		Cache.set(arg, args.get(arg))
 
