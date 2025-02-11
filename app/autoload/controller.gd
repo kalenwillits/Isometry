@@ -15,7 +15,13 @@ extends Node
 @rpc("any_peer", "reliable")
 func get_public_key(peer_id: int) -> void:
 	if Cache.network == Network.Mode.HOST or Cache.network == Network.Mode.SERVER:
-		set_public_key.rpc_id(peer_id, Secrets.get_public_key())
+		Queue.enqueue(
+			Queue.Item.builder()
+			.comment("Send public key to peer %s" % peer_id)
+			.condition(func(): return Secrets.public_key != null)
+			.task(func(): set_public_key.rpc_id(peer_id, Secrets.get_public_key()))
+			.build()
+		)
 
 
 @rpc("any_peer", "reliable")

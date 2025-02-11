@@ -31,4 +31,4 @@ static func builder() -> Builder:
 	return Builder.new()
 	
 func render() -> String:
-	return ("%s%s.%s" % [root, DELIM.join(parts), extension]).rstrip(".")
+	return ("%s%s%s" % [root, DELIM.join(parts), (".%s" % extension) if extension else ""]).rstrip(".%s" % DELIM)

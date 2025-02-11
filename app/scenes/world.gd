@@ -124,4 +124,4 @@ func spawn_actor(data: Dictionary) -> Actor:
 	.build()
 
 func _on_connected_to_server() -> void:
-	pass
+	Controller.get_public_key.rpc_id(1, multiplayer.get_unique_id())
