@@ -21,6 +21,15 @@ func parse_json(json_string: String):
 		return json.get_data()
 	else:
 		Logger.error(json.get_error_message())
+		
+func save_buffer(path: String, data: PackedByteArray) -> void:
+	var file = FileAccess.open(path, FileAccess.WRITE)
+	file.store_buffer(data) 
+	
+func load_buffer(path: String) -> PackedByteArray:
+	var file = FileAccess.open(path, FileAccess.READ)
+	# Maybe this works?
+	return file.get_as_text().to_utf8_buffer()
 
 func save_json(path: String, data) -> void:
 	save_file(path, JSON.stringify(data, "\t"))

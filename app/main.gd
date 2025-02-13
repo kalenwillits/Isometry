@@ -1,7 +1,17 @@
 extends Node
 
 func _ready() -> void:
-	ArgParse.parse()
+	var parsed_args: Dictionary = ArgParse.parse()
+	for arg in [
+		"uri", 
+		"port", 
+		"archive", 
+		"network", 
+		"dir",
+		"username",
+		"password",
+		]:
+		Cache.set(arg, parsed_args.get(arg))
 	DisplayServer.window_set_title(get_window_title())
 	start()
 
@@ -11,11 +21,11 @@ func get_window_title() -> String:
 func start() -> void:
 	match Cache.network:
 		Network.Mode.HOST:
-			Secrets.load_or_create_rsa()
+			Secret.load_or_create_rsa()
 			Network.start_server()
 			Network.server_established.connect(func(): Route.to(Scene.loading))
 		Network.Mode.SERVER:
-			Secrets.load_or_create_rsa()
+			Secret.load_or_create_rsa()
 			Network.start_server()
 			Network.server_established.connect(func(): Route.to(Scene.loading))
 		Network.Mode.CLIENT:

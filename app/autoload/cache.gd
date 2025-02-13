@@ -7,6 +7,8 @@ var cliargs: Dictionary = _parse_command_line_args()
 var uri: String = "localhost"
 var port: int = 5000
 var delay: int = 0
+var username: String
+var password: String
 
 # Runtime storage
 var network: Network.Mode = cliargs.get("network", "0").to_int()

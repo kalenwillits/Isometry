@@ -37,7 +37,13 @@ properties/9/spawn = true
 properties/9/replication_mode = 2
 properties/10/path = NodePath(".:speed")
 properties/10/spawn = true
-properties/10/replication_mode = 1
+properties/10/replication_mode = 2
+properties/11/path = NodePath(".:username")
+properties/11/spawn = true
+properties/11/replication_mode = 2
+properties/12/path = NodePath(".:token")
+properties/12/spawn = true
+properties/12/replication_mode = 2
 
 [node name="Actor" type="CharacterBody2D"]
 z_index = 1

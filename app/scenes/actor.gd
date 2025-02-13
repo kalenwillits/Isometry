@@ -16,6 +16,8 @@ const SPEED_NORMAL: float = 500.0
 const DESTINATION_PRECISION: float = 1.1
 const VIEW_SPEED: float = 0.83 # percent value to controll the amount of acceleration to the actor's view shape.
 
+@export var token: PackedByteArray
+@export var username: String
 @export var origin: Vector2
 @export var destination: Vector2
 @export var speed: float = 1.0
@@ -63,7 +65,21 @@ signal action_9(actor)
 signal heading_change(heading)
 
 class ActorBuilder extends Object:
+	var _username: String
+	var _password: String
 	var this: Actor = Scene.actor.instantiate()
+	
+	func username(value: String) -> ActorBuilder:
+		_username = value
+		return self
+
+	func password(value: String) -> ActorBuilder:
+		_password = value
+		return self
+		
+	func token(value: PackedByteArray) -> ActorBuilder:
+		this.set_token(value)
+		return self
 	
 	func peer_id(value: int) -> ActorBuilder:
 		this.peer_id = value
@@ -114,6 +130,9 @@ class ActorBuilder extends Object:
 			# build measures
 			for measure_ent in Repo.query([Group.MEASURE_ENTITY]):
 				this.measure[measure_ent.key()] = this.build_measure(measure_ent)
+			if _username and _password:
+				this.username = _username
+				this.set_token(Secret.encrypt("%s.%s" % [_username, _password]))
 		return this
 		
 static func builder() -> ActorBuilder:
@@ -121,6 +140,7 @@ static func builder() -> ActorBuilder:
 
 func pack() -> Dictionary:
 	return {
+		"token": token,
 		"peer_id": peer_id,
 		"name": name,
 		"location/x": position.x,
@@ -196,7 +216,7 @@ func _enter_tree():
 			add_to_group(Group.PRIMARY)
 	else: # NPC
 		add_to_group(Group.NPC)
-		
+
 func _exit_tree() -> void:
 	if is_primary():
 		Finder.query([Group.ACTOR]).map(
@@ -204,6 +224,28 @@ func _exit_tree() -> void:
 				a.is_awake(false)
 				a.visible_to_primary(false)
 		)
+
+func save() -> void:
+	var auth = Secret.Auth.builder().token(token).build()
+	var data = pack()
+	io.save_json(auth.get_path(), data)
+	
+
+func save_and_exit() -> void:
+	if !std.is_host_or_server(): return
+	Queue.enqueue(
+		Queue.Item.builder()
+			.comment("Saving actor %s to disk" % name)
+			.task(save)
+			.build()
+	)
+	Queue.enqueue(
+		Queue.Item.builder()
+			.comment("Actor exiting tree %s" % name)
+			.task(queue_free)
+			.build()
+	)
+
 
 func _ready() -> void:
 	build_fader()
@@ -619,6 +661,9 @@ func set_heading(value: String) -> void:
 func set_speed(value: float) -> void:
 	speed = value
 	
+func set_token(value: PackedByteArray) -> void:
+	token = value
+
 func root(time: float) -> void:
 	for dict in $ActionTimer.timeout.get_connections():
 		$ActionTimer.timeout.disconnect(dict.callable)
@@ -899,3 +944,7 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 
 func is_npc() -> bool:
 	return is_in_group(Group.NPC)
+	
+func _notification(what):
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and std.is_host_or_server() and !token.is_empty() and !is_npc():
+		save()

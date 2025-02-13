@@ -31,7 +31,7 @@ Queue="*res://autoload/queue.tscn"
 Controller="*res://autoload/controller.gd"
 Finder="*res://autoload/finder.tscn"
 Transition="*res://autoload/transition.tscn"
-Secrets="*res://autoload/secrets.gd"
+Secret="*res://autoload/secrets.gd"
 Config="*res://autoload/config.gd"
 
 [debug]
@@ -47,7 +47,7 @@ window/stretch/mode="canvas_items"
 
 [editor]
 
-run/main_run_args="--archive=default --uri=localhost --port=5001 --network=1 --dir=maps/target"
+run/main_run_args="--archive=default --uri=localhost --port=5001 --network=1 --dir=maps/target --username=user1 --password=pass1"
 
 [input]
 

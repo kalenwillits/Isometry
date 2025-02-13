@@ -1,19 +1,8 @@
 extends Object
 class_name ArgParse
 
-static func parse() -> void:
-	var args := parse_command_line_args()
-	for arg in [
-		"uri", 
-		"port", 
-		"archive", 
-		"network", 
-		"dir",
-		"username",
-		"password",
-		]:
-		Cache.set(arg, args.get(arg))
-
+static func parse() -> Dictionary:
+	return parse_command_line_args()
 
 static func parse_command_line_args() -> Dictionary:
 	var args = OS.get_cmdline_args()  # Get the command line arguments

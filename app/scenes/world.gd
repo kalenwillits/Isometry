@@ -9,16 +9,15 @@ func _on_peer_connected(peer_id) -> void:
 	Logger.info("Peer %s connected..." % peer_id )
 	Queue.enqueue(
 		Queue.Item.builder()
-				.comment("spawn_primary_actor when peer is connected")
-				.task(func(): spawn_primary_actor(peer_id))
-				.build()
-			)
+		.comment("Request Token from peer %s" % peer_id)
+		.task(func(): Controller.request_token_from_peer.rpc_id(peer_id))
+		.build()
+	)
 
 func _on_peer_disconnected(peer_id) -> void:
 	Logger.info("Peer %s disconnected..." % peer_id)
-	get_tree()\
-	.get_nodes_in_group(str(peer_id))\
-	.map(func(node): node.queue_free()) # TODO - Save actor state?
+	Optional.of_nullable(Finder.get_actor(str(peer_id)))\
+	.if_present(func(actor): actor.save_and_exit())
 	
 func _on_peer_failed_to_connect() -> void:
 	Logger.error("Failed to connect")
@@ -35,13 +34,16 @@ func _ready() -> void:
 	_handle_network_mode()
 	
 func spawn_primary_actor(peer_id: int) -> void:
-	var main_ent = Repo.select(Group.MAIN_ENTITY)
-	var actor_data := {
+	var auth = Secret.get_auth()
+	var data := {
 		"peer_id": peer_id, 
-		"map": main_ent.map.lookup().key(), 
-		"actor": main_ent.actor.lookup().key()
+		"token": auth.get_token(),
 		}
-	get_tree().get_first_node_in_group(Group.SPAWNER).spawn(actor_data)
+	if FileAccess.file_exists(auth.get_path()): 
+		var result = io.load_json(auth.get_path())
+		if result:
+			data.merge(result, false) # False because we do not want to overwrite the new peer id
+	Finder.select(Group.SPAWNER).spawn(data)
 
 func _handle_network_mode() -> void:
 	match Cache.network:
@@ -59,7 +61,7 @@ func _handle_network_mode() -> void:
 				Queue.Item.builder()
 				.comment("Spawning host or server actor")
 				.task(func(): spawn_primary_actor(1))
-				.condition(func(): return build_world_complete())
+				.condition(func(): return build_world_complete() and Secret.public_key != null)
 				.build()
 			)
 			Queue.enqueue(
@@ -113,15 +115,17 @@ func derive_actor_name(peer_id: int) -> String:
 	return str(-get_tree().get_node_count_in_group(Group.ACTOR))
 	
 func spawn_actor(data: Dictionary) -> Actor:
-	return Actor\
-	.builder()\
-	.name(derive_actor_name(data.get("peer_id", 0)))\
-	.actor(data.get("actor"))\
+	var main_ent = Repo.select(Group.MAIN_ENTITY)
+	var builder: Actor.ActorBuilder = Actor.builder()
+	builder.name(derive_actor_name(data.get("peer_id", 0)))\
+	.username(data.get("username", ""))\
+	.token(data.get("token", "".to_utf8_buffer()))\
+	.actor(data.get("actor", main_ent.actor.key()))\
 	.peer_id(data.get("peer_id", 0))\
-	.map(data.get("map"))\
-	.location(Vector2(data.get("position/x", 0.0), data.get("position/y", 0.0)))\
-	.resources(data.get("resources", {}))\
-	.build()
+	.map(data.get("map", main_ent.map.key()))\
+	.location(Vector2(data.get("location/x", 0.0), data.get("location/y", 0.0)))\
+	.resources(data.get("resources", {}))
+	return builder.build()
 
 func _on_connected_to_server() -> void:
 	Controller.get_public_key.rpc_id(1, multiplayer.get_unique_id())
