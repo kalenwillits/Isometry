@@ -39,7 +39,7 @@ class Auth extends Object:
 		return Auth.Builder.new()
 
 	func is_valid() -> bool:
-		return _is_valid_username(_username) and _is_valid_password(_password)
+		return _is_valid_username(_username) and _is_valid_password(_password) and !OS.has_feature("trial")
 
 	func get_token() -> PackedByteArray:
 		return _token

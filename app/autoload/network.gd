@@ -67,6 +67,8 @@ signal client_established
 # ------------------------------------------------------------------------------------------------------------ SIGNALS #
 
 func establish_server(port: int = 5000, max_clients: int = DEFAULT_MAX_NUM_CLIENTS):
+	if OS.has_feature("trial"):
+		max_clients = 0
 	# 	Create server that listens to connections via port. The port needs to
 	# 	be an available, unused port between 0 and 65535. Note that ports below
 	# 	1024 are privileged and may require elevated permissions depending on
@@ -82,6 +84,7 @@ func establish_server(port: int = 5000, max_clients: int = DEFAULT_MAX_NUM_CLIEN
 	_defer_signal(func(): server_established.emit())
 
 func establish_client(uri: String = "localhost", port: int = 5000):
+	if OS.has_feature("trial"): return
 	# Create client that connects to a server at uri using specified port.
 	if peer.create_client(uri, port) != OK:
 		Logger.error("Failed to create client")

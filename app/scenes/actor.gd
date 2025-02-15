@@ -228,10 +228,11 @@ func _exit_tree() -> void:
 func save() -> void:
 	var auth = Secret.Auth.builder().token(token).build()
 	var data = pack()
-	io.save_json(auth.get_path(), data)
-	
+	if !OS.has_feature("trial"): 
+		io.save_json(auth.get_path(), data)
 
 func save_and_exit() -> void:
+	if OS.has_feature("trial"): return
 	if !std.is_host_or_server(): return
 	Queue.enqueue(
 		Queue.Item.builder()
