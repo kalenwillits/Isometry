@@ -9,7 +9,7 @@ func authenticate_and_spawn_actor(peer_id: int, token: PackedByteArray) -> void:
 			.task(func():
 				var auth: Secret.Auth = Secret.Auth.builder().token(token).build()
 				if auth.is_valid():
-					var data: Dictionary = {"peer_id": peer_id, "token": token}
+					var data: Dictionary = {"peer_id": peer_id, "token": token, "name": auth.get_username()}
 					if FileAccess.file_exists(auth.get_path()): 
 						var result = io.load_json(auth.get_path())
 						if result:

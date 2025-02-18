@@ -17,7 +17,7 @@ const DESTINATION_PRECISION: float = 1.1
 const VIEW_SPEED: float = 0.83 # percent value to controll the amount of acceleration to the actor's view shape.
 
 @export var token: PackedByteArray
-@export var username: String
+@export var display_name: String
 @export var origin: Vector2
 @export var destination: Vector2
 @export var speed: float = 1.0
@@ -85,8 +85,8 @@ class ActorBuilder extends Object:
 		this.peer_id = value
 		return self
 		
-	func name(value: String) -> ActorBuilder:
-		this.name = value
+	func display_name(value: String) -> ActorBuilder:
+		this.display_name = value
 		return self
 
 	func map(value: String) -> ActorBuilder:
@@ -133,6 +133,7 @@ class ActorBuilder extends Object:
 			if _username and _password:
 				this.username = _username
 				this.set_token(Secret.encrypt("%s.%s" % [_username, _password]))
+			this.set_display_name(this.display_name)
 		return this
 		
 static func builder() -> ActorBuilder:
@@ -142,7 +143,7 @@ func pack() -> Dictionary:
 	return {
 		"token": token,
 		"peer_id": peer_id,
-		"name": name,
+		"name": display_name,
 		"location/x": position.x,
 		"location/y": position.y,
 		"actor": actor,
@@ -202,6 +203,7 @@ func set_substate(value: SubState) -> void:
 		substate = value
 
 func _enter_tree():
+	set_name(str(peer_id) if peer_id > 0 else str(-randi_range(1000000, 9999999)))
 	add_to_group(Group.ACTOR)
 	add_to_group(map)
 	add_to_group(name)
@@ -247,7 +249,6 @@ func save_and_exit() -> void:
 			.build()
 	)
 
-
 func _ready() -> void:
 	build_fader()
 	is_awake(false)
@@ -258,7 +259,6 @@ func _ready() -> void:
 	Trigger.new().arm("sprite").action(build_sprite).deploy(self)
 	Trigger.new().arm("map").action(update_client_visibility).deploy(self)
 	Trigger.new().arm("state").action(_on_state_change).deploy(self)
-	$Label.set_text(name) # TODO - Replace label with real name
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	if is_primary():
 		set_camera_target()
@@ -377,12 +377,14 @@ func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
 	Optional.of_nullable(Finder.get_actor(old_target_name)).if_present(
 		func(old_actor):
 			old_actor.set_outline_color(Palette.OUTLINE_CLEAR)
+			old_actor.get_node("Label").visible = false
 	)
 	
 func _handle_new_target(new_target_name: String) -> void:
 	Optional.of_nullable(Finder.get_actor(new_target_name)).if_present(
 		func(new_actor):
 			new_actor.set_outline_color(Palette.OUTLINE_SELECT)
+			new_actor.get_node("Label").visible = true
 	)
 	
 func get_target() -> String:
@@ -728,11 +730,15 @@ func handle_target() -> void:
 	.if_present(
 		func(target_actor): 
 			target_actor.set_outline_color(Palette.OUTLINE_SELECT)
+			$Label.visible = true
 	)
 	
 func build_fader() -> void:
 	Fader.builder().target(self).build().deploy(self)
 	fader = get_node("Fader")
+	
+func move_label() -> void:
+	$Label.position.y = -((get_sprite_size().y - get_sprite_margin().y))
 
 func build_sprite() -> void:
 	var sprite_ent = Repo.select(sprite)
@@ -764,6 +770,7 @@ func build_sprite() -> void:
 						)
 					);
 		setup_sprite.call_deferred(sprite_frames)
+		move_label()
 		Queue.enqueue(
 			Queue.Item.builder()
 			.comment("Build audio tracks for actor %s" % name)
@@ -776,6 +783,7 @@ func setup_sprite(sprite_frames: SpriteFrames) -> void:
 		$Sprite.offset = _calculate_sprite_offset()
 		$Sprite.set_sprite_frames(sprite_frames)
 		set_outline_color(Color(0, 0, 0, 0))
+		$Label.visible = false
 
 func _calculate_sprite_offset() -> Vector2i:
 	var full_size: Vector2i = get_sprite_size()
@@ -879,6 +887,9 @@ func use_state() -> void:
 		KeyFrames.RUN: 
 			if position.is_equal_approx(destination):
 				set_state(KeyFrames.IDLE)
+				
+func set_display_name(new_display_name: String) -> void:
+	$Label.set_text(display_name)
 
 func _on_heading_change(_radial):
 	pass
@@ -906,9 +917,11 @@ func _on_sprite_animation_changed():
 
 func _on_mouse_entered() -> void:
 	if get_outline_color().a < Palette.OUTLINE_SELECT.a: set_outline_color(Palette.OUTLINE_HOVER)
+	#$Label.visible = true
 
 func _on_mouse_exited() -> void:
 	if get_outline_color().a < Palette.OUTLINE_SELECT.a: set_outline_color(Palette.OUTLINE_CLEAR)
+	#$Label.visible = false
 	
 func _on_act(_viweport: Node, event: InputEvent, _shape_idx: int) -> void:
 	if event.is_action("primary_action"):

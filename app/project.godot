@@ -49,6 +49,11 @@ window/stretch/mode="canvas_items"
 
 run/main_run_args="--archive=default --uri=localhost --port=5001 --network=1 --dir=maps/target --username=user1 --password=pass1"
 
+[gui]
+
+theme/custom_font="res://themes/UbuntuMono-Regular.ttf"
+theme/default_font_hinting=0
+
 [input]
 
 toggle_developer_console={

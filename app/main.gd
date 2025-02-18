@@ -13,22 +13,26 @@ func _ready() -> void:
 		]:
 		Cache.set(arg, parsed_args.get(arg))
 	DisplayServer.window_set_title(get_window_title())
+	#Route.start()
 	start()
 
 func get_window_title() -> String:
 	return ("%s %s" % [Cache.archive, Network.Mode.find_key(Cache.network)]).strip_edges()
 
 func start() -> void:
-	match Cache.network:
-		Network.Mode.HOST:
-			Secret.load_or_create_rsa()
-			Network.start_server()
-			Network.server_established.connect(func(): Route.to(Scene.loading))
-		Network.Mode.SERVER:
-			Secret.load_or_create_rsa()
-			Network.start_server()
-			Network.server_established.connect(func(): Route.to(Scene.loading))
-		Network.Mode.CLIENT:
-			Route.to(Scene.loading)
-		_:
-			pass
+	#if !Cache.network or !Cache.username or !Cache.password or !Cache.uri or !Cache.port or !Cache.archive:
+		#Route.to(Scene.launcher)
+	#else:
+		match Cache.network:
+			Network.Mode.HOST:
+				Secret.load_or_create_rsa()
+				Network.start_server()
+				Network.server_established.connect(func(): Route.to(Scene.loading))
+			Network.Mode.SERVER:
+				Secret.load_or_create_rsa()
+				Network.start_server()
+				Network.server_established.connect(func(): Route.to(Scene.loading))
+			Network.Mode.CLIENT:
+				Route.to(Scene.loading)
+			_:
+				pass

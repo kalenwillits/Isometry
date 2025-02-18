@@ -38,6 +38,7 @@ func spawn_primary_actor(peer_id: int) -> void:
 	var data := {
 		"peer_id": peer_id, 
 		"token": auth.get_token(),
+		"name": auth.get_username()
 		}
 	if FileAccess.file_exists(auth.get_path()): 
 		var result = io.load_json(auth.get_path())
@@ -108,16 +109,11 @@ func build_deployments() -> void:
 				"position/y": deployment_ent.location.lookup().y,
 			}
 			get_tree().get_first_node_in_group(Group.SPAWNER).spawn(data)
-
-func derive_actor_name(peer_id: int) -> String:
-	if peer_id > 0:
-		return str(peer_id)
-	return str(-get_tree().get_node_count_in_group(Group.ACTOR))
 	
 func spawn_actor(data: Dictionary) -> Actor:
 	var main_ent = Repo.select(Group.MAIN_ENTITY)
 	var builder: Actor.ActorBuilder = Actor.builder()
-	builder.name(derive_actor_name(data.get("peer_id", 0)))\
+	builder.display_name(std.coalesce(data.get("name"), data.get("actor", main_ent.actor.lookup().name_)))\
 	.username(data.get("username", ""))\
 	.token(data.get("token", "".to_utf8_buffer()))\
 	.actor(data.get("actor", main_ent.actor.key()))\

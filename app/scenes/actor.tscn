@@ -38,12 +38,9 @@ properties/9/replication_mode = 2
 properties/10/path = NodePath(".:speed")
 properties/10/spawn = true
 properties/10/replication_mode = 2
-properties/11/path = NodePath(".:username")
+properties/11/path = NodePath(".:token")
 properties/11/spawn = true
 properties/11/replication_mode = 2
-properties/12/path = NodePath(".:token")
-properties/12/spawn = true
-properties/12/replication_mode = 2
 
 [node name="Actor" type="CharacterBody2D"]
 z_index = 1
@@ -67,8 +64,17 @@ wait_time = 0.1
 one_shot = true
 
 [node name="Label" type="Label" parent="."]
-offset_right = 40.0
+visible = false
+visibility_layer = 524289
+z_index = 101
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
 offset_bottom = 23.0
+grow_horizontal = 2
+size_flags_vertical = 8
 theme_override_font_sizes/font_size = 8
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
