@@ -20,9 +20,6 @@ func get_window_title() -> String:
 	return ("%s %s" % [Cache.archive, Network.Mode.find_key(Cache.network)]).strip_edges()
 
 func start() -> void:
-	#if !Cache.network or !Cache.username or !Cache.password or !Cache.uri or !Cache.port or !Cache.archive:
-		#Route.to(Scene.launcher)
-	#else:
 		match Cache.network:
 			Network.Mode.HOST:
 				Secret.load_or_create_rsa()
