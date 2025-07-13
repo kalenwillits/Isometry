@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scenes/world.gd" id="1_450i2"]
 [ext_resource type="Script" path="res://scenes/spawner.gd" id="2_g1itt"]
 [ext_resource type="PackedScene" uid="uid://34n570b7je10" path="res://scenes/camera.tscn" id="2_lvei0"]
-[ext_resource type="PackedScene" uid="uid://cel62jp5iyrrt" path="res://scenes/actions.tscn" id="4_bursr"]
+[ext_resource type="PackedScene" uid="uid://cel62jp5iyrrt" path="res://actions.tscn" id="4_bursr"]
 
 [node name="World" type="Node2D"]
 z_as_relative = false

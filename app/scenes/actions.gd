@@ -164,4 +164,85 @@ func plus_resource_self(self_name: String, target_name: String, params: Dictiona
 		var result: int = ResourceOperator.builder().actor(self_actor).resource(resource).build().plus(value).get_value()
 		#Logger.debug("plus_resource_self(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])
 	)
+
+func find_target(self_name: String, target_name: String, params: Dictionary) -> void:
+	var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
+	match params.get("rule"):
+		"nearest": 
+			pass
+		"furthest": 
+			pass
+		"resource": 
+			pass
+		_: # If none, default to targeting nearest
+			pass
+
+func target_nearest(self_name: String, target_name: String, params: Dictionary) -> void:
+	var self_actor: Actor = Finder.get_actor(self_name)
+	self_actor.set_target(
+		self_actor.find_nearest_actor_in_view()
+		.map(func(a): return a.get_name())
+		.or_else("")
+	)
+	
+func target_furthest(self_name: String, target_name: String, params: Dictionary) -> void:
+	var self_actor: Actor = Finder.get_actor(self_name)
+	self_actor.set_target(
+		self_actor.find_furthest_actor_in_view()
+		.map(func(a): return a.get_name())
+		.or_else("")
+	)
+	
+func target_random(self_name: String, target_name: String, params: Dictionary) -> void:
+	var self_actor: Actor = Finder.get_actor(self_name)
+	self_actor.set_target(
+		self_actor.find_random_actor_in_view()
+		.map(func(a): return a.get_name())
+		.or_else("")
+	)
+	
+func target_lowest_resource(self_name: String, target_name: String, params: Dictionary) -> void:
+	## resource: Name of resource to filter on
+	var self_actor: Actor = Finder.get_actor(self_name)
+	self_actor.set_target(
+		self_actor.find_actor_in_view_with_lowest_resource(params.get("resource"))
+		.map(func(a): return a.get_name())
+		.or_else("")
+	)
+	
+func target_highest_resource(self_name: String, target_name: String, params: Dictionary) -> void:
+	## resource: Name of resource to filter on
+	var self_actor: Actor = Finder.get_actor(self_name)
+	self_actor.set_target(
+		self_actor.find_actor_in_view_with_highest_resource(params.get("resource"))
+		.map(func(a): return a.get_name())
+		.or_else("")
+	)
+	
+func target_lowest_measure(self_name: String, target_name: String, params: Dictionary) -> void:
+	## resource: Name of resource to filter on
+	var self_actor: Actor = Finder.get_actor(self_name)
+	self_actor.set_target(
+		self_actor.find_actor_in_view_with_lowest_measure(params.get("measure"))
+		.map(func(a): return a.get_name())
+		.or_else("")
+	)
+	
+func target_highest_measure(self_name: String, target_name: String, params: Dictionary) -> void:
+	## resource: Name of resource to filter on
+	var self_actor: Actor = Finder.get_actor(self_name)
+	self_actor.set_target(
+		self_actor.find_actor_in_view_with_highest_measure(params.get("measure"))
+		.map(func(a): return a.get_name())
+		.or_else("")
+	)
+
+func move_to_target(self_name: String, target_name: String, params: Dictionary) -> void:
+	var self_actor: Actor = Finder.get_actor(self_name)
+	Optional.of_nullable(Finder.get_actor(target_name))\
+	.map(func(t): return t.get_position())\
+	.if_present(func(pos): self_actor.set_destination(pos))
 # ----------------------------------------------------------------------- Actions #
+
+
+	

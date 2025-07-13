@@ -36,3 +36,5 @@ config.log
 env/*
 
 tmp/
+
+target/

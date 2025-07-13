@@ -1,8 +1,6 @@
 extends CharacterBody2D
 class_name Actor
 
-# TODO - actions should still be requested even if the target is null
-
 enum SubState {
 	IDLE,
 	START,
@@ -40,6 +38,7 @@ var target_groups: Array = []
 var target_group_index: int = 0
 var speed_cache_value: float # Used to store speed value inbetween temporary changes
 var target_groups_counter: Dictionary
+var in_view: Dictionary # A Dictionary[StringName, Integer] of actors that are currently in view of this actor. The value is the total number of actors in the view when entered.
 var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
@@ -777,6 +776,86 @@ func build_sprite() -> void:
 			.task(build_audio)
 			.build()
 		)
+		
+func get_resource(resource_name: String) -> int:
+	## Returns -1 if resource does not exist
+	return resources.get(resource_name, -1)
+	
+func get_measure(measure_name: String) -> int:
+	## Returns -1 if measure does not exist
+	return Optional.of_nullable(measures.get(measure_name)).map(func(measure): return measure.call()).or_else(-1)
+		
+func map_relative_distance_to_in_view_actors() -> Dictionary:
+	var results: Dictionary = {}
+	for actor_name in in_view.keys():
+		results[actor_name] = isometric_distance_to_actor(Finder.get_actor(actor_name))
+	return results
+	
+func map_resource_of_in_view_actors(resource_name: String) -> Dictionary:
+	var results: Dictionary = {}
+	for actor_name in in_view.keys():
+		results[actor_name] = Finder.get_actor(actor_name).get_resource(resource_name)
+	return results
+	
+func map_measure_of_in_view_actors(measure_name: String) -> Dictionary:
+	var results: Dictionary = {}
+	for actor_name in in_view.keys():
+		results[actor_name] = Finder.get_actor(actor_name).get_measure(measure_name)
+	return results
+		
+func find_nearest_actor_in_view() -> Optional:
+	var distances = map_relative_distance_to_in_view_actors()
+	if distances.is_empty():
+		return Optional.of_nullable(null)
+	var min_distance = distances.values().min()
+	var nearest_actor = distances.keys().filter(func(actor): return distances[actor] == min_distance).front()
+	return Optional.of_nullable(Finder.get_actor(nearest_actor))
+
+func find_furthest_actor_in_view() -> Optional:
+	var distances = map_relative_distance_to_in_view_actors()
+	if distances.is_empty():
+		return Optional.of_nullable(null)
+	var max_distance = distances.values().max()
+	var furthest_actor = distances.keys().filter(func(actor): return distances[actor] == max_distance).front()
+	return Optional.of_nullable(Finder.get_actor(furthest_actor))
+
+func find_actor_in_view_with_highest_resource(resource_name: String) -> Optional:
+	var actor_resource_map = map_resource_of_in_view_actors(resource_name)
+	if actor_resource_map.is_empty():
+		return Optional.of_nullable(null)
+	var max_resource = actor_resource_map.values().max()
+	var actor_with_max_resource = actor_resource_map.keys().filter(func(actor): return actor_resource_map[actor] == max_resource).front()
+	return Optional.of_nullable(Finder.get_actor(actor_with_max_resource))
+
+func find_actor_in_view_with_lowest_resource(resource_name: String) -> Optional:
+	var actor_resource_map = map_resource_of_in_view_actors(resource_name)
+	if actor_resource_map.is_empty():
+		return Optional.of_nullable(null)
+	var min_resource = actor_resource_map.values().min()
+	var actor_with_min_resource = actor_resource_map.keys().filter(func(actor): return actor_resource_map[actor] == min_resource).front()
+	return Optional.of_nullable(Finder.get_actor(actor_with_min_resource))
+	
+func find_actor_in_view_with_highest_measure(measure_name: String) -> Optional:
+	var actor_measure_map = map_measure_of_in_view_actors(measure_name)
+	if actor_measure_map.is_empty():
+		return Optional.of_nullable(null)
+	var max_measure = actor_measure_map.values().max()
+	var actor_with_max_measure = actor_measure_map.keys().filter(func(actor): return actor_measure_map[actor] == max_measure).front()
+	return Optional.of_nullable(Finder.get_actor(actor_with_max_measure))
+
+func find_actor_in_view_with_lowest_measure(measure_name: String) -> Optional:
+	var actor_measure_map = map_resource_of_in_view_actors(measure_name)
+	if actor_measure_map.is_empty():
+		return Optional.of_nullable(null)
+	var min_measure = actor_measure_map.values().min()
+	var actor_with_min_measure = actor_measure_map.keys().filter(func(actor): return actor_measure_map[actor] == min_measure).front()
+	return Optional.of_nullable(Finder.get_actor(actor_with_min_measure))
+
+func find_random_actor_in_view() -> Optional:
+	if in_view.is_empty():
+		return Optional.of_nullable(null)
+	var random_actor_name = in_view.keys().pick_random()
+	return Optional.of_nullable(Finder.get_actor(random_actor_name))
 
 func setup_sprite(sprite_frames: SpriteFrames) -> void:
 		## Setting up a sprite sheet dynamically is a touchy thing. It must be started in this order.
@@ -930,6 +1009,7 @@ func _on_act(_viweport: Node, event: InputEvent, _shape_idx: int) -> void:
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
 	other.on_view.emit(self)
+	in_view[other.get_name()] = in_view.size()
 	for target_group_key in other.target_groups:
 		target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
 	other.visible_to_primary(true)
@@ -937,6 +1017,7 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 
 func _on_view_box_area_exited(area: Area2D) -> void:
 	var other = area.get_parent()
+	in_view.erase(other.get_name())
 	var other_name: String = other.get_name()
 	var this_actor_name: String = get_name()
 	other.fader.at_next_appear(
