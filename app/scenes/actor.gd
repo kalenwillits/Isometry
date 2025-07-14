@@ -215,6 +215,7 @@ func _enter_tree():
 		set_multiplayer_authority(str(name).to_int())
 		if is_primary():
 			add_to_group(Group.PRIMARY)
+			Finder.query([Group.INTEFACE]).map(func(i): i.set_primary_actor_display_name(display_name))
 	else: # NPC
 		add_to_group(Group.NPC)
 
