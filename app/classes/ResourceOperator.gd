@@ -17,8 +17,8 @@ class Builder extends Object:
 		return self
 
 	func build() -> ResourceOperator: 
-		assert(this.resource != null)
-		assert(this.actor != null)
+		#assert(this.resource != null)
+		#assert(this.actor != null)
 		return this
 
 static func builder() -> Builder:

@@ -45,6 +45,7 @@ func evaluate() -> int:
 func inject_target_resources() -> void:
 	if target_name == "": return
 	var target_actor: Actor = scene_tree.get_first_node_in_group(target_name)
+	if target_actor == null: return
 	for target_resource_key in target_actor.resources.keys(): # TODO use regex
 		if target_resource_key not in self.expression: continue
 		var target_resource_code: String = "%s%s" % [TARGET_MARKER, target_resource_key]
@@ -52,6 +53,7 @@ func inject_target_resources() -> void:
 	
 func inject_caller_resources() -> void:
 	var caller_actor: Actor = scene_tree.get_first_node_in_group(caller_name)
+	if caller_actor == null: return
 	for caller_resource_key in caller_actor.resources.keys(): # TODO use regex
 		if caller_resource_key not in self.expression: continue
 		var caller_resource_code: String = "%s%s" % [TARGET_MARKER, caller_resource_key]
@@ -60,6 +62,7 @@ func inject_caller_resources() -> void:
 func inject_target_measures() -> void:
 	if target_name == "": return
 	var target_actor: Actor = scene_tree.get_first_node_in_group(target_name)
+	if target_actor == null: return
 	for target_measure_key in target_actor.measures.keys(): # TODO use regex
 		if target_measure_key not in self.expression: continue
 		var target_measure_code: String = "%s%s" % [TARGET_MARKER, target_measure_key]
@@ -67,6 +70,7 @@ func inject_target_measures() -> void:
 	
 func inject_caller_measures() -> void:
 	var caller_actor: Actor = scene_tree.get_first_node_in_group(caller_name)
+	if caller_actor == null: return
 	for caller_measure_key in caller_actor.measures.keys(): # TODO use regex
 		if caller_measure_key not in self.expression: continue
 		var caller_measure_code: String = "%s%s" % [TARGET_MARKER, caller_measure_key]
