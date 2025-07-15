@@ -15,6 +15,10 @@ func update_primary_actor_info() -> void:
 			set_position(str(primary_actor.position))
 			set_origin(str(primary_actor.origin))
 			set_destination(str(primary_actor.destination))
+			set_speed(str(primary_actor.speed))
+			set_heading(primary_actor.heading)
+			set_state(primary_actor.state)
+			set_target(primary_actor.target)
 			for n in range(1, 10):
 				var action_name: String = "action_%d" % n
 				if actor_ent.get(action_name): 
@@ -31,3 +35,15 @@ func set_origin(value: String) -> void:
 	
 func set_destination(value: String) -> void:
 	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/DestinationLabel.set_text("DESTINATION: %s" % value)
+	
+func set_speed(value: String) -> void:
+	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/SpeedLabel.set_text("SPEED: %s" % value)
+
+func set_heading(value: String) -> void:
+	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/HeadingLabel.set_text("HEADING: %s" % value)
+	
+func set_state(value: String) -> void:
+	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/StateLabel.set_text("STATE: %s" % value)
+	
+func set_target(value: String) -> void:
+	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/TargetLabel.set_text("TARGET: %s" % value)

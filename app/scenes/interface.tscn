@@ -31,6 +31,9 @@ size_flags_vertical = 3
 [node name="DisplayNameLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
 layout_mode = 2
 
+[node name="HeadingLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
+layout_mode = 2
+
 [node name="LocationLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
 layout_mode = 2
 
@@ -38,6 +41,15 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="DestinationLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
+layout_mode = 2
+
+[node name="SpeedLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
+layout_mode = 2
+
+[node name="StateLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
+layout_mode = 2
+
+[node name="TargetLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
 layout_mode = 2
 
 [node name="VBoxBot" type="VBoxContainer" parent="DebugView/VBox/HBox/VBoxLeft"]
