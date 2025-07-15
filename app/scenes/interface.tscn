@@ -5,9 +5,89 @@
 [node name="Interface" type="Node"]
 script = ExtResource("1_7q01f")
 
-[node name="View" type="CanvasLayer" parent="."]
+[node name="DebugView" type="CanvasLayer" parent="."]
 
-[node name="TempLabel" type="Label" parent="View"]
-offset_right = 40.0
-offset_bottom = 17.0
-text = "TEST CHECK TEST"
+[node name="VBox" type="VBoxContainer" parent="DebugView"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HBox" type="HBoxContainer" parent="DebugView/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxLeft" type="VBoxContainer" parent="DebugView/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxTop" type="VBoxContainer" parent="DebugView/VBox/HBox/VBoxLeft"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DisplayNameLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
+layout_mode = 2
+
+[node name="LocationLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
+layout_mode = 2
+
+[node name="OriginLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
+layout_mode = 2
+
+[node name="DestinationLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
+layout_mode = 2
+
+[node name="VBoxBot" type="VBoxContainer" parent="DebugView/VBox/HBox/VBoxLeft"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 2
+
+[node name="ActionLabel1" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
+layout_mode = 2
+
+[node name="ActionLabel2" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
+layout_mode = 2
+
+[node name="ActionLabel3" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
+layout_mode = 2
+
+[node name="ActionLabel4" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
+layout_mode = 2
+
+[node name="ActionLabel5" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
+layout_mode = 2
+
+[node name="ActionLabel6" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
+layout_mode = 2
+
+[node name="ActionLabel7" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
+layout_mode = 2
+
+[node name="ActionLabel8" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
+layout_mode = 2
+
+[node name="ActionLabel9" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
+layout_mode = 2
+
+[node name="ActionLabel10" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
+layout_mode = 2
+
+[node name="VBoxRight" type="VBoxContainer" parent="DebugView/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 2
+
+[node name="VBoxTop" type="VBoxContainer" parent="DebugView/VBox/HBox/VBoxRight"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxBot" type="VBoxContainer" parent="DebugView/VBox/HBox/VBoxRight"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 2
+
+[node name="DisplayView" type="CanvasLayer" parent="."]
+visible = false
