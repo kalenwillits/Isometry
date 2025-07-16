@@ -1,11 +1,14 @@
 extends TileMapLayer
 class_name FadingTileMapLayer
 
+var process_delta: float = 0.0
+
 const SCALE_TO_VIEW: float = 5.0
 var tile_render_states: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group(Group.MAP_LAYER)
+	visibility_changed.connect(_on_visibility_changed)
 
 func calculate_distance_and_radius(coords: Vector2i) -> TileRenderState.UpdateParams:
 	var primary_actor: Actor = Finder.get_primary_actor()
@@ -27,6 +30,7 @@ func use_render_tile(coords: Vector2i, tile_data: TileData) -> void:
 	var tile_render_state_update_params: TileRenderState.UpdateParams = calculate_distance_and_radius(coords)
 	tile_render_states[coords].update(tile_render_state_update_params)		
 	tile_data.modulate = tile_render_states[coords].get_modulate()
+	tile_render_states[coords].tick(process_delta)
 		
 func _use_tile_data_runtime_update(coords: Vector2i) -> bool:
 	return true
@@ -36,4 +40,8 @@ func _tile_data_runtime_update(coords: Vector2i, tile_data: TileData) -> void:
 	use_render_tile(coords, tile_data)
 
 func _process(delta: float) -> void: # TODO - consider slowing down this class
+	process_delta = delta
 	notify_runtime_tile_data_update()
+
+func _on_visibility_changed() -> void:
+	set_process(visible)
