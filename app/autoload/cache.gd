@@ -16,8 +16,6 @@ var archive: String = ""
 var dir: String = ""
 var textures: Dictionary  # Storage of already loaded textures
 var camera_zoom: int = 3
-var tile_coords_in_primary_actor_view: Array[Vector2i] = []
-
 # TODO - swap this over to the other cache system
 var packed_actors: Dictionary = {}  # used to store actors server-side that are being transistioned
 

@@ -128,7 +128,6 @@ func build_isometric_tilemap() -> void:
 	var layers_ent_array = tilemap_ent.layers.lookup()
 	for layer_index in range(layers_ent_array.size()):
 		var tilemap_layer := FadingTileMapLayer.new()
-		tilemap_layer.add_to_group(Group.MAP_LAYER)
 		tilemap_layer.add_to_group(name)
 		tilemap_layer.enabled = false # Sets visibilty and collisions off by default
 		var layer_ent = layers_ent_array[layer_index]
