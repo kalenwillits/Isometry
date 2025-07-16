@@ -126,7 +126,7 @@ func build_isometric_tilemap() -> void:
 			atlas_tile.set("physics_layer_0/polygon_0/points", vectors)
 	var layers_ent_array = tilemap_ent.layers.lookup()
 	for layer_index in range(layers_ent_array.size()):
-		var tilemap_layer := TileMapLayer.new()
+		var tilemap_layer := FadingTileMapLayer.new()
 		tilemap_layer.add_to_group(Group.MAP_LAYER)
 		tilemap_layer.add_to_group(name)
 		tilemap_layer.enabled = false # Sets visibilty and collisions off by default

@@ -155,3 +155,39 @@ func intersect(array1: Array, array2: Array) -> Array:
 	
 func is_host_or_server() -> bool:
 	return (Cache.network == Network.Mode.HOST) or (Cache.network == Network.Mode.SERVER)
+	
+func isometric_shape(size: int) -> PackedVector2Array:
+	var half_height := size * 0.5
+	var points := PackedVector2Array()
+	points.append(Vector2(0, -half_height))
+	points.append(Vector2(size, 0))     
+	points.append(Vector2(0, half_height))   
+	points.append(Vector2(-size, 0))         
+	return points
+
+func get_elliptical_grid(grid_size: float, position: Vector2, size: float) -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+
+	# Convert center position to tile coordinates
+	var center_tile := (position / grid_size).floor()
+
+	# Convert size in world units to tile units
+	var size_in_tiles := size / grid_size
+	var half_width := size_in_tiles
+	var half_height := size_in_tiles * 0.5
+
+	# Bounding box to search in tile-space
+	var min_x := int(floor(center_tile.x - half_width))
+	var max_x := int(ceil(center_tile.x + half_width))
+	var min_y := int(floor(center_tile.y - half_height))
+	var max_y := int(ceil(center_tile.y + half_height))
+
+	for x in range(min_x, max_x + 1):
+		for y in range(min_y, max_y + 1):
+			# Check if tile is within the ellipse
+			var dx := (x - center_tile.x) / half_width
+			var dy := (y - center_tile.y) / half_height
+			if (dx * dx + dy * dy) <= 1.0:
+				result.append(Vector2i(x, y))
+
+	return result

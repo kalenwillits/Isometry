@@ -371,7 +371,7 @@ func use_target() -> void:
 		target_group_index = increment_target_group()
 	if Input.is_action_just_pressed("decrement_target_group"):
 		target_group_index = decrement_target_group()
-		
+
 func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
 	Optional.of_nullable(Finder.get_actor(old_target_name)).if_present(
 		func(old_actor):
