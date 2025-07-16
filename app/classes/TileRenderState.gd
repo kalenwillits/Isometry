@@ -55,6 +55,9 @@ class UpdateParams:
 		this.distance = distance
 		this.radius = radius
 		return this
+		
+func is_active() -> bool:
+	return is_in_view or time_left > 0.0
 
 func update(params: UpdateParams) -> void:
 	is_in_view = params.distance <= params.radius
@@ -69,7 +72,7 @@ func update(params: UpdateParams) -> void:
 		target_tint = Style.UNDISCOVERED_TILE_TINT
 		target_alpha = Style.UNDISCOVERED_TILE_TINT
 
-	time_left = Fader.TRANSITION_TIME
+	time_left = Fader.TRANSITION_TIME 
 	
 func tick(delta: float) -> void:
 	if time_left > 0.0:

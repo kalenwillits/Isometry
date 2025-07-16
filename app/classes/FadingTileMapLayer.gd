@@ -26,17 +26,17 @@ func use_register_tile_render_state(coords: Vector2i) -> void:
 	if tile_render_states.get(coords) == null:
 		tile_render_states[coords] = TileRenderState.builder().build()
 		
-func use_render_tile(coords: Vector2i, tile_data: TileData) -> void:		
-	var tile_render_state_update_params: TileRenderState.UpdateParams = calculate_distance_and_radius(coords)
-	tile_render_states[coords].update(tile_render_state_update_params)		
+func use_render_tile(coords: Vector2i, tile_data: TileData) -> void:
 	tile_data.modulate = tile_render_states[coords].get_modulate()
-	tile_render_states[coords].tick(process_delta)
 		
 func _use_tile_data_runtime_update(coords: Vector2i) -> bool:
-	return true
+	use_register_tile_render_state(coords)
+	tile_render_states[coords].tick(process_delta)
+	var params: TileRenderState.UpdateParams = calculate_distance_and_radius(coords)
+	tile_render_states[coords].update(params)	
+	return tile_render_states[coords].is_active()
 	
 func _tile_data_runtime_update(coords: Vector2i, tile_data: TileData) -> void:
-	use_register_tile_render_state(coords)
 	use_render_tile(coords, tile_data)
 
 func _process(delta: float) -> void: # TODO - consider slowing down this class
