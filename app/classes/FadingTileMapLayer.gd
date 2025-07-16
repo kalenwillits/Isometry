@@ -45,3 +45,17 @@ func _process(delta: float) -> void: # TODO - consider slowing down this class
 
 func _on_visibility_changed() -> void:
 	set_process(visible)
+
+func pack_discovered_tiles() -> Array:
+	var results: Array = []
+	for coords: Vector2i in tile_render_states.keys():
+		var tile_render_state: TileRenderState = tile_render_states[coords]
+		if tile_render_state.is_discovered:
+			results.append([coords.x, coords.y])
+	return results
+	
+func unpack_discovered_tiles(tiles: Array) -> void:
+	for tile in tiles:
+		var coords: Vector2i = std.vec2i_from(tile)
+		tile_render_states[coords] = TileRenderState.builder().is_discovered(true).build()
+		

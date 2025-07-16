@@ -120,7 +120,8 @@ func spawn_actor(data: Dictionary) -> Actor:
 	.peer_id(data.get("peer_id", 0))\
 	.map(data.get("map", main_ent.map.key()))\
 	.location(Vector2(data.get("location/x", 0.0), data.get("location/y", 0.0)))\
-	.resources(data.get("resources", {}))
+	.resources(data.get("resources", {}))\
+	.discovery(data.get("discovery", {}))
 	return builder.build()
 
 func _on_connected_to_server() -> void:

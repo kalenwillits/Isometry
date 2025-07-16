@@ -39,6 +39,7 @@ var target_group_index: int = 0
 var speed_cache_value: float # Used to store speed value inbetween temporary changes
 var target_groups_counter: Dictionary
 var in_view: Dictionary # A Dictionary[StringName, Integer] of actors that are currently in view of this actor. The value is the total number of actors in the view when entered.
+var discovery: Dictionary = {}
 var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
@@ -107,6 +108,10 @@ class ActorBuilder extends Object:
 	func resources(value: Dictionary) -> ActorBuilder:
 		this.resources = value
 		return self
+		
+	func discovery(value: Dictionary) -> ActorBuilder:
+		this.discovery = value
+		return self
 
 	func build() -> Actor:
 		var actor_ent = Repo.query([this.actor]).pop_front()
@@ -137,9 +142,25 @@ class ActorBuilder extends Object:
 		
 static func builder() -> ActorBuilder:
 	return ActorBuilder.new()
+	
+func pack_discovery() -> Dictionary:
+	var results: Dictionary = {}
+	for map_layer_node in Finder.query([Group.MAP_LAYER]):
+		var map_node: Map = map_layer_node.get_parent()
+		if results.get(map_node.get_name()) == null: results[map_node.get_name()] = {}
+		results[map_node.get_name()][map_layer_node.get_name()] = map_layer_node.pack_discovered_tiles()
+	return results
+	
+func unpack_discovery() -> void:
+	for map_layer_node in Finder.query([Group.MAP_LAYER]): 
+		var map_node: Map = map_layer_node.get_parent()
+		if discovery.get(map_node.get_name()) == null: continue
+		if discovery[map_node.get_name()].get(map_layer_node.get_name()) == null: continue
+		map_layer_node.unpack_discovered_tiles(discovery[map_node.get_name()][map_layer_node.get_name()])
+	discovery.clear()
 
 func pack() -> Dictionary:
-	return {
+	var results: Dictionary = {
 		"token": token,
 		"peer_id": peer_id,
 		"name": display_name,
@@ -147,8 +168,11 @@ func pack() -> Dictionary:
 		"location/y": position.y,
 		"actor": actor,
 		"map": map,
-		"resources": resources
+		"resources": resources,
 	}
+	if is_primary():
+		results["discovery"] = pack_discovery()
+	return results
 	
 func get_outline_color() -> Color:
 	return $Sprite.material.get_shader_parameter("color")
@@ -273,6 +297,13 @@ func _ready() -> void:
 			Queue.Item.builder()
 			.comment("Set actor to awake %s" % name)
 			.task(func(): Finder.query([Group.ACTOR, map]).map(func(a): a.is_awake(true)))
+			.build()
+		)
+		Queue.enqueue(
+			Queue.Item.builder()
+			.comment("unpack discovery")
+			.task(unpack_discovery)
+			#.condition(func(): return Finder.query([Group.MAP]).size() > 0)
 			.build()
 		)
 
