@@ -124,7 +124,6 @@ class ActorBuilder extends Object:
 			if actor_ent.polygon: this.polygon = actor_ent.polygon.key()
 			if actor_ent.on_touch: this.build_on_touch_action(actor_ent.on_touch.key())
 			if actor_ent.on_view: this.build_on_view_action(actor_ent.on_view.key())
-			if actor_ent.primary_action: this.build_primary_action(actor_ent.primary_action.key())
 			for n in range(1, 10):
 				var action_name: String = "action_%d" % n
 				if actor_ent.get(action_name): this.build_action(actor_ent.get(action_name).key(), n)
@@ -620,17 +619,6 @@ func _local_action_handler(target_actor: Actor, function: Callable, action_ent: 
 			root(action_ent.time)
 			get_tree().create_timer(action_ent.time).timeout.connect(func(): set_substate(SubState.END))
 
-func build_primary_action(value: String) -> void:
-	var action_ent = Repo.select(value)
-	var params: Dictionary = {}
-	if action_ent.parameters:
-		for param_ent in action_ent.parameters.lookup():
-			params[param_ent.name_] = param_ent.value
-	primary.connect(func(target): _local_action_handler(
-		target, 
-		func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, peer_id, target.peer_id),
-		action_ent))
-
 func _local_primary_handler(target: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
 	if target.is_primary(): 
@@ -1024,18 +1012,6 @@ func use_collisions(effect: bool) -> void:
 
 func _on_sprite_animation_changed():
 	$Sprite.play()  # Without this, the animation freezes
-
-func _on_mouse_entered() -> void:
-	if get_outline_color().a < Palette.OUTLINE_SELECT.a: set_outline_color(Palette.OUTLINE_HOVER)
-	#$Label.visible = true
-
-func _on_mouse_exited() -> void:
-	if get_outline_color().a < Palette.OUTLINE_SELECT.a: set_outline_color(Palette.OUTLINE_CLEAR)
-	#$Label.visible = false
-	
-func _on_act(_viweport: Node, event: InputEvent, _shape_idx: int) -> void:
-	if event.is_action("primary_action"):
-		primary.emit(Finder.get_primary_actor())
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()

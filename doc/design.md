@@ -30,6 +30,8 @@ Target groups -- set colored outlines from campaign
 +++ Dynamic menus. With a target, hit select, and open a popup menu of actions to select from
 +++ Make public / private / secret a dice notation expression: If 0, false else true <-- USE A CONDITION!
 
+- controller movements arrow keys always turn actor in opposite direction
+
 
 
 Monster hunter inventory UI to show resources

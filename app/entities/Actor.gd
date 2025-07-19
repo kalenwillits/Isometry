@@ -16,7 +16,6 @@ var action_6: KeyRef # Action
 var action_7: KeyRef # Action
 var action_8: KeyRef # Action
 var action_9: KeyRef # Actiom
-var primary_action: KeyRef # Action
 var resources: KeyRefArray # Resource
 var groups: KeyRefArray # Group
 var triggers: KeyRefArray # Trigger
