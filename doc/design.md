@@ -15,7 +15,27 @@ user must focus all of their related party members. Focused actors will bind to 
 
 Campaign Analyzer: <-- Before loading, a campaign Analyzer should lint and provide feedback in a log file.
 
-name: Atlas Myth
+name: Atlas Myth, Atlas Epsilon, Art of Atlas
+
+AtlasEpsilon
+
+AtlasMyth
 
 ++ Keybinds
 ++ On target signal
+
+Target groups -- set colored outlines from campaign
+
+-- Just use icons!!! <--- It will clean up the AI to use squares
++++ Dynamic menus. With a target, hit select, and open a popup menu of actions to select from
++++ Make public / private / secret a dice notation expression: If 0, false else true <-- USE A CONDITION!
+
+
+
+Monster hunter inventory UI to show resources
+
+Resource number formats:
+<1000 = 999
+>=1,000 = 999k
+>=1,000,000 = 999m
+>=1,000,000,000 = 999g
