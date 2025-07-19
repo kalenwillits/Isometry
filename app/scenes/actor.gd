@@ -920,12 +920,9 @@ func get_speed(delta: float) -> float:
 	
 func use_move_directly(_delta) -> void:
 	var motion = Input.get_vector("left", "right", "up", "down")
-	var new_destination: Vector2 = position + motion * DESTINATION_PRECISION
+	var new_destination: Vector2 = position + motion * DESTINATION_PRECISION * 2 # This must be higher than destination precision or the actor will not be looking in the correct direction
 	if motion.length():
 		set_destination(new_destination)
-		match substate:
-			SubState.IDLE, SubState.START, SubState.END:
-				look_at_point(new_destination)
 
 func set_destination(point: Vector2) -> void:
 	## Where the actor is headed to.
