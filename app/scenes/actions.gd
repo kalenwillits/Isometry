@@ -164,18 +164,18 @@ func plus_resource_self(self_name: String, target_name: String, params: Dictiona
 		var result: int = ResourceOperator.builder().actor(self_actor).resource(resource).build().plus(value).get_value()
 		#Logger.debug("plus_resource_self(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])
 	)
-
-func find_target(self_name: String, target_name: String, params: Dictionary) -> void:
-	var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
-	match params.get("rule"):
-		"nearest": 
-			pass
-		"furthest": 
-			pass
-		"resource": 
-			pass
-		_: # If none, default to targeting nearest
-			pass
+#
+#func find_target(self_name: String, target_name: String, params: Dictionary) -> void:
+	#var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
+	#match params.get("rule"):
+		#"nearest": 
+			#pass # TODO - remove this and use the old ones
+		#"furthest": 
+			#pass
+		#"resource": 
+			#pass
+		#_: # If none, default to targeting nearest
+			#pass
 
 func target_nearest(self_name: String, target_name: String, params: Dictionary) -> void:
 	var self_actor: Actor = Finder.get_actor(self_name)
@@ -242,6 +242,7 @@ func move_to_target(self_name: String, target_name: String, params: Dictionary) 
 	Optional.of_nullable(Finder.get_actor(target_name))\
 	.map(func(t): return t.get_position())\
 	.if_present(func(pos): self_actor.set_destination(pos))
+
 # ----------------------------------------------------------------------- Actions #
 
 

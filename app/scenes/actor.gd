@@ -302,7 +302,6 @@ func _ready() -> void:
 			Queue.Item.builder()
 			.comment("unpack discovery")
 			.task(unpack_discovery)
-			#.condition(func(): return Finder.query([Group.MAP]).size() > 0)
 			.build()
 		)
 
@@ -1012,12 +1011,12 @@ func _on_sprite_animation_changed():
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
+	other.fader.fade()
+	other.visible_to_primary(true)
 	other.on_view.emit(self)
 	in_view[other.get_name()] = in_view.size()
 	for target_group_key in other.target_groups:
 		target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
-	other.visible_to_primary(true)
-	other.fader.fade()
 
 func _on_view_box_area_exited(area: Area2D) -> void:
 	var other = area.get_parent()

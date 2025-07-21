@@ -32,6 +32,12 @@ Target groups -- set colored outlines from campaign
 
 - controller movements arrow keys always turn actor in opposite direction
 
+- Cooldown on actions. ??? <-- maybe thats already there
+
+- Fully check if strategies will work for npcs
+
+
+
 
 
 Monster hunter inventory UI to show resources
