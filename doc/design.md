@@ -52,3 +52,4 @@ Resource number formats:
 
 
 --- Stragegies are way too complicated. -- develop a handful of bots and leave it at that. passive / defensive / aggressive
+https://gamedev.stackexchange.com/questions/51693/difference-between-decision-trees-behavior-trees-for-game-ai/51722#51722

@@ -545,6 +545,7 @@ func build_strategy() -> void:
 func set_strategy(value: Entity) -> void:
 	var behaviors: Array[Behavior] = []
 	for behavior_ent in value.behaviors.lookup():
+		# TODO - Support no criteria
 		behaviors.append(
 			Behavior.builder().criteria(behavior_ent.criteria.key()).action(func(interaction): _local_action_handler(interaction.target, func(t): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, behavior_ent.action.key(), name, Optional.of_nullable(t).map(func(t): return t.get_name()).or_else("")), behavior_ent.action.lookup())).build()
 		)

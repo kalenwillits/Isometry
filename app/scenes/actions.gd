@@ -242,7 +242,15 @@ func move_to_target(self_name: String, target_name: String, params: Dictionary) 
 	Optional.of_nullable(Finder.get_actor(target_name))\
 	.map(func(t): return t.get_position())\
 	.if_present(func(pos): self_actor.set_destination(pos))
-
+	
+func change_strategy(self_name: String, target_name: String, params: Dictionary) -> void:
+	var self_actor: Actor = Finder.get_actor(self_name)
+	var strategy_key: String = params.get("strategy")
+	var strategy_ent: Entity
+	if strategy_key != null:
+		strategy_ent = Repo.query([strategy_key]).pop_front()
+	if strategy_ent != null:
+		self_actor.set_strategy(strategy_ent)
 # ----------------------------------------------------------------------- Actions #
 
 
