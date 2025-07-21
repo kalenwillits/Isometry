@@ -282,15 +282,16 @@ func _ready() -> void:
 	Trigger.new().arm("map").action(update_client_visibility).deploy(self)
 	Trigger.new().arm("state").action(_on_state_change).deploy(self)
 	$Sprite.set_sprite_frames(SpriteFrames.new())
+	$HitBox.area_entered.connect(_on_hit_box_body_entered)
+	$ViewBox.area_entered.connect(_on_view_box_area_entered)
 	if is_primary():
+		$ViewBox.area_exited.connect(_on_view_box_area_exited)
+		fader.fade()
 		set_camera_target()
 		Transition.appear()
 		build_target_groups_counter()
 		is_awake(true)
 		visible_to_primary(true)
-		$HitBox.area_entered.connect(_on_hit_box_body_entered)
-		$ViewBox.area_entered.connect(_on_view_box_area_entered)
-		$ViewBox.area_exited.connect(_on_view_box_area_exited)
 		schedule_render_this_actors_map()
 		Queue.enqueue(
 			Queue.Item.builder()
@@ -1011,13 +1012,15 @@ func _on_sprite_animation_changed():
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
-	other.fader.fade()
-	other.visible_to_primary(true)
-	other.on_view.emit(self)
-	in_view[other.get_name()] = in_view.size()
-	for target_group_key in other.target_groups:
-		target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
-
+	if other == self: return
+	if is_primary():
+		other.fader.fade()
+		other.visible_to_primary(true)
+		in_view[other.get_name()] = in_view.size()
+		for target_group_key in other.target_groups:
+			target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
+	self.on_view.emit(other)
+	
 func _on_view_box_area_exited(area: Area2D) -> void:
 	var other = area.get_parent()
 	in_view.erase(other.get_name())

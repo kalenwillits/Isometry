@@ -47,3 +47,8 @@ Resource number formats:
 >=1,000 = 999k
 >=1,000,000 = 999m
 >=1,000,000,000 = 999g
+
+
+
+
+--- Stragegies are way too complicated. -- develop a handful of bots and leave it at that. passive / defensive / aggressive
