@@ -1,7 +1,7 @@
 extends Object
 class_name Strategy
 
-var _index: int
+var behavior_index: int = 0
 
 var behaviors: Array[Behavior] = []
 
@@ -19,24 +19,32 @@ class Builder extends Object:
 static func builder() -> Builder:
 	return Builder.new()
 
+func get_active_behavior() -> Behavior:
+	return behaviors[behavior_index % behaviors.size()]
+
 func reset() -> void:
-	_index = 0
+	behavior_index = 0
 	
-func increment_index() -> void:
-	_index += 1
-	
-func decrement_index() -> void:
-	_index -= 1
+func advance() -> void:
+	behavior_index += 1;
+	if behavior_index >= behaviors.size():
+		reset()
+		
+func fallback() -> void:
+	behavior_index = max(0, behavior_index - 1)
 
 func use(interaction: ActorInteraction) -> void:
-	var num_behaviors: int = behaviors.size()
-	if num_behaviors <= 0: return
-	var current_behavior: Behavior = behaviors[clamp(_index, 0, num_behaviors - 1)]
-	current_behavior.use(interaction)
-	match current_behavior.get_state():
-		Behavior.State.IDLE:
-			decrement_index()
-		Behavior.State.ACTIVE:
-			pass
-		Behavior.State.ADVANCE:
-			increment_index()
+	for i in range(0, behavior_index + 1):
+		var behavior_goals_are_met: bool = behaviors[i].goals_are_met(interaction)
+		if behavior_goals_are_met and behavior_index == i:
+			behaviors[i].advance()
+		if !behavior_goals_are_met and behavior_index != i:
+			behaviors[i].fallback()
+		match behaviors[i].get_state():
+			Behavior.State.FALLBACK:
+				fallback()
+				behaviors[i].arm()
+			Behavior.State.ACTIVE:
+				behaviors[i].get_action().call(interaction)
+			Behavior.State.ADVANCE:
+				advance()

@@ -289,6 +289,7 @@ func _ready() -> void:
 	$HitBox.area_entered.connect(_on_hit_box_body_entered)
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
 	if is_primary():
+		position = Vector2(100, 200)
 		$ViewBox.area_exited.connect(_on_view_box_area_exited)
 		fader.fade()
 		set_camera_target()
@@ -579,7 +580,7 @@ func set_strategy(value: Entity) -> void:
 	var behaviors: Array[Behavior] = []
 	for behavior_ent in value.behaviors.lookup():
 		behaviors.append(
-			Behavior.builder().criteria(behavior_ent.criteria.keys())
+			Behavior.builder().goals(behavior_ent.goals.keys())
 				.action(
 					func(interaction): 
 						_local_action_handler(interaction.target, func(t): 
