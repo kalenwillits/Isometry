@@ -8,9 +8,8 @@ var action: Callable
 
 enum State {
 	IDLE,
-	STARTING,
 	ACTIVE,
-	COMPLETED,
+	ADVANCE
 }
 
 class Builder extends Object:
@@ -35,17 +34,6 @@ static func builder() -> Builder:
 	
 func get_state() -> State:
 	return _state
-	
-func promote_state() -> void:
-	match get_state():
-		Behavior.State.IDLE: 
-			_state = State.STARTING
-		Behavior.State.STARTING: 
-			_state = State.ACTIVE
-		Behavior.State.ACTIVE: 
-			_state = State.COMPLETED
-		Behavior.State.COMPLETED: 
-			_state = State.IDLE
 			
 func criteria_is_met(interaction: ActorInteraction) -> bool:
 	var criteria_results: Array[bool] = []
@@ -60,15 +48,14 @@ func criteria_is_met(interaction: ActorInteraction) -> bool:
 	return criteria_results.all(func(result): return result)
 
 func use(interaction: ActorInteraction) -> void:
+	action.call(interaction)
 	match get_state():
 		Behavior.State.IDLE:
-			promote_state()
-		Behavior.State.STARTING:
-			promote_state()
+			if !criteria_is_met(interaction):
+				_state = State.ACTIVE
 		Behavior.State.ACTIVE:
 			if criteria_is_met(interaction):
-				promote_state()
-			else: 
-				action.call(interaction)
-		Behavior.State.COMPLETED:
-			promote_state()
+				_state = State.ADVANCE
+		Behavior.State.ADVANCE:
+			if !criteria_is_met(interaction):
+				_state = State.IDLE

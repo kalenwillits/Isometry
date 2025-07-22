@@ -25,8 +25,8 @@ func reset() -> void:
 func increment_index() -> void:
 	_index += 1
 	
-func stop() -> void:
-	pass
+func decrement_index() -> void:
+	_index -= 1
 
 func use(interaction: ActorInteraction) -> void:
 	var num_behaviors: int = behaviors.size()
@@ -35,10 +35,8 @@ func use(interaction: ActorInteraction) -> void:
 	current_behavior.use(interaction)
 	match current_behavior.get_state():
 		Behavior.State.IDLE:
-			pass
-		Behavior.State.STARTING:
-			pass
+			decrement_index()
 		Behavior.State.ACTIVE:
 			pass
-		Behavior.State.COMPLETED:
+		Behavior.State.ADVANCE:
 			increment_index()
