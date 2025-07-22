@@ -1,6 +1,6 @@
 extends Entity
 
-var criteria: KeyRef # Condition
+var criteria: KeyRefArray # Condition
 var action: KeyRef # Action
 
 func _ready() -> void:

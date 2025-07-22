@@ -8,9 +8,6 @@ const TILESET_TILESHAPE: TileSet.TileShape = TileSet.TILE_SHAPE_ISOMETRIC
 const TILESET_LAYOUT: TileSet.TileLayout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
 const TILESET_OFFSET_AXIS: TileSet.TileOffsetAxis = TileSet.TILE_OFFSET_AXIS_HORIZONTAL
 
-#const COLLISION_LAYER_ACTOR: int = 1
-#const COLLISION_LAYER_WALL: int = 2
-
 const INVALID_TILE_SYMBOLS: Array[String] = ["", " ", "\t", "\n"]
 
 var map_key: String

@@ -162,23 +162,11 @@ func plus_resource_self(self_name: String, target_name: String, params: Dictiona
 		var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
 		var value: int = Dice.builder().expression(params.expression).build().evaluate()
 		var result: int = ResourceOperator.builder().actor(self_actor).resource(resource).build().plus(value).get_value()
-		#Logger.debug("plus_resource_self(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])
 	)
-#
-#func find_target(self_name: String, target_name: String, params: Dictionary) -> void:
-	#var self_actor: Actor = get_tree().get_first_node_in_group(self_name)
-	#match params.get("rule"):
-		#"nearest": 
-			#pass # TODO - remove this and use the old ones
-		#"furthest": 
-			#pass
-		#"resource": 
-			#pass
-		#_: # If none, default to targeting nearest
-			#pass
 
 func target_nearest(self_name: String, target_name: String, params: Dictionary) -> void:
 	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null: return
 	self_actor.set_target(
 		self_actor.find_nearest_actor_in_view()
 		.map(func(a): return a.get_name())
@@ -239,12 +227,21 @@ func target_highest_measure(self_name: String, target_name: String, params: Dict
 
 func move_to_target(self_name: String, target_name: String, params: Dictionary) -> void:
 	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null: return
 	Optional.of_nullable(Finder.get_actor(target_name))\
 	.map(func(t): return t.get_position())\
 	.if_present(func(pos): self_actor.set_destination(pos))
 	
+func use_track(self_name: String, target_name: String, params: Dictionary) -> void:
+	## Designed to be use as a behavior action.
+	var self_actor: Actor = Finder.get_actor(self_name)
+	var track_param: String = params.get("track", "")
+	var track_keys: Array = track_param.split("|")
+	self_actor.use_track(track_keys)
+
 func change_strategy(self_name: String, target_name: String, params: Dictionary) -> void:
 	var self_actor: Actor = Finder.get_actor(self_name)
+	self_actor.interrupt_strategy()
 	var strategy_key: String = params.get("strategy")
 	var strategy_ent: Entity
 	if strategy_key != null:

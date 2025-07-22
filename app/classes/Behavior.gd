@@ -3,7 +3,7 @@ class_name Behavior
 
 var _state: State = State.IDLE
 
-var criteria: String # Condition Key
+var criteria: Array # Condition Key
 var action: Callable
 
 enum State {
@@ -16,7 +16,7 @@ enum State {
 class Builder extends Object:
 	var this: Behavior = Behavior.new()
 	
-	func criteria(value: String) -> Builder:
+	func criteria(value: Array) -> Builder:
 		this.criteria = value
 		return self
 		
@@ -46,22 +46,29 @@ func promote_state() -> void:
 			_state = State.COMPLETED
 		Behavior.State.COMPLETED: 
 			_state = State.IDLE
+			
+func criteria_is_met(interaction: ActorInteraction) -> bool:
+	var criteria_results: Array[bool] = []
+	for condition_key in criteria:
+		criteria_results.append(ConditionEvaluator.evaluate(
+			ConditionEvaluator.EvaluateParams.builder()
+			.caller_name(interaction.get_caller().name)
+			.target_name(Optional.of_nullable(interaction.get_target()).map(func(t): t.name).or_else(""))
+			.condition_key(condition_key)
+			.build()
+		))
+	return criteria_results.all(func(result): return result)
 
 func use(interaction: ActorInteraction) -> void:
 	match get_state():
 		Behavior.State.IDLE:
 			promote_state()
 		Behavior.State.STARTING:
-			action.call(interaction)
 			promote_state()
 		Behavior.State.ACTIVE:
-			if ConditionEvaluator.evaluate(
-				ConditionEvaluator.EvaluateParams.builder()
-				.caller_name(interaction.get_caller().name)
-				.target_name(Optional.of_nullable(interaction.get_target()).map(func(t): t.name).or_else(""))
-				.condition_key(criteria)
-				.build()
-			): promote_state()
-			else: action.call(interaction)
+			if criteria_is_met(interaction):
+				promote_state()
+			else: 
+				action.call(interaction)
 		Behavior.State.COMPLETED:
 			promote_state()

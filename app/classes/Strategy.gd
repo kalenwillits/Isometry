@@ -24,15 +24,18 @@ func reset() -> void:
 	
 func increment_index() -> void:
 	_index += 1
+	
+func stop() -> void:
+	pass
 
 func use(interaction: ActorInteraction) -> void:
 	var num_behaviors: int = behaviors.size()
 	if num_behaviors <= 0: return
-	var current_behavior: Behavior = behaviors[_index % num_behaviors]
+	var current_behavior: Behavior = behaviors[clamp(_index, 0, num_behaviors - 1)]
 	current_behavior.use(interaction)
 	match current_behavior.get_state():
 		Behavior.State.IDLE:
-			pass # TODO - add hooks if needed
+			pass
 		Behavior.State.STARTING:
 			pass
 		Behavior.State.ACTIVE:

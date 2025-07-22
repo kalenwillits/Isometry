@@ -39,10 +39,12 @@ var target_group_index: int = 0
 var speed_cache_value: float # Used to store speed value inbetween temporary changes
 var target_groups_counter: Dictionary
 var in_view: Dictionary # A Dictionary[StringName, Integer] of actors that are currently in view of this actor. The value is the total number of actors in the view when entered.
+var track_index: int = 0 # Identifies what index in a npc's track array to follow
 var discovery: Dictionary = {}
 var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
+	"has_target": _built_in_measure__has_target,
 }
 var strategy: Strategy
 # Without these, the viewshape only moves while the actor is moving.
@@ -61,6 +63,7 @@ signal action_6(actor)
 signal action_7(actor)
 signal action_8(actor)
 signal action_9(actor)
+signal untarget_hook # Tell actors who are targeting this actor to untarget
 
 signal heading_change(heading)
 
@@ -242,6 +245,7 @@ func _enter_tree():
 		add_to_group(Group.NPC)
 
 func _exit_tree() -> void:
+	untarget_hook.emit()
 	if is_primary():
 		Finder.query([Group.ACTOR]).map(
 			func(a): 
@@ -336,13 +340,31 @@ func _physics_process(delta) -> void:
 		use_movement(delta)
 
 func _built_in_measure__distance_to_target() -> int:
-	Optional.of_nullable(Finder.select(target))\
-		.map(func(t): return isometric_distance_to_actor(t) * BASE_TILE_SIZE)\
-		.get_value()
+	var target_actor: Actor = Finder.select(target)
+	if target_actor != null:
+		return isometric_distance_to_actor(target_actor)
 	return -1
 	
 func _built_in_measure__distance_to_destination() -> int:
 	return isometric_distance_to_point(destination) * BASE_TILE_SIZE
+	
+func _built_in_measure__has_target() -> int:
+	if target != "":
+		return 1
+	return 0
+	
+func use_track(track: Array) -> void:
+	var track_vectors: Array = []
+	for vertex_key in track:
+		var track_vector_ent: Entity = Repo.query([Group.VERTEX_ENTITY, vertex_key]).pop_front()
+		var vector: Vector2 = std.vec2_from([track_vector_ent.x, track_vector_ent.y])
+		track_vectors.append(vector)
+	if track_vectors.size() == 0: 
+		return
+	var next: Vector2 = track_vectors[track_index % track_vectors.size()]
+	set_destination(next)
+	if isometric_distance_to_point(destination) < DESTINATION_PRECISION:
+		track_index += 1
 
 func use_move_view(delta: float) -> void:
 	var primary_view_shape: CollisionShape2D = $ViewBox.get_node_or_null("PrimaryViewShape")
@@ -407,6 +429,7 @@ func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
 		func(old_actor):
 			old_actor.set_outline_color(Palette.OUTLINE_CLEAR)
 			old_actor.get_node("Label").visible = false
+			old_actor.untarget_hook.disconnect(handle_untarget_hook)
 	)
 	
 func _handle_new_target(new_target_name: String) -> void:
@@ -414,6 +437,7 @@ func _handle_new_target(new_target_name: String) -> void:
 		func(new_actor):
 			new_actor.set_outline_color(Palette.OUTLINE_SELECT)
 			new_actor.get_node("Label").visible = true
+			new_actor.untarget_hook.connect(handle_untarget_hook)
 	)
 	
 func get_target() -> String:
@@ -424,7 +448,9 @@ func set_target(value: String) -> void:
 	target = value
 	_handle_new_target(value)	
 	
-		
+func handle_untarget_hook() -> void:
+	set_target("")
+
 func get_targetable_groups() -> Array:
 	var targetable_keys: Array = []
 	for key in target_groups_counter.keys():
@@ -541,13 +567,30 @@ func build_strategy() -> void:
 			.map(func(e): return e.strategy)\
 			.map(func(e): return e.lookup())\
 			.if_present(set_strategy)
+			
+func interrupt_strategy() -> void:
+	strategy.stop()
+	strategy = null
+	set_destination(position)
+	set_origin(position)
+	set_target("")
 
 func set_strategy(value: Entity) -> void:
 	var behaviors: Array[Behavior] = []
 	for behavior_ent in value.behaviors.lookup():
-		# TODO - Support no criteria
 		behaviors.append(
-			Behavior.builder().criteria(behavior_ent.criteria.key()).action(func(interaction): _local_action_handler(interaction.target, func(t): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, behavior_ent.action.key(), name, Optional.of_nullable(t).map(func(t): return t.get_name()).or_else("")), behavior_ent.action.lookup())).build()
+			Behavior.builder().criteria(behavior_ent.criteria.keys())
+				.action(
+					func(interaction): 
+						_local_action_handler(interaction.target, func(t): 
+							Finder.select(Group.ACTIONS)\
+							.invoke_action\
+							.rpc_id(1, behavior_ent.action.key(), name, Optional.of_nullable(t)\
+							.map(func(t): 
+								return t.get_name())\
+								.or_else("")), behavior_ent.action\
+								.lookup()))
+						.build()
 		)
 	strategy = Strategy.builder().behaviors(behaviors).build()
 
@@ -1014,10 +1057,10 @@ func _on_sprite_animation_changed():
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
 	if other == self: return
+	in_view[other.get_name()] = in_view.size()
 	if is_primary():
 		other.fader.fade()
 		other.visible_to_primary(true)
-		in_view[other.get_name()] = in_view.size()
 		for target_group_key in other.target_groups:
 			target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
 	self.on_view.emit(other)
