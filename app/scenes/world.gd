@@ -109,17 +109,43 @@ func build_deployments() -> void:
 				"position/y": deployment_ent.location.lookup().y,
 			}
 			get_tree().get_first_node_in_group(Group.SPAWNER).spawn(data)
+
+func get_actor_location(data: Dictionary) -> Vector2:
+	## Derives the actor's location using fallbacks
+	## - if a location is set using location/x, location/y -- such as when a saved actor reloads. That location takes prority.
+	## - if a location is set on data as to be a action parameter
+	## - The default spawn location set on the map.
+	## - If no map exists for the actor yet, we must derive one from the main entity
+	## - Final static fallback value
+	
+	if data.get("location/x") != null and data.get("location/y") != null:
+		return Vector2(data.get("location/x"), data.get("location/y"))
+		
+	if data.get("location") != null:
+		var vertex_ent: Entity = Repo.select(data.get("location"))
+		if vertex_ent != null:
+			return Vector2(vertex_ent.x, vertex_ent.y)
+			
+	var main_ent = Repo.select(Group.MAIN_ENTITY)
+	if data.get("map", main_ent.map.key()) != null:
+		var map_ent: Entity = Repo.select(data.get("map", main_ent.map.key()))
+		if map_ent != null:
+			var vertex_ent: Entity = map_ent.spawn.lookup()
+			if vertex_ent != null:
+				return Vector2(vertex_ent.x, vertex_ent.y)
+	return Vector2(0.0, 0.0)
 	
 func spawn_actor(data: Dictionary) -> Actor:
 	var main_ent = Repo.select(Group.MAIN_ENTITY)
 	var builder: Actor.ActorBuilder = Actor.builder()
+	var location: Vector2 = get_actor_location(data)
 	builder.display_name(std.coalesce(data.get("name"), data.get("actor", main_ent.actor.lookup().name_)))\
 	.username(data.get("username", ""))\
 	.token(data.get("token", "".to_utf8_buffer()))\
 	.actor(data.get("actor", main_ent.actor.key()))\
 	.peer_id(data.get("peer_id", 0))\
 	.map(data.get("map", main_ent.map.key()))\
-	.location(Vector2(data.get("location/x", 0.0), data.get("location/y", 0.0)))\
+	.location(location)\
 	.resources(data.get("resources", {}))\
 	.discovery(data.get("discovery", {}))
 	return builder.build()
