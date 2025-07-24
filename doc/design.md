@@ -36,7 +36,11 @@ Target groups -- set colored outlines from campaign
 
 - Fully check if strategies will work for npcs
 
+- NPCS should be able to maneuver around walls
 
+- line of site checks
+
+- spawn locations on map
 
 
 
