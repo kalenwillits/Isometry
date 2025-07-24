@@ -80,7 +80,7 @@ func build_audio() -> void:
 				var stream: AudioStream = AssetLoader.builder()\
 					.key(sound_ent.source)\
 					.type(AssetLoader.derive_type_from_path(sound_ent.source).get_value())\
-					.archive(Cache.archive)\
+					.archive(Cache.campaign)\
 					.loop(sound_ent.loop)\
 					.build()\
 					.pull()
@@ -102,7 +102,7 @@ func build_isometric_tilemap() -> void:
 	var texture_bytes = AssetLoader.builder()\
 	.key(tileset_ent.texture)\
 	.type(AssetLoader.Type.IMAGE)\
-	.archive(Cache.archive)\
+	.archive(Cache.campaign)\
 	.build()\
 	.pull()
 	atlas.set_texture(texture_bytes)
@@ -135,7 +135,7 @@ func build_isometric_tilemap() -> void:
 		tilemap_layer.z_as_relative = true
 		tilemap_layer.set_visibility_layer_bit(0, false) # Reset defualt state to none
 		tilemap_layer.set_visibility_layer_bit(layer_index, true)
-		var layer_string: String = io.load_asset(Cache.archive + layer_ent.source, Cache.archive)
+		var layer_string: String = io.load_asset(Cache.campaign + layer_ent.source, Cache.campaign)
 		var coords: Vector2i = Vector2i()	
 		for row in layer_string.split("\n"):
 			coords.y = 0

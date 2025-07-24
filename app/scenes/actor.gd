@@ -194,7 +194,7 @@ func add_sound_as_child_node(sound_ent: Entity, state_key: String) -> void:
 	var stream: AudioStream = AssetLoader.builder()\
 								.key(sound_ent.source)\
 								.type(AssetLoader.derive_type_from_path(sound_ent.source).get_value())\
-								.archive(Cache.archive)\
+								.archive(Cache.campaign)\
 								.loop(sound_ent.loop)\
 								.build()\
 								.pull()
@@ -753,7 +753,7 @@ func build_frame(index: int, size: Vector2i, source: String) -> AtlasTexture:
 		external_texture = Cache.textures[source]
 	else:
 		Cache.textures[source] = AssetLoader.builder()\
-		.archive(Cache.archive)\
+		.archive(Cache.campaign)\
 		.type(AssetLoader.Type.IMAGE)\
 		.key(source)\
 		.build()\
@@ -806,7 +806,7 @@ func build_sprite() -> void:
 	if !sprite_ent: return
 	if !Cache.textures.has(sprite_ent.texture):
 		Cache.textures[sprite_ent.texture] = AssetLoader.builder()\
-		.archive(Cache.archive)\
+		.archive(Cache.campaign)\
 		.type(AssetLoader.Type.IMAGE)\
 		.key(sprite_ent.texture)\
 		.build()\
@@ -1092,6 +1092,7 @@ func is_npc() -> bool:
 	return is_in_group(Group.NPC)
 	
 func _notification(what):
+	# It is important to save on this hook because it will also save on OS notifications. i.e. alt-F4
 	if what == NOTIFICATION_WM_CLOSE_REQUEST and std.is_host_or_server() and !token.is_empty() and !is_npc():
 		save()
 

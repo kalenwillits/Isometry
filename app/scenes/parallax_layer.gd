@@ -9,7 +9,7 @@ func load_texture(path_to_asset: String) -> void:
 	var texture = AssetLoader.builder()\
 		.key(path_to_asset)\
 		.type(AssetLoader.Type.IMAGE)\
-		.archive(Cache.archive)\
+		.archive(Cache.campaign)\
 		.build()\
 		.pull()
 	$Layer.set_mirroring(Vector2(texture.get_width(), texture.get_height()))

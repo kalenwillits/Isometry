@@ -5,7 +5,7 @@ func _ready() -> void:
 	for arg in [
 		"uri", 
 		"port", 
-		"archive", 
+		"campaign", 
 		"network", 
 		"dir",
 		"username",
@@ -13,11 +13,10 @@ func _ready() -> void:
 		]:
 		Cache.set(arg, parsed_args.get(arg))
 	DisplayServer.window_set_title(get_window_title())
-	#Route.start()
 	start()
 
 func get_window_title() -> String:
-	return ("%s %s" % [Cache.archive, Network.Mode.find_key(Cache.network)]).strip_edges()
+	return ("%s %s" % [Cache.campaign, Network.Mode.find_key(Cache.network)]).strip_edges()
 
 func start() -> void:
 		match Cache.network:

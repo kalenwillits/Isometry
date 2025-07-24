@@ -3,10 +3,10 @@ extends CanvasLayer
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	if !Cache.network or !Cache.username or !Cache.password or !Cache.uri or !Cache.port or !Cache.archive:
+	if !Cache.network or !Cache.username or !Cache.password or !Cache.uri or !Cache.port or !Cache.campaign:
 		$VBox/HBox/VBox/UsernameBox/LineEdit.set_text(Cache.username)
 		$VBox/HBox/VBox/PasswordBox/LineEdit.set_text(Cache.password)
-		$VBox/HBox/VBox/ArchiveBox/LineEdit.set_text(Cache.archive)
+		$VBox/HBox/VBox/ArchiveBox/LineEdit.set_text(Cache.campaign)
 		$VBox/HBox/VBox/UriBox/LineEdit.set_text(Cache.uri)
 		$VBox/HBox/VBox/PortBox/LineEdit.set_text(str(Cache.port))
 	else:
@@ -15,7 +15,7 @@ func _ready() -> void:
 func on_submit() -> void:
 	Cache.username = $VBox/HBox/VBox/UsernameBox/LineEdit.get_text().strip_edges().strip_escapes()
 	Cache.password = $VBox/HBox/VBox/PasswordBox/LineEdit.get_text().strip_edges().strip_escapes()
-	Cache.archive = $VBox/HBox/VBox/ArchiveBox/LineEdit.get_text().strip_edges().strip_escapes()
+	Cache.campaign = $VBox/HBox/VBox/ArchiveBox/LineEdit.get_text().strip_edges().strip_escapes()
 	Cache.uri = $VBox/HBox/VBox/UriBox/LineEdit.get_text().strip_edges().strip_escapes()
 	Cache.port = $VBox/HBox/VBox/PortBox/LineEdit.get_text().strip_edges().strip_escapes().to_int()
 

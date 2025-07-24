@@ -12,7 +12,7 @@ var password: String
 
 # Runtime storage
 var network: Network.Mode = cliargs.get("network", "0").to_int()
-var archive: String = ""
+var campaign: String = ""
 var dir: String = ""
 var textures: Dictionary  # Storage of already loaded textures
 var camera_zoom: int = 3
@@ -55,7 +55,7 @@ func pack_audio() -> void:
 		Cache.pack(
 			Cache.Pack.builder()
 				.key(sound_ent.source)
-				.ref(func(): return AssetLoader.builder().archive(Cache.archive).loop(sound_ent.loop).key(sound_ent.source).type(AssetLoader.derive_type_from_path(sound_ent.source).get_value()).build().pull())
+				.ref(func(): return AssetLoader.builder().archive(Cache.campaign).loop(sound_ent.loop).key(sound_ent.source).type(AssetLoader.derive_type_from_path(sound_ent.source).get_value()).build().pull())
 				.build()
 		)
 
@@ -79,7 +79,6 @@ func unpack(key: String) -> Variant:
 	var object: Variant = packs.get(key)
 	packs.erase(key)
 	return object
-
 
 func pack_actor(peer_id: int, pack: Dictionary) -> void:
 	packed_actors[peer_id] = pack

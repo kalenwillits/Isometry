@@ -1,6 +1,5 @@
 + There are nine action slots. On controller, use the south button to target and use the W N E + bumpers to access all actions.
 + Make resources public / private / secret
-* Allow CLI arguments to use descriptive names instead of ints
 + The follow action should change a strategy
 + MiniMap? It's probably worth doing
     https://github.com/eilamg/godot-tilemap-minimap/blob/master/Minimap.gd
@@ -22,27 +21,12 @@ AtlasEpsilon
 AtlasMyth
 
 ++ Keybinds
-++ On target signal
 
 Target groups -- set colored outlines from campaign
 
 -- Just use icons!!! <--- It will clean up the AI to use squares
 +++ Dynamic menus. With a target, hit select, and open a popup menu of actions to select from
 +++ Make public / private / secret a dice notation expression: If 0, false else true <-- USE A CONDITION!
-
-- controller movements arrow keys always turn actor in opposite direction
-
-- Cooldown on actions. ??? <-- maybe thats already there
-
-- Fully check if strategies will work for npcs
-
-- NPCS should be able to maneuver around walls
-
-- line of site checks
-
-- spawn locations on map
-
-
 
 Monster hunter inventory UI to show resources
 
@@ -53,7 +37,10 @@ Resource number formats:
 >=1,000,000,000 = 999g
 
 
+* Allow CLI arguments to use descriptive names instead of ints
+- NPCS should be able to maneuver around walls
+    - line of site checks
+- speed should be a built-in resource
+    + include a walk calculation
 
 
---- Stragegies are way too complicated. -- develop a handful of bots and leave it at that. passive / defensive / aggressive
-https://gamedev.stackexchange.com/questions/51693/difference-between-decision-trees-behavior-trees-for-game-ai/51722#51722

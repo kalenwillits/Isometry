@@ -77,7 +77,7 @@ func load_archive():
 		.root()\
 		.part(io.get_dir())\
 		.part(Cache.dir)\
-		.part(Cache.archive)\
+		.part(Cache.campaign)\
 		.extension(".zip")\
 		.build()\
 		.render()
@@ -89,7 +89,7 @@ func load_archive():
 			if asset_filename.ends_with(".json"):
 				var asset_key: String = asset_filename.split("/", true, 1)[-1]
 				var asset: Dictionary = AssetLoader.builder()\
-				.archive(Cache.archive)\
+				.archive(Cache.campaign)\
 				.key(asset_key)\
 				.type(AssetLoader.Type.OBJECT)\
 				.build()\
