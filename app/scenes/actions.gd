@@ -249,6 +249,3 @@ func change_strategy(self_name: String, target_name: String, params: Dictionary)
 	if strategy_ent != null:
 		self_actor.set_strategy(strategy_ent)
 # ----------------------------------------------------------------------- Actions #
-
-
-	

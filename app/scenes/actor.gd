@@ -63,7 +63,6 @@ signal action_6(actor)
 signal action_7(actor)
 signal action_8(actor)
 signal action_9(actor)
-signal untarget_hook # Tell actors who are targeting this actor to untarget
 
 signal heading_change(heading)
 
@@ -120,7 +119,6 @@ class ActorBuilder extends Object:
 		var actor_ent = Repo.query([this.actor]).pop_front()
 		if actor_ent:
 			this.build_viewbox(actor_ent.view)
-			# TODO - these are all dependant on if the actor changes
 			if actor_ent.groups: this.build_target_groups(actor_ent.groups.lookup())
 			if actor_ent.sprite: this.sprite = actor_ent.sprite.key()
 			if actor_ent.hitbox: this.hitbox = actor_ent.hitbox.key()
@@ -228,7 +226,7 @@ func set_substate(value: SubState) -> void:
 		substate = value
 
 func _enter_tree():
-	set_name(str(peer_id) if peer_id > 0 else str(-randi_range(1000000, 9999999)))
+	set_name(str(peer_id) if peer_id > 0 else str(-randi_range(1, 9_999_999)))
 	add_to_group(Group.ACTOR)
 	add_to_group(map)
 	add_to_group(name)
@@ -245,7 +243,6 @@ func _enter_tree():
 		add_to_group(Group.NPC)
 
 func _exit_tree() -> void:
-	untarget_hook.emit()
 	if is_primary():
 		Finder.query([Group.ACTOR]).map(
 			func(a): 
@@ -353,6 +350,13 @@ func _built_in_measure__has_target() -> int:
 		return 1
 	return 0
 	
+func resolve_target() -> Actor:
+	var target_set: Array = Finder.query([map, target])
+	if target_set.size() > 0:
+		return target_set.pop_at(0)
+	set_target("")  # Clear target if it no longer exists
+	return null
+	
 func use_track(track: Array) -> void:
 	var track_vectors: Array = []
 	for vertex_key in track:
@@ -387,29 +391,29 @@ func use_strategy() -> void:
 		strategy.use(
 			ActorInteraction.builder()
 			.caller(self)
-			.target(Finder.select(target))
+			.target(resolve_target())
 			.build())
 
 func use_actions() -> void:
 	if Input.is_action_just_released("action_1"):
 		set_state(KeyFrames.ACTION_1)
-		emit_signal("action_1", get_parent().get_node_or_null(target))
+		emit_signal("action_1", resolve_target())
 	if Input.is_action_just_released("action_2"):
-		emit_signal("action_2", get_parent().get_node_or_null(target))
+		emit_signal("action_2", resolve_target())
 	if Input.is_action_just_released("action_3"):
-		emit_signal("action_3", get_parent().get_node_or_null(target))
+		emit_signal("action_3", resolve_target())
 	if Input.is_action_just_released("action_4"):
-		emit_signal("action_4", get_parent().get_node_or_null(target))
+		emit_signal("action_4", resolve_target())
 	if Input.is_action_just_released("action_5"):
-		emit_signal("action_5", get_parent().get_node_or_null(target))
+		emit_signal("action_5", resolve_target())
 	if Input.is_action_just_released("action_6"):
-		emit_signal("action_6", get_parent().get_node_or_null(target))
+		emit_signal("action_6", resolve_target())
 	if Input.is_action_just_released("action_7"):
-		emit_signal("action_7", get_parent().get_node_or_null(target))
+		emit_signal("action_7", resolve_target())
 	if Input.is_action_just_released("action_8"):
-		emit_signal("action_8", get_parent().get_node_or_null(target))
+		emit_signal("action_8", resolve_target())
 	if Input.is_action_just_released("action_9"):
-		emit_signal("action_9", get_parent().get_node_or_null(target))
+		emit_signal("action_9", resolve_target())
 
 func use_target() -> void:
 	if Input.is_action_just_pressed("increment_target"):
@@ -429,7 +433,6 @@ func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
 		func(old_actor):
 			old_actor.set_outline_color(Palette.OUTLINE_CLEAR)
 			old_actor.get_node("Label").visible = false
-			old_actor.untarget_hook.disconnect(handle_untarget_hook)
 	)
 	
 func _handle_new_target(new_target_name: String) -> void:
@@ -437,7 +440,6 @@ func _handle_new_target(new_target_name: String) -> void:
 		func(new_actor):
 			new_actor.set_outline_color(Palette.OUTLINE_SELECT)
 			new_actor.get_node("Label").visible = true
-			new_actor.untarget_hook.connect(handle_untarget_hook)
 	)
 	
 func get_target() -> String:
@@ -447,9 +449,6 @@ func set_target(value: String) -> void:
 	_handle_target_is_no_longer_targeted(target)
 	target = value
 	_handle_new_target(value)	
-	
-func handle_untarget_hook() -> void:
-	set_target("")
 
 func get_targetable_groups() -> Array:
 	var targetable_keys: Array = []
@@ -467,7 +466,7 @@ func get_target_group() -> String:
 	return get_targetable_groups()[target_group_index]
 
 func find_next_target() -> String:
-	var actors = Finder.query([Group.IS_VISIBLE, get_target_group()])
+	var actors = Finder.query([map, Group.IS_VISIBLE, get_target_group()])
 	actors.sort_custom(func(a, b): isometric_distance_to_actor(a) > isometric_distance_to_actor(b))
 	if target_queue.size() >= actors.size():
 		target_queue.clear()
@@ -479,7 +478,7 @@ func find_next_target() -> String:
 	return ""
 
 func find_prev_target() -> String:
-	var actors = Finder.query([Group.IS_VISIBLE, get_target_group()])
+	var actors = Finder.query([map, Group.IS_VISIBLE, get_target_group()])
 	actors.sort_custom(func(a, b): isometric_distance_to_actor(a) < isometric_distance_to_actor(b))
 	if target_queue.size() >= actors.size():
 		target_queue.clear()
@@ -530,7 +529,7 @@ func build_on_touch_action(value: String) -> void:
 	if action_ent.parameters:
 		for param_ent in action_ent.parameters.lookup():
 			params[param_ent.name_] = param_ent.value
-	on_touch.connect(func(target): _local_passive_action_handler(target, func(target): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target.name)))
+	on_touch.connect(func(target_actor): _local_passive_action_handler(target_actor, func(target_actor): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_actor.name)))
 
 
 func build_on_view_action(value: String) -> void:
@@ -605,7 +604,7 @@ func build_triggers() -> void:
 					func():
 						_local_action_handler(
 							self,  # Both caller and target for triggers is always self
-							func(target):
+							func(_target_actor):
 								Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, trigger_ent.action.key(), name, name),
 								trigger_ent.action.lookup()
 						)
@@ -623,8 +622,8 @@ func build_timers() -> void:
 						func():
 							add_child(ResourceTimer.builder().total(timer_ent.total).interval(timer_ent.interval).action(
 								func(): _local_action_handler(
-										Optional.of_nullable(get_parent().get_node_or_null(target)).or_else(self), 
-										func(target): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, timer_ent.action.key(), name, target.name),
+										Optional.of_nullable(resolve_target()).or_else(self), 
+										func(target_actor): get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, timer_ent.action.key(), name, target_actor.name),
 										timer_ent.action.lookup())
 							).build()))
 					.build()
@@ -657,17 +656,17 @@ func _local_passive_action_handler(target: Actor, function: Callable) -> void:
 		
 func _local_action_handler(target_actor: Actor, function: Callable, action_ent: Entity) -> void:
 	match substate:
-		SubState.IDLE, SubState.START:
+		SubState.IDLE, SubState.START:  # Cooldowns mechanic
 			function.call(target_actor)
 			look_at_target()
 			root(action_ent.time)
 			get_tree().create_timer(action_ent.time).timeout.connect(func(): set_substate(SubState.END))
 
-func _local_primary_handler(target: Actor, function: Callable) -> void:
+func _local_primary_handler(target_actor: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
-	if target.is_primary(): 
-		Logger.info("%s primary activated by %s" % [name, target.name])
-		function.call(target)
+	if target_actor.is_primary(): 
+		Logger.info("%s primary activated by %s" % [name, target_actor.name])
+		function.call(target_actor)
 
 func build_viewbox(value: int) -> void:
 	if value > 0:
@@ -851,7 +850,9 @@ func get_measure(measure_name: String) -> int:
 func map_relative_distance_to_in_view_actors() -> Dictionary:
 	var results: Dictionary = {}
 	for actor_name in in_view.keys():
-		results[actor_name] = isometric_distance_to_actor(Finder.get_actor(actor_name))
+		var per_actor: Actor = Finder.query([map, Group.IS_VISIBLE, actor_name]).pop_front()
+		if per_actor != null:
+			results[actor_name] = isometric_distance_to_actor(per_actor)
 	return results
 	
 func map_resource_of_in_view_actors(resource_name: String) -> Dictionary:
@@ -1093,3 +1094,6 @@ func is_npc() -> bool:
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST and std.is_host_or_server() and !token.is_empty() and !is_npc():
 		save()
+
+func _on_tree_exiting() -> void:
+	Controller.broadcast_actor_is_despawning.rpc_id(1, peer_id, map)

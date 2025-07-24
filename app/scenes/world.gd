@@ -105,8 +105,8 @@ func build_deployments() -> void:
 				"peer_id": 0,  # NPC 
 				"map": map_ent.key(), 
 				"actor": deployment_ent.actor.key(),
-				"position/x": deployment_ent.location.lookup().x,
-				"position/y": deployment_ent.location.lookup().y,
+				"location/x": deployment_ent.location.lookup().x,
+				"location/y": deployment_ent.location.lookup().y,
 			}
 			get_tree().get_first_node_in_group(Group.SPAWNER).spawn(data)
 
