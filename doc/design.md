@@ -37,7 +37,7 @@ Resource number formats:
 >=1,000,000,000 = 999g
 
 
-* Allow CLI arguments to use descriptive names instead of ints
+* Allow CLI arguments to use descriptive names instead of ints -- No idea why I cannot get this
 - NPCS should be able to maneuver around walls
     - line of site checks
 - speed should be a built-in resource

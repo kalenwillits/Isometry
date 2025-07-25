@@ -45,6 +45,7 @@ var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
 	"has_target": _built_in_measure__has_target,
+	"speed": _built_in_measure__speed,
 }
 var strategy: Strategy
 # Without these, the viewshape only moves while the actor is moving.
@@ -350,6 +351,9 @@ func _built_in_measure__has_target() -> int:
 		return 1
 	return 0
 	
+func _built_in_measure__speed() -> float:
+	return speed
+	
 func resolve_target() -> Actor:
 	var target_set: Array = Finder.query([map, target])
 	if target_set.size() > 0:
@@ -399,20 +403,28 @@ func use_actions() -> void:
 		set_state(KeyFrames.ACTION_1)
 		emit_signal("action_1", resolve_target())
 	if Input.is_action_just_released("action_2"):
+		set_state(KeyFrames.ACTION_2)
 		emit_signal("action_2", resolve_target())
 	if Input.is_action_just_released("action_3"):
+		set_state(KeyFrames.ACTION_3)
 		emit_signal("action_3", resolve_target())
 	if Input.is_action_just_released("action_4"):
+		set_state(KeyFrames.ACTION_4)
 		emit_signal("action_4", resolve_target())
 	if Input.is_action_just_released("action_5"):
+		set_state(KeyFrames.ACTION_5)
 		emit_signal("action_5", resolve_target())
 	if Input.is_action_just_released("action_6"):
+		set_state(KeyFrames.ACTION_6)
 		emit_signal("action_6", resolve_target())
 	if Input.is_action_just_released("action_7"):
+		set_state(KeyFrames.ACTION_7)
 		emit_signal("action_7", resolve_target())
 	if Input.is_action_just_released("action_8"):
+		set_state(KeyFrames.ACTION_8)
 		emit_signal("action_8", resolve_target())
 	if Input.is_action_just_released("action_9"):
+		set_state(KeyFrames.ACTION_9)
 		emit_signal("action_9", resolve_target())
 
 func use_target() -> void:
@@ -1022,8 +1034,13 @@ func use_state() -> void:
 		KeyFrames.IDLE:
 			if !position.is_equal_approx(destination):
 				set_animation_speed(std.isometric_factor(velocity.angle()))
-				set_state(KeyFrames.RUN)
-		# TODO -- add walking
+				if speed > 0.33:
+					set_state(KeyFrames.RUN)
+				else:
+					set_state(KeyFrames.WALK)
+		KeyFrames.WALK:
+			if position.is_equal_approx(destination):
+				set_state(KeyFrames.IDLE)
 		KeyFrames.RUN: 
 			if position.is_equal_approx(destination):
 				set_state(KeyFrames.IDLE)
