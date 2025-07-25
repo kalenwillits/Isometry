@@ -446,18 +446,20 @@ func use_target() -> void:
 		target_group_index = decrement_target_group()
 
 func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
-	Optional.of_nullable(Finder.get_actor(old_target_name)).if_present(
-		func(old_actor):
-			old_actor.set_outline_color(Palette.OUTLINE_CLEAR)
-			old_actor.get_node("Label").visible = false
-	)
+	if is_primary():
+		Optional.of_nullable(Finder.get_actor(old_target_name)).if_present(
+			func(old_actor):
+				old_actor.set_outline_color(Palette.OUTLINE_CLEAR)
+				old_actor.get_node("Label").visible = false
+		)
 	
 func _handle_new_target(new_target_name: String) -> void:
-	Optional.of_nullable(Finder.get_actor(new_target_name)).if_present(
-		func(new_actor):
-			new_actor.set_outline_color(Palette.OUTLINE_SELECT)
-			new_actor.get_node("Label").visible = true
-	)
+	if is_primary():
+		Optional.of_nullable(Finder.get_actor(new_target_name)).if_present(
+			func(new_actor):
+				new_actor.set_outline_color(Palette.OUTLINE_SELECT)
+				new_actor.get_node("Label").visible = true
+		)
 	
 func get_target() -> String:
 	return target

@@ -248,4 +248,48 @@ func change_strategy(self_name: String, target_name: String, params: Dictionary)
 		strategy_ent = Repo.query([strategy_key]).pop_front()
 	if strategy_ent != null:
 		self_actor.set_strategy(strategy_ent)
+
+func set_speed_target(self_name: String, target_name: String, params: Dictionary) -> void:
+	## speed: Float value to set target's speed to
+	if target_name == "": return
+	var target_actor: Actor = Finder.get_actor(target_name)
+	if target_actor == null: return
+	var new_speed: float = params.get("speed", 1.0)
+	target_actor.set_speed(new_speed)
+
+func set_speed_self(self_name: String, target_name: String, params: Dictionary) -> void:
+	## speed: Float value to set caller's speed to
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null: return
+	var new_speed: float = params.get("speed", 1.0)
+	self_actor.set_speed(new_speed)
+
+func temp_speed_target(self_name: String, target_name: String, params: Dictionary) -> void:
+	## speed: Float value to temporarily set target's speed to
+	## duration: Float time in seconds for the temporary speed change
+	if target_name == "": return
+	var target_actor: Actor = Finder.get_actor(target_name)
+	if target_actor == null: return
+	var new_speed: float = params.get("speed", 1.0)
+	var duration: float = params.get("duration", 1.0)
+	var original_speed: float = target_actor.speed
+	target_actor.set_speed(new_speed)
+	get_tree().create_timer(duration).timeout.connect(func(): 
+		if target_actor != null and is_instance_valid(target_actor):
+			target_actor.set_speed(original_speed)
+	)
+
+func temp_speed_self(self_name: String, target_name: String, params: Dictionary) -> void:
+	## speed: Float value to temporarily set caller's speed to  
+	## duration: Float time in seconds for the temporary speed change
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null: return
+	var new_speed: float = params.get("speed", 1.0)
+	var duration: float = params.get("duration", 1.0)
+	var original_speed: float = self_actor.speed
+	self_actor.set_speed(new_speed)
+	get_tree().create_timer(duration).timeout.connect(func():
+		if self_actor != null and is_instance_valid(self_actor):
+			self_actor.set_speed(original_speed)
+	)
 # ----------------------------------------------------------------------- Actions #
