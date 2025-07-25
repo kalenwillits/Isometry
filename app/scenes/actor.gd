@@ -115,6 +115,10 @@ class ActorBuilder extends Object:
 	func discovery(value: Dictionary) -> ActorBuilder:
 		this.discovery = value
 		return self
+		
+	func speed(value: float) -> ActorBuilder:
+		this.speed = value
+		return self
 
 	func build() -> Actor:
 		var actor_ent = Repo.query([this.actor]).pop_front()
@@ -170,8 +174,9 @@ func pack() -> Dictionary:
 		"actor": actor,
 		"map": map,
 		"resources": resources,
+		"speed": speed,
 	}
-	if is_primary():
+	if !is_npc():
 		results["discovery"] = pack_discovery()
 	return results
 	

@@ -101,12 +101,14 @@ func build_map(map_key: String) -> void:
 func build_deployments() -> void:
 	for map_ent in Repo.query([Group.MAP_ENTITY]):
 		for deployment_ent in map_ent.deployments.lookup():
+			var actor_ent: Entity = deployment_ent.actor.lookup()
 			var data := {
 				"peer_id": 0,  # NPC 
 				"map": map_ent.key(), 
 				"actor": deployment_ent.actor.key(),
 				"location/x": deployment_ent.location.lookup().x,
 				"location/y": deployment_ent.location.lookup().y,
+				"speed": actor_ent.speed,
 			}
 			get_tree().get_first_node_in_group(Group.SPAWNER).spawn(data)
 
@@ -147,7 +149,8 @@ func spawn_actor(data: Dictionary) -> Actor:
 	.map(data.get("map", main_ent.map.key()))\
 	.location(location)\
 	.resources(data.get("resources", {}))\
-	.discovery(data.get("discovery", {}))
+	.discovery(data.get("discovery", {}))\
+	.speed(data.get("speed", main_ent.actor.lookup().speed))
 	return builder.build()
 
 func _on_connected_to_server() -> void:
