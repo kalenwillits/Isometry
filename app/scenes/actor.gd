@@ -46,6 +46,7 @@ var measures: Dictionary = {
 	"distance_to_destination": _built_in_measure__distance_to_destination,
 	"has_target": _built_in_measure__has_target,
 	"speed": _built_in_measure__speed,
+	"line_of_sight": _built_in_measure__line_of_sight,
 }
 var strategy: Strategy
 # Without these, the viewshape only moves while the actor is moving.
@@ -54,6 +55,8 @@ var last_viewshape_origin: Vector2
 
 signal on_touch(actor)
 signal on_view(actor)
+signal line_of_sight_entered(actor)
+signal line_of_sight_exited(actor)
 signal primary(actor)
 signal action_1(actor)
 signal action_2(actor)
@@ -292,6 +295,8 @@ func _ready() -> void:
 	$HitBox.area_entered.connect(_on_hit_box_body_entered)
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
 	if is_primary():
+		line_of_sight_entered.connect(_on_line_of_sight_entered)
+		line_of_sight_exited.connect(_on_line_of_sight_exited)
 		$ViewBox.area_exited.connect(_on_view_box_area_exited)
 		fader.fade()
 		set_camera_target()
@@ -323,6 +328,7 @@ func schedule_render_this_actors_map() -> void:
 		)
 
 func is_awake(effect: bool) -> void:
+	# TODO -- This could be renamed to make more sense
 	use_collisions(effect)
 	
 func update_client_visibility() -> void:
@@ -339,8 +345,16 @@ func _physics_process(delta) -> void:
 		use_move_directly(delta)
 		use_actions()
 		use_target()
+		use_line_of_sight()
 	if is_npc() and std.is_host_or_server():
 		use_movement(delta)
+		
+func _built_in_measure__line_of_sight() -> int:
+	var target_actor: Actor = Finder.select(target)
+	if target_actor != null:
+		if line_of_sight_to_point(target_actor.get_position()):
+			return 1
+	return 0
 
 func _built_in_measure__distance_to_target() -> int:
 	var target_actor: Actor = Finder.select(target)
@@ -514,6 +528,15 @@ func isometric_distance_to_actor(other: Actor) -> float:
 	
 func isometric_distance_to_point(point: Vector2) -> float:
 	return position.distance_to(point) * std.isometric_factor(position.angle_to(point))
+	
+func line_of_sight_to_point(point: Vector2) -> bool:
+	var space_state = get_world_2d().direct_space_state
+	var query: LineOfSightQueryParameters = LineOfSightQueryParameters.builder()\
+	.from(position)\
+	.to(point)\
+	.build()
+	var result: Dictionary = space_state.intersect_ray(query)
+	return result.is_empty()
 
 func click_to_move() -> void:
 	if Input.is_action_pressed("interact"):
@@ -954,6 +977,21 @@ func _calculate_sprite_offset() -> Vector2i:
 	var result: Vector2i = -actual_size
 	result.x += ((full_size.x / 2) - (margin.x))
 	return result
+	
+var _use_line_of_sight_tick: int = 0
+func use_line_of_sight() -> void:
+	if in_view.size() == 0: return
+	var actor_name_per_tick: String = in_view.keys()[_use_line_of_sight_tick % in_view.size()]
+	var other: Actor = Finder.select(actor_name_per_tick)
+	if line_of_sight_to_point(other.get_position()):
+		if !other.is_in_group(Group.LINE_OF_SIGHT):
+			other.add_to_group(Group.LINE_OF_SIGHT)
+			line_of_sight_entered.emit(other)
+	else:
+		if other.is_in_group(Group.LINE_OF_SIGHT):
+			other.remove_from_group(Group.LINE_OF_SIGHT)
+			line_of_sight_exited.emit(other)
+	_use_line_of_sight_tick += 1
 
 func use_movement(delta: float) -> void:
 	if position.distance_squared_to(destination) > DESTINATION_PRECISION:
@@ -1078,23 +1116,32 @@ func use_collisions(effect: bool) -> void:
 
 func _on_sprite_animation_changed():
 	$Sprite.play()  # Without this, the animation freezes
+	
+func _on_line_of_sight_entered(other: Actor) -> void:
+	other.fader.fade()
+	other.visible_to_primary(true)
+	
+func _on_line_of_sight_exited(other: Actor) -> void:
+	other.fader.fade()
+	other.visible_to_primary(false)
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
 	if other == self: return
 	in_view[other.get_name()] = in_view.size()
 	if is_primary():
-		other.fader.fade()
-		other.visible_to_primary(true)
+		#other.fader.fade()
+		#other.visible_to_primary(true)
 		for target_group_key in other.target_groups:
 			target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
 	self.on_view.emit(other)
-	
+
 func _on_view_box_area_exited(area: Area2D) -> void:
 	var other = area.get_parent()
 	in_view.erase(other.get_name())
 	var other_name: String = other.get_name()
 	var this_actor_name: String = get_name()
+	other.remove_from_group(Group.LINE_OF_SIGHT)
 	other.fader.at_next_appear(
 		func(): 
 			Optional.of_nullable(Finder.get_actor(other_name))\

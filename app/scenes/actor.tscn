@@ -94,6 +94,8 @@ collision_mask = 0
 collision_layer = 0
 collision_mask = 0
 
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+
 [connection signal="heading_change" from="." to="." method="_on_heading_change"]
 [connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]

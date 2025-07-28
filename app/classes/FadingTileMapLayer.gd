@@ -16,6 +16,7 @@ func calculate_distance_and_radius(coords: Vector2i) -> TileRenderState.UpdatePa
 	var view_shape = primary_actor.get_node_or_null("ViewBox/PrimaryViewShape")
 	if view_shape == null: return TileRenderState.UpdateParams.create(INF, 0.0)
 	var tile_position = to_global(map_to_local(coords))
+	if !primary_actor.line_of_sight_to_point(tile_position): return TileRenderState.UpdateParams.create(INF, 0.0)
 	var view_position = to_global(primary_actor.position + view_shape.position)
 	var change_pos = tile_position - view_position
 	var radius = view_shape.scale.x * SCALE_TO_VIEW

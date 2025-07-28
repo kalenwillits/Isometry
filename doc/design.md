@@ -39,6 +39,12 @@ Resource number formats:
 
 * Allow CLI arguments to use descriptive names instead of ints -- No idea why I cannot get this
 - NPCS should be able to maneuver around walls
-    - line of site checks
+    - Use the new navigation nodes
+    - Basically, every layer will need to calculate it's entire floor polygon shape. 
+    - Then update movement so the agent performs the calculation for the destination
+    - And then it should just.... work.
+
+- line of site checks on fading/visibility
+- ^ Use a ray cast nodes
 
 
