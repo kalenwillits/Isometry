@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c4pgea7iqy4pf"]
 
-[ext_resource type="Script" path="res://autoload/finder.gd" id="1_2cgiq"]
+[ext_resource type="Script" uid="uid://b7d4n0u1xte55" path="res://autoload/finder.gd" id="1_2cgiq"]
 
 [node name="Finder" type="Node"]
 script = ExtResource("1_2cgiq")

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bjtuo8ra5vnkx"]
 
-[ext_resource type="Script" path="res://scenes/launcher.gd" id="1_2rn83"]
+[ext_resource type="Script" uid="uid://bx0lo3cnqm7x7" path="res://scenes/launcher.gd" id="1_2rn83"]
 
 [node name="Launcher" type="CanvasLayer"]
 layer = 128

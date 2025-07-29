@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://demxd2u2188ea"]
 
-[ext_resource type="Script" path="res://autoload/transition.gd" id="1_4v55y"]
+[ext_resource type="Script" uid="uid://c81pq035ufqm4" path="res://autoload/transition.gd" id="1_4v55y"]
 
 [node name="Transition" type="CanvasLayer"]
 script = ExtResource("1_4v55y")

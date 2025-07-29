@@ -14,7 +14,7 @@ config/name="Atlas"
 config/description="Atlas RPG platform software by Dark Mode Games"
 config/version="0.0"
 run/main_scene="res://main.tscn"
-config/features=PackedStringArray("4.3", "Mobile")
+config/features=PackedStringArray("4.4", "Mobile")
 
 [autoload]
 

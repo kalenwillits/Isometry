@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://ds2c6525iq2fh"]
 
-[ext_resource type="Script" path="res://classes/ArgParse.gd" id="1_83000"]
+[ext_resource type="Script" uid="uid://cb20epnt50wg7" path="res://classes/ArgParse.gd" id="1_83000"]
 
 [node name="ArgParse" type="Node"]
 script = ExtResource("1_83000")

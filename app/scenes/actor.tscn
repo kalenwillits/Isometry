@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://dl6t8dqsvo35i"]
 
-[ext_resource type="Script" path="res://scenes/actor.gd" id="1_y2kqt"]
-[ext_resource type="Script" path="res://scenes/synchronizer.gd" id="2_dd5io"]
+[ext_resource type="Script" uid="uid://koppc1nn1mr3" path="res://scenes/actor.gd" id="1_y2kqt"]
+[ext_resource type="Script" uid="uid://brbsk14fuhsrr" path="res://scenes/synchronizer.gd" id="2_dd5io"]
 [ext_resource type="Material" uid="uid://dlvv5616hqn0x" path="res://materials/actor_sprite.tres" id="3_vyb2n"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_bd4xq"]
