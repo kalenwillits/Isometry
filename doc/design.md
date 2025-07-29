@@ -43,8 +43,5 @@ Resource number formats:
     - Basically, every layer will need to calculate it's entire floor polygon shape. 
     - Then update movement so the agent performs the calculation for the destination
     - And then it should just.... work.
-
-- line of site checks on fading/visibility
-- ^ Use a ray cast nodes
-
+    - Actors should have a navigation obstacle node on them.
 
