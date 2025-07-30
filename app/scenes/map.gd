@@ -98,6 +98,7 @@ func build_isometric_tilemap() -> void:
 	tileset.set_tile_offset_axis(TILESET_OFFSET_AXIS)
 	tileset.add_physics_layer()
 	tileset.set_physics_layer_collision_layer(0, Layer.WALL)  # set the second int as value, not bit or index.
+	tileset.add_navigation_layer()
 	var atlas: TileSetAtlasSource = TileSetAtlasSource.new()
 	var texture_bytes = AssetLoader.builder()\
 	.key(tileset_ent.texture)\
@@ -116,6 +117,10 @@ func build_isometric_tilemap() -> void:
 		var atlas_tile = atlas.get_tile_data(coords, 0)
 		atlas_tile.modulate = Color(Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT)
 		atlas.set("%s:%s/0/y_sort_origin" % [coords.x, coords.y], tile_ent.origin)
+		var navigation_polygon: NavigationPolygon = NavigationPolygon.new()
+		navigation_polygon.add_outline(std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, -TILEMAP_TILESIZE.y/2)))
+		navigation_polygon.make_polygons_from_outlines()
+		atlas_tile.set_navigation_polygon(0, navigation_polygon)
 		if tile_ent.polygon != null:
 			var polygon_ent = tile_ent.polygon.lookup()
 			var vectors: PackedVector2Array = []

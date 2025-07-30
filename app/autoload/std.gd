@@ -156,13 +156,14 @@ func intersect(array1: Array, array2: Array) -> Array:
 func is_host_or_server() -> bool:
 	return (Cache.network == Network.Mode.HOST) or (Cache.network == Network.Mode.SERVER)
 	
-func isometric_shape(size: int) -> PackedVector2Array:
-	var half_height := size * 0.5
+func generate_isometric_shape(size: int, offset: Vector2i) -> PackedVector2Array:
+	var half_width := size * 0.5
+	var half_height := size * 0.25
 	var points := PackedVector2Array()
-	points.append(Vector2(0, -half_height))
-	points.append(Vector2(size, 0))     
-	points.append(Vector2(0, half_height))   
-	points.append(Vector2(-size, 0))         
+	points.append(Vector2(0 + offset.x, -half_height + offset.y))
+	points.append(Vector2(half_width + offset.x, 0 + offset.y))     
+	points.append(Vector2(0 + offset.x, half_height + offset.y))   
+	points.append(Vector2(-half_width + offset.x, 0 + offset.y))         
 	return points
 
 func get_elliptical_grid(grid_size: float, position: Vector2, size: float) -> Array[Vector2i]:
