@@ -149,7 +149,7 @@ func spawn_actor(data: Dictionary) -> Actor:
 	.map(data.get("map", main_ent.map.key()))\
 	.location(location)\
 	.resources(data.get("resources", {}))\
-	.discovery(data.get("discovery", {}))\
+	#.discovery(data.get("discovery", {}))\
 	.speed(data.get("speed", main_ent.actor.lookup().speed))
 	return builder.build()
 

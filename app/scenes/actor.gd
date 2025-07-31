@@ -40,7 +40,7 @@ var speed_cache_value: float # Used to store speed value inbetween temporary cha
 var target_groups_counter: Dictionary
 var in_view: Dictionary # A Dictionary[StringName, Integer] of actors that are currently in view of this actor. The value is the total number of actors in the view when entered.
 var track_index: int = 0 # Identifies what index in a npc's track array to follow
-var discovery: Dictionary = {}
+#var discovery: Dictionary = {}
 var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
@@ -115,9 +115,9 @@ class ActorBuilder extends Object:
 		this.resources = value
 		return self
 		
-	func discovery(value: Dictionary) -> ActorBuilder:
-		this.discovery = value
-		return self
+	#func discovery(value: Dictionary) -> ActorBuilder:
+		#this.discovery = value
+		#return self
 		
 	func speed(value: float) -> ActorBuilder:
 		this.speed = value
@@ -151,21 +151,21 @@ class ActorBuilder extends Object:
 static func builder() -> ActorBuilder:
 	return ActorBuilder.new()
 	
-func pack_discovery() -> Dictionary:
-	var results: Dictionary = {}
-	for map_layer_node in Finder.query([Group.MAP_LAYER]):
-		var map_node: Map = map_layer_node.get_parent()
-		if results.get(map_node.get_name()) == null: results[map_node.get_name()] = {}
-		results[map_node.get_name()][map_layer_node.get_name()] = map_layer_node.pack_discovered_tiles()
-	return results
+#func pack_discovery() -> Dictionary:
+	#var results: Dictionary = {}
+	#for map_layer_node in Finder.query([Group.MAP_LAYER]):
+		#var map_node: Map = map_layer_node.get_parent()
+		#if results.get(map_node.get_name()) == null: results[map_node.get_name()] = {}
+		#results[map_node.get_name()][map_layer_node.get_name()] = map_layer_node.pack_discovered_tiles()
+	#return results
 	
-func unpack_discovery() -> void:
-	for map_layer_node in Finder.query([Group.MAP_LAYER]): 
-		var map_node: Map = map_layer_node.get_parent()
-		if discovery.get(map_node.get_name()) == null: continue
-		if discovery[map_node.get_name()].get(map_layer_node.get_name()) == null: continue
-		map_layer_node.unpack_discovered_tiles(discovery[map_node.get_name()][map_layer_node.get_name()])
-	discovery.clear()
+#func unpack_discovery() -> void:
+	#for map_layer_node in Finder.query([Group.MAP_LAYER]): 
+		#var map_node: Map = map_layer_node.get_parent()
+		#if discovery.get(map_node.get_name()) == null: continue
+		#if discovery[map_node.get_name()].get(map_layer_node.get_name()) == null: continue
+		#map_layer_node.unpack_discovered_tiles(discovery[map_node.get_name()][map_layer_node.get_name()])
+	#discovery.clear()
 
 func pack() -> Dictionary:
 	var results: Dictionary = {
@@ -179,8 +179,8 @@ func pack() -> Dictionary:
 		"resources": resources,
 		"speed": speed,
 	}
-	if !is_npc():
-		results["discovery"] = pack_discovery()
+	#if !is_npc():
+		#results["discovery"] = pack_discovery()
 	return results
 	
 func get_outline_color() -> Color:
@@ -311,12 +311,12 @@ func _ready() -> void:
 			.task(func(): Finder.query([Group.ACTOR, map]).map(func(a): a.is_awake(true)))
 			.build()
 		)
-		Queue.enqueue(
-			Queue.Item.builder()
-			.comment("unpack discovery")
-			.task(unpack_discovery)
-			.build()
-		)
+		#Queue.enqueue(
+			#Queue.Item.builder()
+			#.comment("unpack discovery")
+			#.task(unpack_discovery)
+			#.build()
+		#)
 
 func schedule_render_this_actors_map() -> void:
 	Queue.enqueue(
@@ -1131,7 +1131,7 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 	in_view[other.get_name()] = in_view.size()
 	if is_primary():
 		#other.fader.fade()
-		#other.visible_to_primary(true)
+		#other.visible_to_primary(true) # Commented out if using LOS
 		for target_group_key in other.target_groups:
 			target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
 	self.on_view.emit(other)

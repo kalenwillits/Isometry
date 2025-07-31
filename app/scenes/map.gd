@@ -115,7 +115,7 @@ func build_isometric_tilemap() -> void:
 		var tile_pos: Vector2i = Vector2i(tile_ent.index % tileset_ent.columns, tile_ent.index / tileset_ent.columns)
 		tileset.get_source(0).create_tile(tile_pos)
 		var atlas_tile = atlas.get_tile_data(coords, 0)
-		atlas_tile.modulate = Color(Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT)
+		#atlas_tile.modulate = Color(Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT)
 		atlas.set("%s:%s/0/y_sort_origin" % [coords.x, coords.y], tile_ent.origin)
 		var navigation_polygon: NavigationPolygon = NavigationPolygon.new()
 		navigation_polygon.add_outline(std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, -TILEMAP_TILESIZE.y/2)))
@@ -129,8 +129,9 @@ func build_isometric_tilemap() -> void:
 			atlas_tile.set("physics_layer_0/polygon_0/points", vectors)
 	var layers_ent_array = tilemap_ent.layers.lookup()
 	for layer_index in range(layers_ent_array.size()):
-		var tilemap_layer := FadingTileMapLayer.new()
+		var tilemap_layer := TileMapLayer.new()
 		tilemap_layer.add_to_group(name)
+		tilemap_layer.add_to_group(Group.MAP_LAYER)
 		tilemap_layer.enabled = false # Sets visibilty and collisions off by default
 		var layer_ent = layers_ent_array[layer_index]
 		tilemap_layer.name = layer_ent.key()
