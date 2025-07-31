@@ -51,4 +51,31 @@ The player can then interact with other actors on the map via actions
 
 It is meant to be an RPG played like a MOBA with extreme custom content support
 
+● This is Atlas, a tabletop RPG platform built with Godot 4. Based on the
+  codebase structure, here's my understanding:
 
+  Core Purpose: Atlas is a digital tabletop RPG platform that allows
+  players to run campaigns with networked multiplayer support, featuring a
+  tile-based map system with actors, resources, and action management.
+
+  Key Features:
+  - Godot 4 Game Engine with GDScript and C++ extensions (using godot-cpp)
+  - Multiplayer networking with client-server architecture
+  - Campaign system with map loading and management
+  - Actor-based gameplay with movement, targeting, and action systems
+  - Resource management system with public/private/secret visibility
+  - Dice rolling engine (C++ extension) with algebraic expressions
+  - Real-time communication and synchronization between players
+  - Controller/keyboard input with 9 action slots and targeting system
+
+  Technical Architecture:
+  - Uses Godot's autoload singleton pattern for core systems (networking,
+  routing, logging, etc.)
+  - C++ extensions for performance-critical dice mechanics
+  - Tile-based rendering with line-of-sight calculations
+  - Scene-based UI management with transitions
+
+  This appears to be a sophisticated digital tabletop platform designed for
+   running D&D-style campaigns with multiple networked players, combining
+  the flexibility of traditional tabletop gaming with digital convenience
+  and automation.
