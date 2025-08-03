@@ -98,7 +98,9 @@ func build_isometric_tilemap() -> void:
 	tileset.set_tile_offset_axis(TILESET_OFFSET_AXIS)
 	tileset.add_physics_layer()
 	tileset.set_physics_layer_collision_layer(0, Layer.WALL)  # set the second int as value, not bit or index.
-	tileset.add_navigation_layer()
+	var navigation_enabled: bool = tileset_ent.navigation
+	if navigation_enabled:
+		tileset.add_navigation_layer()
 	var atlas: TileSetAtlasSource = TileSetAtlasSource.new()
 	var texture_bytes = AssetLoader.builder()\
 	.key(tileset_ent.texture)\
@@ -115,12 +117,21 @@ func build_isometric_tilemap() -> void:
 		var tile_pos: Vector2i = Vector2i(tile_ent.index % tileset_ent.columns, tile_ent.index / tileset_ent.columns)
 		tileset.get_source(0).create_tile(tile_pos)
 		var atlas_tile = atlas.get_tile_data(coords, 0)
-		#atlas_tile.modulate = Color(Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT, Style.UNDISCOVERED_TILE_TINT)
 		atlas.set("%s:%s/0/y_sort_origin" % [coords.x, coords.y], tile_ent.origin)
-		var navigation_polygon: NavigationPolygon = NavigationPolygon.new()
-		navigation_polygon.add_outline(std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, -TILEMAP_TILESIZE.y/2)))
-		navigation_polygon.make_polygons_from_outlines()
-		atlas_tile.set_navigation_polygon(0, navigation_polygon)
+		if navigation_enabled:
+			# TODO Debug this. This is throwing a nasty warning and subsequent error.
+			# W 0:00:00:718   map.gd:122 @ build_isometric_tilemap(): Function make_polygons_from_outlines() is deprecated.
+			#Use NavigationServer2D.parse_source_geometry_data() and NavigationServer2D.bake_from_source_geometry_data() instead.
+  			#<C++ Source>  scene/resources/2d/navigation_polygon.cpp:315 @ make_polygons_from_outlines()
+ 			#<Stack Trace> map.gd:122 @ build_isometric_tilemap()
+				# queue.gd:70 @ _call_task_safe()
+				# queue.gd:79 @ _process()
+#			E 0:00:01:351   _build_step_find_edge_connection_pairs: Navigation map synchronization error. Attempted to merge a navigation mesh polygon edge with another already-merged edge. This is usually caused by crossing edges, overlapping polygons, or a mismatch of the NavigationMesh / NavigationPolygon baked 'cell_size' and navigation map 'cell_size'. If you're certain none of above is the case, change 'navigation/3d/merge_rasterizer_cell_scale' to 0.001.
+ 			# <C++ Source>  modules/navigation/3d/nav_map_builder_3d.cpp:151 @ _build_step_find_edge_connection_pairs()
+			var navigation_polygon: NavigationPolygon = NavigationPolygon.new()
+			navigation_polygon.add_outline(std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, -TILEMAP_TILESIZE.y/2)))
+			navigation_polygon.make_polygons_from_outlines()
+			atlas_tile.set_navigation_polygon(0, navigation_polygon)
 		if tile_ent.polygon != null:
 			var polygon_ent = tile_ent.polygon.lookup()
 			var vectors: PackedVector2Array = []
