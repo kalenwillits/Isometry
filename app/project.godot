@@ -54,6 +54,10 @@ run/main_run_args="--campaign=default --uri=localhost --port=5002 --network=1 --
 theme/custom_font="res://themes/UbuntuMono-Regular.ttf"
 theme/default_font_hinting=0
 
+[navigation]
+
+3d/merge_rasterizer_cell_scale=0.001
+
 [input]
 
 toggle_developer_console={

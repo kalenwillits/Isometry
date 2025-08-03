@@ -116,17 +116,8 @@ func build_isometric_tilemap() -> void:
 		tileset.get_source(0).create_tile(tile_pos)
 		var atlas_tile = atlas.get_tile_data(coords, 0)
 		atlas.set("%s:%s/0/y_sort_origin" % [coords.x, coords.y], tile_ent.origin)
-		if tile_ent.navigation:
-			var navigation_polygon: NavigationPolygon = NavigationPolygon.new()
-			var outline = std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, -TILEMAP_TILESIZE.y/2))
-			# Set vertices first
-			navigation_polygon.vertices = PackedVector2Array(outline)
-			# Create polygon using vertex indices (0, 1, 2, 3... for each vertex in order)
-			var indices = PackedInt32Array()
-			for i in range(outline.size()):
-				indices.append(i)
-			navigation_polygon.add_polygon(indices)
-			atlas_tile.set_navigation_polygon(0, navigation_polygon)
+		# Navigation will be handled by a single NavigationRegion2D instead of individual tile polygons
+		# This prevents overlapping polygon errors and allows proper merging of navigation areas
 		if tile_ent.polygon != null:
 			var polygon_ent = tile_ent.polygon.lookup()
 			var vectors: PackedVector2Array = []
@@ -164,7 +155,81 @@ func build_isometric_tilemap() -> void:
 		add_child(tilemap_layer)
 	Queue.enqueue(
 		Queue.Item.builder()
+		.comment("Build navigation region for map %s" % name)
+		.task(build_navigation_region)
+		.build()
+	)
+	Queue.enqueue(
+		Queue.Item.builder()
 		.comment("Set build complete in map")
 		.task(func(): _build_complete = true)
 		.build()
 	)
+
+func build_navigation_region() -> void:
+	var map_ent = Repo.query([name]).pop_front()
+	var tilemap_ent = map_ent.tilemap.lookup()
+	var tileset_ent = tilemap_ent.tileset.lookup()
+	
+	# Collect all navigable tile positions across all layers
+	var navigable_positions: Array[Vector2i] = []
+	var layers_ent_array = tilemap_ent.layers.lookup()
+	
+	for layer_index in range(layers_ent_array.size()):
+		var layer_ent = layers_ent_array[layer_index]
+		var layer_string: String = io.load_asset(Cache.campaign + layer_ent.source, Cache.campaign)
+		var coords: Vector2i = Vector2i()
+		
+		for row in layer_string.split("\n"):
+			coords.y = 0
+			for tile_symbol in row:
+				if !(tile_symbol in INVALID_TILE_SYMBOLS):
+					var tile_ent = Repo.query([Group.TILE_ENTITY]).filter(func(ent): return ent.symbol == tile_symbol).front()
+					if tile_ent.navigation:
+						navigable_positions.append(coords)
+				coords.y -= 1
+			coords.x += 1
+	
+	if navigable_positions.is_empty():
+		return
+		
+	# Create NavigationRegion2D
+	var navigation_region := NavigationRegion2D.new()
+	navigation_region.name = "Navigation"
+	navigation_region.add_to_group(name)
+	navigation_region.add_to_group(Group.NAVIGATION)
+	navigation_region.add_to_group(map_key)
+	navigation_region.use_edge_connections = true
+	
+	# Create NavigationPolygon with manual geometry
+	var navigation_polygon := NavigationPolygon.new()
+	var all_vertices: PackedVector2Array = []
+	var vertex_index := 0
+	
+	# Create diamond shapes for each navigable tile position
+	var tilemap_layers = get_children().filter(func(child): return child is TileMapLayer)
+	if not tilemap_layers.is_empty():
+		var tilemap_layer = tilemap_layers[0] as TileMapLayer
+		
+		for pos in navigable_positions:
+			var world_pos = tilemap_layer.map_to_local(pos)
+			var diamond = std.generate_isometric_shape(TILEMAP_TILESIZE.x * 0.99, Vector2i(0, -TILEMAP_TILESIZE.y/2))
+			
+			# Add vertices for this diamond (offset by world position)
+			var start_vertex = vertex_index
+			for vertex in diamond:
+				all_vertices.append(world_pos + vertex)
+				vertex_index += 1
+			
+			# Create separate polygon for this diamond
+			var diamond_indices = PackedInt32Array()
+			for i in range(diamond.size()):
+				diamond_indices.append(start_vertex + i)
+			navigation_polygon.add_polygon(diamond_indices)
+	
+	# Set vertices
+	navigation_polygon.vertices = all_vertices
+	
+	# Set the navigation polygon and add to scene
+	navigation_region.navigation_polygon = navigation_polygon
+	add_child(navigation_region)

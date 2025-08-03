@@ -80,6 +80,17 @@ func render_map(map: String) -> void:
 				for audio_fader in Finder.query([Group.AUDIO, map_node.name]):
 					audio_fader.fade_in() if map_node.name == map else audio_fader.fade_out()
 				).build()
+			)
+	for navigation_region: NavigationRegion2D in Finder.query([Group.NAVIGATION]):
+		Queue.enqueue(
+			Queue.Item.builder()
+			.comment("Enable navigation region on map %s = %s" % [map, navigation_region.is_in_group(map)])
+			.condition(func(): return navigation_region.get_parent().build_complete())
+			.task(func(): 
+				navigation_region.enabled = navigation_region.is_in_group(map)
+				navigation_region.visible = navigation_region.is_in_group(map)
+				)
+			.build()
 		)
 
 @rpc("authority", "call_local", "reliable")
