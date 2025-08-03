@@ -98,9 +98,7 @@ func build_isometric_tilemap() -> void:
 	tileset.set_tile_offset_axis(TILESET_OFFSET_AXIS)
 	tileset.add_physics_layer()
 	tileset.set_physics_layer_collision_layer(0, Layer.WALL)  # set the second int as value, not bit or index.
-	var navigation_enabled: bool = tileset_ent.navigation
-	if navigation_enabled:
-		tileset.add_navigation_layer()
+	tileset.add_navigation_layer()
 	var atlas: TileSetAtlasSource = TileSetAtlasSource.new()
 	var texture_bytes = AssetLoader.builder()\
 	.key(tileset_ent.texture)\
@@ -118,7 +116,7 @@ func build_isometric_tilemap() -> void:
 		tileset.get_source(0).create_tile(tile_pos)
 		var atlas_tile = atlas.get_tile_data(coords, 0)
 		atlas.set("%s:%s/0/y_sort_origin" % [coords.x, coords.y], tile_ent.origin)
-		if navigation_enabled:
+		if tile_ent.navigation:
 			# TODO Debug this. This is throwing a nasty warning and subsequent error.
 			# W 0:00:00:718   map.gd:122 @ build_isometric_tilemap(): Function make_polygons_from_outlines() is deprecated.
 			#Use NavigationServer2D.parse_source_geometry_data() and NavigationServer2D.bake_from_source_geometry_data() instead.

@@ -4,6 +4,7 @@ var symbol: String
 var index: int
 var polygon: KeyRef
 var origin: int
+var navigation: bool
 
 func _ready() -> void:
 	tag(tile_group_name())
