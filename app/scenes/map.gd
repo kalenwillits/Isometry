@@ -117,18 +117,15 @@ func build_isometric_tilemap() -> void:
 		var atlas_tile = atlas.get_tile_data(coords, 0)
 		atlas.set("%s:%s/0/y_sort_origin" % [coords.x, coords.y], tile_ent.origin)
 		if tile_ent.navigation:
-			# TODO Debug this. This is throwing a nasty warning and subsequent error.
-			# W 0:00:00:718   map.gd:122 @ build_isometric_tilemap(): Function make_polygons_from_outlines() is deprecated.
-			#Use NavigationServer2D.parse_source_geometry_data() and NavigationServer2D.bake_from_source_geometry_data() instead.
-  			#<C++ Source>  scene/resources/2d/navigation_polygon.cpp:315 @ make_polygons_from_outlines()
- 			#<Stack Trace> map.gd:122 @ build_isometric_tilemap()
-				# queue.gd:70 @ _call_task_safe()
-				# queue.gd:79 @ _process()
-#			E 0:00:01:351   _build_step_find_edge_connection_pairs: Navigation map synchronization error. Attempted to merge a navigation mesh polygon edge with another already-merged edge. This is usually caused by crossing edges, overlapping polygons, or a mismatch of the NavigationMesh / NavigationPolygon baked 'cell_size' and navigation map 'cell_size'. If you're certain none of above is the case, change 'navigation/3d/merge_rasterizer_cell_scale' to 0.001.
- 			# <C++ Source>  modules/navigation/3d/nav_map_builder_3d.cpp:151 @ _build_step_find_edge_connection_pairs()
 			var navigation_polygon: NavigationPolygon = NavigationPolygon.new()
-			navigation_polygon.add_outline(std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, -TILEMAP_TILESIZE.y/2)))
-			navigation_polygon.make_polygons_from_outlines()
+			var outline = std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, -TILEMAP_TILESIZE.y/2))
+			# Set vertices first
+			navigation_polygon.vertices = PackedVector2Array(outline)
+			# Create polygon using vertex indices (0, 1, 2, 3... for each vertex in order)
+			var indices = PackedInt32Array()
+			for i in range(outline.size()):
+				indices.append(i)
+			navigation_polygon.add_polygon(indices)
 			atlas_tile.set_navigation_polygon(0, navigation_polygon)
 		if tile_ent.polygon != null:
 			var polygon_ent = tile_ent.polygon.lookup()
