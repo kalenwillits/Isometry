@@ -3,24 +3,14 @@ class_name FadingTileMapLayer
 
 var process_delta: float = 0.0
 
-const SCALE_TO_VIEW: float = 5.0
+const UPDATE_INTERVAL: float = 0.1
 var tile_render_states: Dictionary = {}
 var discovery_source: Actor = null
+var update_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group(Group.MAP_LAYER)
 	visibility_changed.connect(_on_visibility_changed)
-#
-func calculate_distance_and_radius(coords: Vector2i) -> TileRenderState.UpdateParams:
-	var primary_actor: Actor = Finder.get_primary_actor()
-	var primary_actor_cell: Vector2i = local_to_map(to_local(primary_actor.global_position))
-	var distance: float = primary_actor_cell.distance_to(coords)
-	var viewbox_area: Area2D = primary_actor.get_node("ViewBox") # TODO - it should be any tile from within the viewbox shape
-	var viewbox_collision_shape: CollisionShape2D = viewbox_area.get_children()[0]
-	var viewbox_circle_shape: CircleShape2D = viewbox_collision_shape.shape
-	var radius_world: float = viewbox_circle_shape.radius
-	var radius_cells: float = (radius_world / (tile_set.tile_size.x + tile_set.tile_size.y)) * SCALE_TO_VIEW
-	return TileRenderState.UpdateParams.create(distance, radius_cells)
 
 func get_tile_render_state(coords: Vector2i) -> TileRenderState:
 	if not tile_render_states.has(coords):
@@ -54,7 +44,7 @@ func use_render_tile(coords: Vector2i, tile_data: TileData) -> void:
 		tile_render_state.target_tint = Style.UNDISCOVERED_TILE_TINT
 		tile_render_state.target_alpha = Style.UNDISCOVERED_TILE_TINT
 	
-	tile_render_state.time_left = Fader.TRANSITION_TIME
+	tile_render_state.time_left = 0.9
 	tile_render_state.tick(process_delta)
 	tile_data.modulate = tile_render_state.get_modulate()
 		
@@ -65,9 +55,14 @@ func _tile_data_runtime_update(coords: Vector2i, tile_data: TileData) -> void:
 	get_tile_render_state(coords)
 	use_render_tile(coords, tile_data)
 
-func _process(delta: float) -> void: # TODO - consider slowing down this class
+func _process(delta: float) -> void:
 	process_delta = delta
-	notify_runtime_tile_data_update()
+	update_timer += delta
+	
+	# Only update tiles at intervals instead of every frame
+	if update_timer >= UPDATE_INTERVAL:
+		update_timer = 0.0
+		notify_runtime_tile_data_update()
 
 func set_discovery_source(actor: Actor) -> void:
 	discovery_source = actor

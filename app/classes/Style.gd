@@ -3,6 +3,6 @@ class_name Style
 
 ## Static class to house style constants
 
-const DISCOVERED_TILE_TINT: float = 0.6
+const DISCOVERED_TILE_TINT: float = 0.9
 const UNDISCOVERED_TILE_TINT: float = 0.0
 const VISIBLE_TILE_TINT: float = 1.0
