@@ -740,6 +740,12 @@ func build_discoverybox(value: int) -> void:
 	discovery_shape.shape = CircleShape2D.new()
 	discovery_shape.apply_scale(Vector2(1 * value, 0.5 * value))
 	$DiscoveryBox.add_child(discovery_shape)
+	
+func get_relative_camera_position() -> Vector2:
+	var view_shape: CollisionShape2D = $ViewBox.get_node_or_null("ViewShape")
+	if view_shape:
+		return global_position + view_shape.position
+	return global_position
 
 func set_camera_target():
 	Finder.select(Group.CAMERA).set_target(self)

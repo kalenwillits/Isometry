@@ -8,7 +8,7 @@ const CAMERA_ZOOM_MAX: int = 11
 @export var zoom_level: int = CAMERA_ZOOM_DEFAULT
 
 const CAMERA_MARGIN: int = 33.33
-const CAMERA_SPEED: float = 333.3
+const CAMERA_SPEED: float = 111.1
 const CAMERA_TOLERANCE: float = 100.0
 
 var _target: WeakRef
@@ -76,7 +76,7 @@ func handle_zoom_events() -> void:
 
 func use_target(delta: float) -> void:
 	if get_target():
-		pan_to(get_target().get_global_position(), delta)
+		pan_to(get_target().get_relative_camera_position(), delta)
 	
 func handle_camera_lock() -> void:
 	if Input.is_action_just_pressed("camera_lock"):
