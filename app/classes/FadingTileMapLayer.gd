@@ -3,7 +3,7 @@ class_name FadingTileMapLayer
 
 var process_delta: float = 0.0
 
-const UPDATE_INTERVAL: float = 0.1
+const UPDATE_INTERVAL: float = 0.01
 var tile_render_states: Dictionary = {}
 var discovery_source: Actor = null
 var update_timer: float = 0.0
@@ -30,6 +30,9 @@ func use_render_tile(coords: Vector2i, tile_data: TileData) -> void:
 	# Check if tile is in discovery area
 	var is_in_discovery: bool = is_tile_in_discovery_area(coords)
 	
+	var previous_target_tint = tile_render_state.target_tint
+	var previous_target_alpha = tile_render_state.target_alpha
+	
 	if is_in_discovery:
 		tile_render_state.is_discovered = true
 		tile_render_state.is_in_view = true
@@ -44,7 +47,10 @@ func use_render_tile(coords: Vector2i, tile_data: TileData) -> void:
 		tile_render_state.target_tint = Style.UNDISCOVERED_TILE_TINT
 		tile_render_state.target_alpha = Style.UNDISCOVERED_TILE_TINT
 	
-	tile_render_state.time_left = 0.9
+	# Only reset time_left if target values changed
+	if previous_target_tint != tile_render_state.target_tint or previous_target_alpha != tile_render_state.target_alpha:
+		tile_render_state.time_left = Fader.TRANSITION_TIME
+	
 	tile_render_state.tick(process_delta)
 	tile_data.modulate = tile_render_state.get_modulate()
 		
@@ -73,11 +79,12 @@ func is_tile_in_discovery_area(coords: Vector2i) -> bool:
 	
 	var tile_world_position: Vector2 = to_global(map_to_local(coords))
 	var discovery_box: Area2D = discovery_source.get_node("DiscoveryBox")
-	var discovery_shape: CollisionShape2D = discovery_box.get_children()[0]
+	var discovery_shape: CollisionShape2D = discovery_box.get_children().pop_front()
 	var circle_shape: CircleShape2D = discovery_shape.shape
 	
-	# Get the relative position from actor to tile
-	var relative_pos: Vector2 = tile_world_position - discovery_source.global_position
+	# Get the relative position from discovery shape center to tile
+	var discovery_shape_world_pos: Vector2 = discovery_source.global_position + discovery_shape.position
+	var relative_pos: Vector2 = tile_world_position - discovery_shape_world_pos
 	
 	# Apply inverse scaling to check against the unit circle
 	var scaled_x: float = relative_pos.x / (circle_shape.radius * discovery_shape.scale.x)
