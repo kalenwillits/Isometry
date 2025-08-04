@@ -97,7 +97,11 @@ func build_isometric_tilemap() -> void:
 	tileset.set_tile_layout(TILESET_LAYOUT)
 	tileset.set_tile_offset_axis(TILESET_OFFSET_AXIS)
 	tileset.add_physics_layer()
-	tileset.set_physics_layer_collision_layer(0, Layer.WALL)  # set the second int as value, not bit or index.
+	tileset.set_physics_layer_collision_layer(0, 1)  # WALL bit value is 1
+	tileset.set_physics_layer_collision_mask(0, 0) # disable mask bit 1
+	tileset.add_physics_layer()
+	tileset.set_physics_layer_collision_layer(1, 16)  # DISCOVERY BIT VALUE = 16
+	tileset.set_physics_layer_collision_mask(1, 0) # disable mask bit 1
 	tileset.add_navigation_layer()
 	var atlas: TileSetAtlasSource = TileSetAtlasSource.new()
 	var texture_bytes = AssetLoader.builder()\
@@ -116,6 +120,7 @@ func build_isometric_tilemap() -> void:
 		tileset.get_source(0).create_tile(tile_pos)
 		var atlas_tile = atlas.get_tile_data(coords, 0)
 		atlas.set("%s:%s/0/y_sort_origin" % [coords.x, coords.y], tile_ent.origin)
+
 		# Navigation will be handled by a single NavigationRegion2D instead of individual tile polygons
 		# This prevents overlapping polygon errors and allows proper merging of navigation areas
 		if tile_ent.polygon != null:
@@ -124,6 +129,8 @@ func build_isometric_tilemap() -> void:
 			for vertex_ent in polygon_ent.vertices.lookup():
 				vectors.append(vertex_ent.to_vec2i())
 			atlas_tile.set("physics_layer_0/polygon_0/points", vectors)
+		var discovery_vectors = std.generate_isometric_shape(TILEMAP_TILESIZE.x * 0.99, Vector2i(0, -TILEMAP_TILESIZE.y/2))
+		atlas_tile.set("physics_layer_1/polygon_0/points", discovery_vectors)
 	var layers_ent_array = tilemap_ent.layers.lookup()
 	for layer_index in range(layers_ent_array.size()):
 		var tilemap_layer := FadingTileMapLayer.new()

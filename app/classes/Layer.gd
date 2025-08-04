@@ -6,4 +6,5 @@ enum {
 	BASE=2, ## Actor base or footprint
 	HITBOX=3, ## Vertical space of an actor
 	VIEWBOX=4, ## How far an actor can see
+	DISCOVERY=5, ## Map discovery on tiles
 }

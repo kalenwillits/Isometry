@@ -94,6 +94,10 @@ collision_mask = 0
 collision_layer = 0
 collision_mask = 0
 
+[node name="DiscoveryBox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 0
+
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
 
 [connection signal="heading_change" from="." to="." method="_on_heading_change"]
@@ -109,3 +113,4 @@ collision_mask = 0
 [connection signal="input_event" from="HitBox" to="." method="_on_act"]
 [connection signal="mouse_entered" from="HitBox" to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="HitBox" to="." method="_on_mouse_exited"]
+[connection signal="body_entered" from="DiscoveryBox" to="." method="_on_discovery_box_body_entered"]

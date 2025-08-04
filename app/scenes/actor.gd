@@ -40,7 +40,7 @@ var speed_cache_value: float # Used to store speed value inbetween temporary cha
 var target_groups_counter: Dictionary
 var in_view: Dictionary # A Dictionary[StringName, Integer] of actors that are currently in view of this actor. The value is the total number of actors in the view when entered.
 var track_index: int = 0 # Identifies what index in a npc's track array to follow
-#var discovery: Dictionary = {}
+var discovery: Dictionary = {}
 var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
@@ -115,9 +115,9 @@ class ActorBuilder extends Object:
 		this.resources = value
 		return self
 		
-	#func discovery(value: Dictionary) -> ActorBuilder:
-		#this.discovery = value
-		#return self
+	func discovery(value: Dictionary) -> ActorBuilder:
+		this.discovery = value
+		return self
 		
 	func speed(value: float) -> ActorBuilder:
 		this.speed = value
@@ -127,6 +127,7 @@ class ActorBuilder extends Object:
 		var actor_ent = Repo.query([this.actor]).pop_front()
 		if actor_ent:
 			this.build_viewbox(actor_ent.view)
+			this.view = actor_ent.view
 			if actor_ent.groups: this.build_target_groups(actor_ent.groups.lookup())
 			if actor_ent.sprite: this.sprite = actor_ent.sprite.key()
 			if actor_ent.hitbox: this.hitbox = actor_ent.hitbox.key()
@@ -151,21 +152,21 @@ class ActorBuilder extends Object:
 static func builder() -> ActorBuilder:
 	return ActorBuilder.new()
 	
-#func pack_discovery() -> Dictionary:
-	#var results: Dictionary = {}
-	#for map_layer_node in Finder.query([Group.MAP_LAYER]):
-		#var map_node: Map = map_layer_node.get_parent()
-		#if results.get(map_node.get_name()) == null: results[map_node.get_name()] = {}
+func pack_discovery() -> Dictionary:
+	var results: Dictionary = {}
+	for map_layer_node in Finder.query([Group.MAP_LAYER]):
+		var map_node: Map = map_layer_node.get_parent()
+		if results.get(map_node.get_name()) == null: results[map_node.get_name()] = {}
 		#results[map_node.get_name()][map_layer_node.get_name()] = map_layer_node.pack_discovered_tiles()
-	#return results
+	return results
 	
-#func unpack_discovery() -> void:
-	#for map_layer_node in Finder.query([Group.MAP_LAYER]): 
-		#var map_node: Map = map_layer_node.get_parent()
-		#if discovery.get(map_node.get_name()) == null: continue
-		#if discovery[map_node.get_name()].get(map_layer_node.get_name()) == null: continue
-		#map_layer_node.unpack_discovered_tiles(discovery[map_node.get_name()][map_layer_node.get_name()])
-	#discovery.clear()
+func unpack_discovery() -> void:
+	for map_layer_node in Finder.query([Group.MAP_LAYER]): 
+		var map_node: Map = map_layer_node.get_parent()
+		if discovery.get(map_node.get_name()) == null: continue
+		if discovery[map_node.get_name()].get(map_layer_node.get_name()) == null: continue
+		map_layer_node.unpack_discovered_tiles(discovery[map_node.get_name()][map_layer_node.get_name()])
+	discovery.clear()
 
 func pack() -> Dictionary:
 	var results: Dictionary = {
@@ -179,8 +180,8 @@ func pack() -> Dictionary:
 		"resources": resources,
 		"speed": speed,
 	}
-	#if !is_npc():
-		#results["discovery"] = pack_discovery()
+	if !is_npc():
+		results["discovery"] = pack_discovery()
 	return results
 	
 func get_outline_color() -> Color:
@@ -295,6 +296,7 @@ func _ready() -> void:
 	$HitBox.area_entered.connect(_on_hit_box_body_entered)
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
 	if is_primary():
+		build_discoverybox(view)
 		line_of_sight_entered.connect(_on_line_of_sight_entered)
 		line_of_sight_exited.connect(_on_line_of_sight_exited)
 		$ViewBox.area_exited.connect(_on_view_box_area_exited)
@@ -311,12 +313,12 @@ func _ready() -> void:
 			.task(func(): Finder.query([Group.ACTOR, map]).map(func(a): a.is_awake(true)))
 			.build()
 		)
-		#Queue.enqueue(
-			#Queue.Item.builder()
-			#.comment("unpack discovery")
-			#.task(unpack_discovery)
-			#.build()
-		#)
+		Queue.enqueue(
+			Queue.Item.builder()
+			.comment("unpack discovery")
+			.task(unpack_discovery)
+			.build()
+		)
 
 func schedule_render_this_actors_map() -> void:
 	Queue.enqueue(
@@ -714,10 +716,19 @@ func build_viewbox(value: int) -> void:
 	if value > 0:
 		for node in $ViewBox.get_children(): node.queue_free()
 		var view_shape: CollisionShape2D = CollisionShape2D.new()
-		view_shape.name = "PrimaryViewShape"
+		view_shape.name = "ViewShape"
 		view_shape.shape = CircleShape2D.new()
 		view_shape.apply_scale(Vector2(1 * value, 0.5 * value))
 		$ViewBox.add_child(view_shape)
+		
+		
+func build_discoverybox(value: int) -> void:
+	for node in $DiscoveryBox.get_children(): node.queue_free()
+	var discovery_shape: CollisionShape2D = CollisionShape2D.new()
+	discovery_shape.name = "DiscoveryShape"
+	discovery_shape.shape = CircleShape2D.new()
+	discovery_shape.apply_scale(Vector2(1 * value, 0.5 * value))
+	$DiscoveryBox.add_child(discovery_shape)
 
 func set_camera_target():
 	Finder.select(Group.CAMERA).set_target(self)
@@ -1113,6 +1124,8 @@ func use_collisions(effect: bool) -> void:
 	$ViewBox.set_collision_layer_value(Layer.VIEWBOX, effect)
 	$ViewBox.set_collision_mask_value(Layer.HITBOX, effect)
 	$ViewBox.set_collision_mask_value(Layer.BASE, effect)
+	$DiscoveryBox.set_collision_layer_value(Layer.DISCOVERY, effect)
+	$DiscoveryBox.set_collision_mask_value(Layer.DISCOVERY, effect)
 
 func _on_sprite_animation_changed():
 	$Sprite.play()  # Without this, the animation freezes
@@ -1169,3 +1182,6 @@ func _notification(what):
 
 func _on_tree_exiting() -> void:
 	Controller.broadcast_actor_is_despawning.rpc_id(1, peer_id, map)
+
+func _on_discovery_box_body_entered(tileMapLayer: FadingTileMapLayer) -> void:
+	pass # TODO - render tiles based on on state
