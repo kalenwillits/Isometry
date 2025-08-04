@@ -12,7 +12,7 @@ const BASE_TILE_SIZE: float = 32.0
 const BASE_ACTOR_SPEED: float = 10.0
 const SPEED_NORMAL: float = 500.0
 const DESTINATION_PRECISION: float = 1.1
-const VIEW_SPEED: float = 0.83 # percent value to controll the amount of acceleration to the actor's view shape.
+const VIEW_SPEED: float = 4
 
 @export var token: PackedByteArray
 @export var display_name: String
@@ -297,6 +297,7 @@ func _ready() -> void:
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
 	if is_primary():
 		build_discoverybox(view)
+		$DiscoveryBox.body_entered.connect(_on_discovery_box_body_entered)
 		line_of_sight_entered.connect(_on_line_of_sight_entered)
 		line_of_sight_exited.connect(_on_line_of_sight_exited)
 		$ViewBox.area_exited.connect(_on_view_box_area_exited)
@@ -342,6 +343,7 @@ func _physics_process(delta) -> void:
 	use_strategy()
 	use_move_view(delta)
 	if is_primary():
+		use_move_discovery()
 		use_movement(delta)
 		click_to_move()
 		use_move_directly(delta)
@@ -394,21 +396,30 @@ func use_track(track: Array) -> void:
 	set_destination(next)
 	if isometric_distance_to_point(destination) < DESTINATION_PRECISION:
 		track_index += 1
+		
+func use_move_discovery() -> void:
+	var view_shape: CollisionShape2D = $ViewBox.get_node_or_null("ViewShape")
+	if view_shape:
+		var discovery_shape: CollisionShape2D = $DiscoveryBox.get_node_or_null("DiscoveryShape")
+		if discovery_shape:
+			discovery_shape.position = view_shape.position
+
+
 
 func use_move_view(delta: float) -> void:
-	var primary_view_shape: CollisionShape2D = $ViewBox.get_node_or_null("PrimaryViewShape")
+	var view_shape: CollisionShape2D = $ViewBox.get_node_or_null("ViewShape")
 	if origin.distance_to(destination) > 0: 
 		last_viewshape_destination = destination
 		last_viewshape_origin = origin
-	if primary_view_shape:
+	if view_shape:
 		var direction: Vector2 = last_viewshape_destination.direction_to(last_viewshape_origin) 
-		var radius: float = view * PI * BASE_TILE_SIZE
-		var distance: float = std.isometric_factor(direction.angle()) * radius
-		var viewpoint: Vector2 = direction * distance
-		var viewshape_distance_to_viewpoint: float = primary_view_shape.position.distance_to(viewpoint)
+		var offset_distance: float = view * VIEW_SPEED
+		var viewpoint: Vector2 = -direction * offset_distance
+		viewpoint.y *= std.isometric_factor(origin.angle_to(destination)) / 2
+		var viewshape_distance_to_viewpoint: float = view_shape.position.distance_to(viewpoint)
 		var acceleration: float = viewshape_distance_to_viewpoint * delta * VIEW_SPEED
-		primary_view_shape.position.x = move_toward(primary_view_shape.position.x, viewpoint.x, acceleration)
-		primary_view_shape.position.y = move_toward(primary_view_shape.position.y, viewpoint.y, acceleration)
+		view_shape.position.x = move_toward(view_shape.position.x, viewpoint.x, acceleration)
+		view_shape.position.y = move_toward(view_shape.position.y, viewpoint.y, acceleration)
 
 func use_strategy() -> void:
 	if strategy == null: return
@@ -1126,31 +1137,30 @@ func use_collisions(effect: bool) -> void:
 	$ViewBox.set_collision_mask_value(Layer.BASE, effect)
 	$DiscoveryBox.set_collision_layer_value(Layer.DISCOVERY, effect)
 	$DiscoveryBox.set_collision_mask_value(Layer.DISCOVERY, effect)
-
+	
 func _on_sprite_animation_changed():
 	$Sprite.play()  # Without this, the animation freezes
 	
 func _on_line_of_sight_entered(other: Actor) -> void:
-	other.fader.fade()
-	other.visible_to_primary(true)
+	pass
 	
 func _on_line_of_sight_exited(other: Actor) -> void:
-	other.fader.fade()
-	other.visible_to_primary(false)
+	pass
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
 	if other == self: return
 	in_view[other.get_name()] = in_view.size()
 	if is_primary():
-		#other.fader.fade()
-		#other.visible_to_primary(true) # Commented out if using LOS
+		other.fader.fade()
+		other.visible_to_primary(true) # Commented out if using LOS
 		for target_group_key in other.target_groups:
 			target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
 	self.on_view.emit(other)
 
 func _on_view_box_area_exited(area: Area2D) -> void:
 	var other = area.get_parent()
+	if other == self: return
 	in_view.erase(other.get_name())
 	var other_name: String = other.get_name()
 	var this_actor_name: String = get_name()
@@ -1184,4 +1194,5 @@ func _on_tree_exiting() -> void:
 	Controller.broadcast_actor_is_despawning.rpc_id(1, peer_id, map)
 
 func _on_discovery_box_body_entered(tileMapLayer: FadingTileMapLayer) -> void:
-	pass # TODO - render tiles based on on state
+	if tileMapLayer is FadingTileMapLayer:
+		tileMapLayer.set_discovery_source(self)
