@@ -356,8 +356,14 @@ func _physics_process(delta) -> void:
 func _built_in_measure__line_of_sight() -> int:
 	var target_actor: Actor = Finder.select(target)
 	if target_actor != null:
-		if line_of_sight_to_point(target_actor.get_position()):
-			return 1
+		if is_primary():
+			# Primary players use actual line-of-sight checking
+			if line_of_sight_to_point(target_actor.get_position()):
+				return 1
+		else:
+			# NPCs only use viewbox detection (if target is in view, they can "see" it)
+			if target_actor.get_name() in in_view:
+				return 1
 	return 0
 
 func _built_in_measure__distance_to_target() -> int:
@@ -920,7 +926,13 @@ func get_measure(measure_name: String) -> int:
 func map_relative_distance_to_in_view_actors() -> Dictionary:
 	var results: Dictionary = {}
 	for actor_name in in_view.keys():
-		var per_actor: Actor = Finder.query([map, Group.IS_VISIBLE, actor_name]).pop_front()
+		var per_actor: Actor
+		if is_primary():
+			# Primary players only consider visible actors
+			per_actor = Finder.query([map, Group.IS_VISIBLE, actor_name]).pop_front()
+		else:
+			# NPCs consider any actor in their view (no visibility requirement)
+			per_actor = Finder.query([map, actor_name]).pop_front()
 		if per_actor != null:
 			results[actor_name] = isometric_distance_to_actor(per_actor)
 	return results
@@ -1148,10 +1160,12 @@ func _on_sprite_animation_changed():
 	$Sprite.play()  # Without this, the animation freezes
 	
 func _on_line_of_sight_entered(other: Actor) -> void:
-	pass
+	other.fader.fade()
+	other.visible_to_primary(true)
 	
 func _on_line_of_sight_exited(other: Actor) -> void:
-	pass
+	other.fader.fade()
+	other.visible_to_primary(false)
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
@@ -1159,7 +1173,7 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 	in_view[other.get_name()] = in_view.size()
 	if is_primary():
 		other.fader.fade()
-		other.visible_to_primary(true) # Commented out if using LOS
+		other.visible_to_primary(true)
 		for target_group_key in other.target_groups:
 			target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
 	self.on_view.emit(other)

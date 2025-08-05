@@ -54,10 +54,6 @@ run/main_run_args="--campaign=default --uri=localhost --port=5002 --network=1 --
 theme/custom_font="res://themes/UbuntuMono-Regular.ttf"
 theme/default_font_hinting=0
 
-[navigation]
-
-3d/merge_rasterizer_cell_scale=0.001
-
 [input]
 
 toggle_developer_console={
@@ -185,6 +181,10 @@ interact={
 "events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":0,"position":Vector2(0, 0),"global_position":Vector2(0, 0),"factor":1.0,"button_index":2,"canceled":false,"pressed":false,"double_click":false,"script":null)
 ]
 }
+
+[navigation]
+
+3d/merge_rasterizer_cell_scale=0.001
 
 [rendering]
 
