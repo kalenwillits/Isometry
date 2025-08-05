@@ -163,7 +163,7 @@ func build_isometric_tilemap() -> void:
 	Queue.enqueue(
 		Queue.Item.builder()
 		.comment("Build navigation region for map %s" % name)
-		.task(build_navigation_region)
+		.task(func(): build_navigation_region(collect_obstacle_coordinates()))
 		.build()
 	)
 	Queue.enqueue(
@@ -173,12 +173,39 @@ func build_isometric_tilemap() -> void:
 		.build()
 	)
 
-func build_navigation_region() -> void:
+func collect_obstacle_coordinates() -> Array[Vector2i]:
 	var map_ent = Repo.query([name]).pop_front()
 	var tilemap_ent = map_ent.tilemap.lookup()
 	var tileset_ent = tilemap_ent.tileset.lookup()
 	
-	# Collect all navigable tile positions across all layers
+	# Collect coordinates that have collision polygons on ANY layer
+	var obstacle_coordinates: Array[Vector2i] = []
+	var layers_ent_array = tilemap_ent.layers.lookup()
+	
+	for layer_index in range(layers_ent_array.size()):
+		var layer_ent = layers_ent_array[layer_index]
+		var layer_string: String = io.load_asset(Cache.campaign + layer_ent.source, Cache.campaign)
+		var coords: Vector2i = Vector2i()
+		
+		for row in layer_string.split("\n"):
+			coords.y = 0
+			for tile_symbol in row:
+				if !(tile_symbol in INVALID_TILE_SYMBOLS):
+					var tile_ent = Repo.query([Group.TILE_ENTITY]).filter(func(ent): return ent.symbol == tile_symbol).front()
+					# Add coordinate if this tile has a collision polygon and coordinate not already added
+					if tile_ent.polygon != null and coords not in obstacle_coordinates:
+						obstacle_coordinates.append(coords)
+				coords.y -= 1
+			coords.x += 1
+	
+	return obstacle_coordinates
+
+func build_navigation_region(obstacle_coordinates: Array[Vector2i] = []) -> void:
+	var map_ent = Repo.query([name]).pop_front()
+	var tilemap_ent = map_ent.tilemap.lookup()
+	var tileset_ent = tilemap_ent.tileset.lookup()
+	
+	# Collect all navigable tile positions across all layers, excluding obstacle coordinates
 	var navigable_positions: Array[Vector2i] = []
 	var layers_ent_array = tilemap_ent.layers.lookup()
 	
@@ -192,7 +219,8 @@ func build_navigation_region() -> void:
 			for tile_symbol in row:
 				if !(tile_symbol in INVALID_TILE_SYMBOLS):
 					var tile_ent = Repo.query([Group.TILE_ENTITY]).filter(func(ent): return ent.symbol == tile_symbol).front()
-					if tile_ent.navigation:
+					# Only add to navigable if it has navigation AND is not blocked by an obstacle
+					if tile_ent.navigation and coords not in obstacle_coordinates:
 						navigable_positions.append(coords)
 				coords.y -= 1
 			coords.x += 1
