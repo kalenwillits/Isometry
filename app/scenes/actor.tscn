@@ -44,6 +44,9 @@ properties/11/replication_mode = 2
 properties/12/path = NodePath(".:target")
 properties/12/spawn = true
 properties/12/replication_mode = 2
+properties/13/path = NodePath(".:fix")
+properties/13/spawn = true
+properties/13/replication_mode = 2
 
 [node name="Actor" type="CharacterBody2D"]
 z_index = 1
@@ -98,7 +101,9 @@ collision_mask = 0
 collision_layer = 0
 collision_mask = 0
 
-[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+[node name="NavigationAgent" type="NavigationAgent2D" parent="."]
+path_postprocessing = 1
+debug_enabled = true
 
 [connection signal="heading_change" from="." to="." method="_on_heading_change"]
 [connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]

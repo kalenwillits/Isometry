@@ -236,19 +236,20 @@ func build_navigation_region(obstacle_coordinates: Array[Vector2i] = []) -> void
 	navigation_region.add_to_group(map_key)
 	navigation_region.use_edge_connections = true
 	
-	# Create NavigationPolygon with manual geometry
+	# Create NavigationPolygon with properly spaced diamond shapes
 	var navigation_polygon := NavigationPolygon.new()
 	var all_vertices: PackedVector2Array = []
 	var vertex_index := 0
 	
-	# Create diamond shapes for each navigable tile position
+	# Create diamond shapes for each navigable tile position with proper spacing
 	var tilemap_layers = get_children().filter(func(child): return child is TileMapLayer)
 	if not tilemap_layers.is_empty():
 		var tilemap_layer = tilemap_layers[0] as TileMapLayer
 		
 		for pos in navigable_positions:
 			var world_pos = tilemap_layer.map_to_local(pos)
-			var diamond = std.generate_isometric_shape(TILEMAP_TILESIZE.x * 0.99, Vector2i(0, -TILEMAP_TILESIZE.y/2))
+			# Use 0.98 scale to prevent overlaps while maintaining connectivity
+			var diamond = std.generate_isometric_shape(TILEMAP_TILESIZE.x * 1, Vector2i(0, -TILEMAP_TILESIZE.y/2))
 			
 			# Add vertices for this diamond (offset by world position)
 			var start_vertex = vertex_index

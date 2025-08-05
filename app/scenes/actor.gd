@@ -18,6 +18,7 @@ const VIEW_SPEED: float = 4
 @export var display_name: String
 @export var origin: Vector2
 @export var destination: Vector2
+@export var fix: Vector2
 @export var speed: float = 1.0
 @export var heading: String = "S"
 @export var state: String = "idle"
@@ -52,6 +53,7 @@ var strategy: Strategy
 # Without these, the viewshape only moves while the actor is moving.
 var last_viewshape_destination: Vector2 
 var last_viewshape_origin: Vector2
+# Path management for navigation (simplified - NavigationAgent2D handles path internally)
 
 signal on_touch(actor)
 signal on_view(actor)
@@ -1034,16 +1036,28 @@ func use_line_of_sight() -> void:
 	_use_line_of_sight_tick += 1
 
 func use_movement(delta: float) -> void:
-	if position.distance_squared_to(destination) > DESTINATION_PRECISION:
-		var motion = position.direction_to(destination)
-		velocity = motion * get_speed(delta) * std.isometric_factor(motion.angle())
-		move_and_slide()
-		match substate:
-			SubState.IDLE, SubState.START, SubState.END:
-				look_at_point(destination)
-	else:
+	var nav = $NavigationAgent
+	
+	# Set navigation target every frame when position != destination
+	if not position.is_equal_approx(destination):
+		nav.target_position = destination
+	
+	# Check if navigation is finished (reached destination)
+	if nav.is_navigation_finished():
 		set_destination(position)
 		velocity = Vector2.ZERO
+		return
+	
+	# Get next navigation position and move toward it
+	var next_position = nav.get_next_path_position()
+	fix = next_position  # Update fix to current navigation target
+	var motion = position.direction_to(next_position)
+	velocity = motion * get_speed(delta) * std.isometric_factor(motion.angle())
+	move_and_slide()
+	
+	match substate:
+		SubState.IDLE, SubState.START, SubState.END:
+			look_at_point(next_position)
 
 func look_at_target() -> void:
 	Optional.of_nullable(Finder.get_actor(target)).if_present(func(target_actor): look_at_point(target_actor.position))
@@ -1066,10 +1080,12 @@ func use_move_directly(_delta) -> void:
 	if motion.length():
 		set_destination(new_destination)
 
+
 func set_destination(point: Vector2) -> void:
 	## Where the actor is headed to.
 	set_origin(position)
 	destination = point
+	fix = point  # Set fix to destination, will be updated by NavigationAgent2D in use_movement()
 	
 func set_origin(point: Vector2) -> void:
 	## Where the actor started before moving.
