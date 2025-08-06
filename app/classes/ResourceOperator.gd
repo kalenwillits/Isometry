@@ -17,8 +17,6 @@ class Builder extends Object:
 		return self
 
 	func build() -> ResourceOperator: 
-		#assert(this.resource != null)
-		#assert(this.actor != null)
 		return this
 
 static func builder() -> Builder:
@@ -47,8 +45,8 @@ func multiply(value: int) -> ResourceOperator:
 
 func divide(value: int) -> ResourceOperator:
 	## Important!!!! 
-	## If someone attempts to divide by zero, it will be treated as n/1.
-	if value == 0: value = 1
+	## If someone attempts to divide by zero, it will be treated as infitity
+	if value == 0: value = INF
 	var current_value: int = actor.resources.get(resource.key())
 	var new_value: int = current_value / value
 	actor.resources[resource.key()] = enforce_bounds(new_value)

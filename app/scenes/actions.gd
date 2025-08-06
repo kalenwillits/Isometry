@@ -125,10 +125,10 @@ func minus_resource_target(self_name: String, target_name: String, params: Dicti
 	).pop_front()
 		).if_present(
 	func(resource: Entity):
-		var target_actor: Actor = get_tree().get_first_node_in_group(target_name)
+		var target_actor: Actor = Finder.get_actor(target_name)
 		var value: int = Dice.builder().expression(params.expression).build().evaluate()
 		var result: int = ResourceOperator.builder().actor(target_actor).resource(resource).build().minus(value).get_value()
-		#Logger.debug("minus_resource_target(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])		
+		Logger.debug("minus_resource_target(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])		
 	)
 
 func minus_resource_self(self_name: String, target_name: String, params: Dictionary) -> void:
