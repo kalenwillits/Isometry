@@ -14,6 +14,13 @@ const SPEED_NORMAL: float = 500.0
 const DESTINATION_PRECISION: float = 1.1
 const VIEW_SPEED: float = 4
 
+# Navigation constants
+const NAV_AGENT_RADIUS: float = 16.0  # Half tile size for collision radius
+const NAV_NEIGHBOR_DISTANCE: float = 64.0  # 2x tile size for neighbor detection
+const NAV_PATH_DESIRED_DISTANCE: float = 8.0  # Quarter tile for path points
+const NAV_TARGET_DESIRED_DISTANCE: float = DESTINATION_PRECISION  # Use existing precision
+const NAV_PATH_MAX_DISTANCE: float = 128.0  # 4x tile size for path recalculation
+
 @export var token: PackedByteArray
 @export var display_name: String
 @export var origin: Vector2
@@ -297,6 +304,15 @@ func _ready() -> void:
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	$HitBox.area_entered.connect(_on_hit_box_body_entered)
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
+	
+	# Configure NavigationAgent2D for all actors (primary and NPCs)
+	$NavigationAgent.radius = NAV_AGENT_RADIUS
+	$NavigationAgent.neighbor_distance = NAV_NEIGHBOR_DISTANCE
+	$NavigationAgent.path_desired_distance = NAV_PATH_DESIRED_DISTANCE
+	$NavigationAgent.target_desired_distance = NAV_TARGET_DESIRED_DISTANCE
+	$NavigationAgent.path_max_distance = NAV_PATH_MAX_DISTANCE
+	$NavigationAgent.avoidance_enabled = true
+	
 	if is_primary():
 		$NavigationAgent.debug_enabled = true
 		$NavigationAgent.debug_use_custom = true
