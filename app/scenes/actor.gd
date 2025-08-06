@@ -348,14 +348,14 @@ func _physics_process(delta) -> void:
 	use_move_view(delta)
 	if is_primary():
 		use_move_discovery()
-		use_movement(delta)
+		use_pathing(delta)
 		click_to_move()
 		use_move_directly(delta)
 		use_actions()
 		use_target()
 		use_line_of_sight()
 	if is_npc() and std.is_host_or_server():
-		use_movement(delta)
+		use_pathing(delta)
 		
 func _built_in_measure__line_of_sight() -> int:
 	var target_actor: Actor = Finder.select(target)
@@ -1037,7 +1037,7 @@ func use_line_of_sight() -> void:
 			line_of_sight_exited.emit(other)
 	_use_line_of_sight_tick += 1
 
-func use_movement(delta: float) -> void:
+func use_pathing(delta: float) -> void:
 	# Set navigation target every frame when position != destination
 	if not position.is_equal_approx(destination):
 		$NavigationAgent.target_position = destination
@@ -1091,7 +1091,7 @@ func set_destination(point: Vector2) -> void:
 	## Where the actor is headed to.
 	set_origin(position)
 	destination = point
-	fix = point  # Set fix to destination, will be updated by NavigationAgent2D in use_movement()
+	fix = point  # Set fix to destination, will be updated by NavigationAgent2D in use_pathing()
 	
 func set_origin(point: Vector2) -> void:
 	## Where the actor started before moving.
