@@ -93,5 +93,27 @@ func is_tile_in_discovery_area(coords: Vector2i) -> bool:
 	# Check if point is inside the ellipse (scaled_x² + scaled_y² <= 1)
 	return (scaled_x * scaled_x + scaled_y * scaled_y) <= 1.0
 
+func pack_discovered_tiles() -> Array:
+	var discovered_tiles: Array = []
+	for coords: Vector2i in tile_render_states.keys():
+		var tile_state: TileRenderState = tile_render_states[coords]
+		if tile_state.is_discovered:
+			discovered_tiles.append(str(coords))
+	return discovered_tiles
+
+func unpack_discovered_tiles(packed_tiles: Array) -> void:
+	for coords_string: String in packed_tiles:
+		# Parse format "(x, y)" to Vector2i
+		var cleaned = coords_string.strip_edges().trim_prefix("(").trim_suffix(")")
+		var parts = cleaned.split(",")
+		var coords: Vector2i = Vector2i(parts[0].to_int(), parts[1].to_int())
+		
+		var tile_state: TileRenderState = get_tile_render_state(coords)
+		tile_state.is_discovered = true
+		# Set appropriate visual state for discovered tiles
+		tile_state.target_tint = Style.DISCOVERED_TILE_TINT
+		tile_state.target_alpha = Style.VISIBLE_TILE_TINT
+		tile_state.time_left = Fader.TRANSITION_TIME
+
 func _on_visibility_changed() -> void:
 	set_process(visible)

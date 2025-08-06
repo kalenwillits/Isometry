@@ -159,7 +159,7 @@ func pack_discovery() -> Dictionary:
 	for map_layer_node in Finder.query([Group.MAP_LAYER]):
 		var map_node: Map = map_layer_node.get_parent()
 		if results.get(map_node.get_name()) == null: results[map_node.get_name()] = {}
-		#results[map_node.get_name()][map_layer_node.get_name()] = map_layer_node.pack_discovered_tiles()
+		results[map_node.get_name()][map_layer_node.get_name()] = map_layer_node.pack_discovered_tiles()
 	return results
 	
 func unpack_discovery() -> void:
