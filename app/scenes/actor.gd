@@ -298,6 +298,8 @@ func _ready() -> void:
 	$HitBox.area_entered.connect(_on_hit_box_body_entered)
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
 	if is_primary():
+		$NavigationAgent.debug_enabled = true
+		$NavigationAgent.debug_use_custom = true
 		build_discoverybox(view)
 		$DiscoveryBox.body_entered.connect(_on_discovery_box_body_entered)
 		line_of_sight_entered.connect(_on_line_of_sight_entered)

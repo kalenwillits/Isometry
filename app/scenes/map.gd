@@ -247,8 +247,12 @@ func build_navigation_region(obstacle_coordinates: Array[Vector2i] = []) -> void
 		
 		for pos in navigable_positions:
 			var world_pos = tilemap_layer.map_to_local(pos)
-			# Use 0.98 scale to prevent overlaps while maintaining connectivity
-			var diamond = std.generate_isometric_shape(TILEMAP_TILESIZE.x * 1, Vector2i(0, -TILEMAP_TILESIZE.y/2))
+			
+			# Use standard offset for all navigation diamonds
+			# The outset behavior only affects obstacle collision detection, not navigation shape
+			# TODO if tile ent .inset = true, multiply offset by -1
+			var offset: Vector2i = Vector2i(0, +TILEMAP_TILESIZE.y/2)
+			var diamond = std.generate_isometric_shape(TILEMAP_TILESIZE.x, offset)
 			
 			# Add vertices for this diamond (offset by world position)
 			var start_vertex = vertex_index

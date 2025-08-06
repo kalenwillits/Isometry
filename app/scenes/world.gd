@@ -100,6 +100,7 @@ func build_map(map_key: String) -> void:
 
 func build_deployments() -> void:
 	for map_ent in Repo.query([Group.MAP_ENTITY]):
+		if map_ent.deployments == null: continue
 		for deployment_ent in map_ent.deployments.lookup():
 			var actor_ent: Entity = deployment_ent.actor.lookup()
 			var data := {
@@ -149,7 +150,7 @@ func spawn_actor(data: Dictionary) -> Actor:
 	.map(data.get("map", main_ent.map.key()))\
 	.location(location)\
 	.resources(data.get("resources", {}))\
-	#.discovery(data.get("discovery", {}))\
+	.discovery(data.get("discovery", {}))\
 	.speed(data.get("speed", main_ent.actor.lookup().speed))
 	return builder.build()
 
