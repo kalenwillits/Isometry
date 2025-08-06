@@ -1039,17 +1039,14 @@ func use_line_of_sight() -> void:
 
 func use_movement(delta: float) -> void:
 	var nav = $NavigationAgent
-	
 	# Set navigation target every frame when position != destination
 	if not position.is_equal_approx(destination):
 		nav.target_position = destination
-	
 	# Check if navigation is finished (reached destination)
 	if nav.is_navigation_finished():
 		set_destination(position)
 		velocity = Vector2.ZERO
 		return
-	
 	# Get next navigation position and move toward it
 	var next_position = nav.get_next_path_position()
 	fix = next_position  # Update fix to current navigation target
@@ -1081,7 +1078,6 @@ func use_move_directly(_delta) -> void:
 	var new_destination: Vector2 = position + motion * DESTINATION_PRECISION * 2 # This must be higher than destination precision or the actor will not be looking in the correct direction
 	if motion.length():
 		set_destination(new_destination)
-
 
 func set_destination(point: Vector2) -> void:
 	## Where the actor is headed to.
@@ -1165,7 +1161,7 @@ func _on_hit_box_body_entered(other):
 func use_collisions(effect: bool) -> void:
 	set_collision_layer_value(Layer.BASE, effect)
 	set_collision_mask_value(Layer.BASE, effect)
-	set_collision_mask_value(Layer.WALL, effect)
+	#set_collision_mask_value(Layer.WALL, effect) # Disasbling
 	$HitBox.set_collision_layer_value(Layer.HITBOX, effect)
 	$HitBox.set_collision_mask_value(Layer.HITBOX, effect)
 	$ViewBox.set_collision_layer_value(Layer.VIEWBOX, effect)
