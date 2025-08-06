@@ -1038,17 +1038,16 @@ func use_line_of_sight() -> void:
 	_use_line_of_sight_tick += 1
 
 func use_movement(delta: float) -> void:
-	var nav = $NavigationAgent
 	# Set navigation target every frame when position != destination
 	if not position.is_equal_approx(destination):
-		nav.target_position = destination
+		$NavigationAgent.target_position = destination
 	# Check if navigation is finished (reached destination)
-	if nav.is_navigation_finished():
+	if $NavigationAgent.is_navigation_finished():
 		set_destination(position)
 		velocity = Vector2.ZERO
 		return
 	# Get next navigation position and move toward it
-	var next_position = nav.get_next_path_position()
+	var next_position = $NavigationAgent.get_next_path_position()
 	fix = next_position  # Update fix to current navigation target
 	var motion = position.direction_to(next_position)
 	velocity = motion * get_speed(delta) * std.isometric_factor(motion.angle())
@@ -1075,9 +1074,18 @@ func get_speed(delta: float) -> float:
 	
 func use_move_directly(_delta) -> void:
 	var motion = Input.get_vector("left", "right", "up", "down")
-	var new_destination: Vector2 = position + motion * DESTINATION_PRECISION * 2 # This must be higher than destination precision or the actor will not be looking in the correct direction
 	if motion.length():
+		var new_destination: Vector2 = position + motion * DESTINATION_PRECISION * 10  # 10 is as low as this will go and still register movement
+		#if is_point_on_navigation_region(new_destination):
 		set_destination(new_destination)
+		$NavigationAgent.target_position = new_destination
+
+
+func is_point_on_navigation_region(point: Vector2) -> bool:
+	var map = get_world_2d().navigation_map
+	var closest_point = NavigationServer2D.map_get_closest_point(map, point)
+	var distance = point.distance_to(closest_point)
+	return distance < DESTINATION_PRECISION * 2
 
 func set_destination(point: Vector2) -> void:
 	## Where the actor is headed to.
@@ -1161,7 +1169,7 @@ func _on_hit_box_body_entered(other):
 func use_collisions(effect: bool) -> void:
 	set_collision_layer_value(Layer.BASE, effect)
 	set_collision_mask_value(Layer.BASE, effect)
-	#set_collision_mask_value(Layer.WALL, effect) # Disasbling
+	set_collision_mask_value(Layer.WALL, effect)
 	$HitBox.set_collision_layer_value(Layer.HITBOX, effect)
 	$HitBox.set_collision_mask_value(Layer.HITBOX, effect)
 	$ViewBox.set_collision_layer_value(Layer.VIEWBOX, effect)
