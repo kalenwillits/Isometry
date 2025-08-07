@@ -15,11 +15,11 @@ const DESTINATION_PRECISION: float = 1.1
 const VIEW_SPEED: float = 4
 
 # Navigation constants
-const NAV_AGENT_RADIUS: float = 16.0  # Half tile size for collision radius
-const NAV_NEIGHBOR_DISTANCE: float = 64.0  # 2x tile size for neighbor detection
+#const NAV_AGENT_RADIUS: float = 16.0  # Half tile size for collision radius
+const NAV_NEIGHBOR_DISTANCE: float = 32.0
 const NAV_PATH_DESIRED_DISTANCE: float = 8.0  # Quarter tile for path points
 const NAV_TARGET_DESIRED_DISTANCE: float = DESTINATION_PRECISION  # Use existing precision
-const NAV_PATH_MAX_DISTANCE: float = 128.0  # 4x tile size for path recalculation
+const NAV_PATH_MAX_DISTANCE: float = 32.0  # 4x tile size for path recalculation
 
 @export var token: PackedByteArray
 @export var display_name: String
@@ -31,7 +31,7 @@ const NAV_PATH_MAX_DISTANCE: float = 128.0  # 4x tile size for path recalculatio
 @export var state: String = "idle"
 @export var substate: SubState  # TODO - use to get status of current state loop
 @export var sprite: String = ""
-@export var polygon: String = ""
+@export var base: int = 0
 @export var actor: String = ""
 @export var hitbox: String = ""
 @export var map: String = ""
@@ -111,6 +111,10 @@ class ActorBuilder extends Object:
 	func view(value: int) -> ActorBuilder:
 		this.view = value
 		return self
+		
+	func base(value: int) -> ActorBuilder:
+		this.base = value
+		return self
 
 	func location(value: Vector2) -> ActorBuilder:
 		this.set_location(value)
@@ -137,10 +141,10 @@ class ActorBuilder extends Object:
 		if actor_ent:
 			this.build_viewbox(actor_ent.view)
 			this.view = actor_ent.view
+			this.base = actor_ent.base
 			if actor_ent.groups: this.build_target_groups(actor_ent.groups.lookup())
 			if actor_ent.sprite: this.sprite = actor_ent.sprite.key()
 			if actor_ent.hitbox: this.hitbox = actor_ent.hitbox.key()
-			if actor_ent.polygon: this.polygon = actor_ent.polygon.key()
 			if actor_ent.on_touch: this.build_on_touch_action(actor_ent.on_touch.key())
 			if actor_ent.on_view: this.build_on_view_action(actor_ent.on_view.key())
 			for n in range(1, 10):
@@ -296,7 +300,7 @@ func _ready() -> void:
 	is_awake(false)
 	visible_to_primary(false)
 	Trigger.new().arm("heading").action(func(): heading_change.emit(heading)).deploy(self)
-	Trigger.new().arm("polygon").action(build_polygon).deploy(self)
+	Trigger.new().arm("base").action(build_base).deploy(self)
 	Trigger.new().arm("hitbox").action(build_hitbox).deploy(self)
 	Trigger.new().arm("sprite").action(build_sprite).deploy(self)
 	Trigger.new().arm("map").action(update_client_visibility).deploy(self)
@@ -306,7 +310,8 @@ func _ready() -> void:
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
 	
 	# Configure NavigationAgent2D for all actors (primary and NPCs)
-	$NavigationAgent.radius = NAV_AGENT_RADIUS
+	var actor_ent: Entity = Repo.select(actor)
+	$NavigationAgent.radius = actor_ent.base
 	$NavigationAgent.neighbor_distance = NAV_NEIGHBOR_DISTANCE
 	$NavigationAgent.path_desired_distance = NAV_PATH_DESIRED_DISTANCE
 	$NavigationAgent.target_desired_distance = NAV_TARGET_DESIRED_DISTANCE
@@ -590,13 +595,6 @@ func move(coordinates: Vector2) -> void:
 	set_position(coordinates)
 	origin = coordinates
 	destination = coordinates 
-
-func clear_footprint():
-	for node in get_children().filter(func(node): return node.is_class("CollisionPolygon2D")):
-		node.queue_free()
-		
-func set_polygon(value: String) -> void:
-	polygon = value
 	
 func set_hitbox(value: String) -> void:
 	hitbox = value
@@ -776,22 +774,20 @@ func get_relative_camera_position() -> Vector2:
 func set_camera_target():
 	Finder.select(Group.CAMERA).set_target(self)
 
-func build_polygon() -> void:
-	if !polygon: return
-	var polygon_ent = Repo.select(polygon)
-	if !polygon_ent: return
-	var collision_polygon: CollisionPolygon2D = CollisionPolygon2D.new()
-	var vector_array: PackedVector2Array = []
-	for vertex in polygon_ent.vertices.lookup():
-		vector_array.append(Vector2i(vertex.x, vertex.y))
-	collision_polygon.set_polygon(vector_array)
-	var polygon_name: String = "FootprintPolygon"
-	var existing_polygon = get_node_or_null(polygon_name)
-	if existing_polygon != null:
-		existing_polygon.queue_free()
-		remove_child(existing_polygon)
-	collision_polygon.set_name(polygon_name)
-	add_child(collision_polygon)
+func build_base() -> void:
+	if base <= 0: return
+	var collision_shape: CollisionShape2D = CollisionShape2D.new()
+	var circle_shape: CircleShape2D = CircleShape2D.new()
+	circle_shape.radius = base
+	collision_shape.set_shape(circle_shape)
+	collision_shape.scale = Vector2(1.0, 0.5)
+	var base_name: String = "BaseShape"
+	var existing_base = get_node_or_null(base_name)
+	if existing_base != null:
+		existing_base.queue_free()
+		remove_child(existing_base)
+	collision_shape.set_name(base_name)
+	add_child(collision_shape)
 	
 func build_hitbox() -> void:
 	if !hitbox: return

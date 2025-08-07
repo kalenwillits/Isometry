@@ -124,7 +124,7 @@ func build_isometric_tilemap() -> void:
 		# Navigation will be handled by a single NavigationRegion2D instead of individual tile polygons
 		# This prevents overlapping polygon errors and allows proper merging of navigation areas
 		if tile_ent.obstacle:
-			atlas_tile.set("physics_layer_0/polygon_0/points", std.generate_isometric_shape(TILEMAP_TILESIZE.x/2, Vector2i(0, +TILEMAP_TILESIZE.y/2)))
+			atlas_tile.set("physics_layer_0/polygon_0/points", std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, +TILEMAP_TILESIZE.y/2)))
 		var discovery_vectors = std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, +TILEMAP_TILESIZE.y/2))
 		atlas_tile.set("physics_layer_1/polygon_0/points", discovery_vectors)
 	var layers_ent_array = tilemap_ent.layers.lookup()
