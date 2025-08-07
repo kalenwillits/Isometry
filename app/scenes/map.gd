@@ -122,10 +122,9 @@ func build_isometric_tilemap() -> void:
 		atlas.set("%s:%s/0/y_sort_origin" % [coords.x, coords.y], tile_ent.origin)
 
 		# Navigation will be handled by a single NavigationRegion2D instead of individual tile polygons
-		# This prevents overlapping polygon errors and allows proper merging of navigation areas
 		if tile_ent.obstacle:
 			# Use specialized obstacle shape for smooth corner navigation with extra NW/SE corner smoothing
-			atlas_tile.set("physics_layer_0/polygon_0/points", std.generate_obstacle_shape(TILEMAP_TILESIZE.x * 0.8, TILEMAP_TILESIZE.y/2, Vector2i(0, +TILEMAP_TILESIZE.y/2), 6))
+			atlas_tile.set("physics_layer_0/polygon_0/points", std.generate_obstacle_shape(TILEMAP_TILESIZE.x, TILEMAP_TILESIZE.y/2, Vector2i(0, +TILEMAP_TILESIZE.y/2), 6))
 		var discovery_vectors = std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, +TILEMAP_TILESIZE.y/2))
 		atlas_tile.set("physics_layer_1/polygon_0/points", discovery_vectors)
 	var layers_ent_array = tilemap_ent.layers.lookup()

@@ -102,6 +102,9 @@ collision_layer = 0
 collision_mask = 0
 
 [node name="NavigationAgent" type="NavigationAgent2D" parent="."]
+path_desired_distance = 32.0
+target_desired_distance = 8.0
+path_max_distance = 3200.0
 path_postprocessing = 1
 simplify_path = true
 radius = 0.01
