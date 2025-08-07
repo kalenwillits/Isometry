@@ -1177,7 +1177,6 @@ func _on_hit_box_body_entered(other):
 func use_collisions(effect: bool) -> void:
 	set_collision_layer_value(Layer.BASE, effect)
 	set_collision_mask_value(Layer.BASE, effect)
-	set_collision_mask_value(Layer.WALL, effect)
 	$HitBox.set_collision_layer_value(Layer.HITBOX, effect)
 	$HitBox.set_collision_mask_value(Layer.HITBOX, effect)
 	$ViewBox.set_collision_layer_value(Layer.VIEWBOX, effect)
