@@ -312,11 +312,6 @@ func _ready() -> void:
 	# Configure NavigationAgent2D for all actors (primary and NPCs)
 	var actor_ent: Entity = Repo.select(actor)
 	$NavigationAgent.radius = actor_ent.base
-	$NavigationAgent.neighbor_distance = NAV_NEIGHBOR_DISTANCE
-	$NavigationAgent.path_desired_distance = NAV_PATH_DESIRED_DISTANCE
-	$NavigationAgent.target_desired_distance = NAV_TARGET_DESIRED_DISTANCE
-	$NavigationAgent.path_max_distance = NAV_PATH_MAX_DISTANCE
-	$NavigationAgent.avoidance_enabled = true
 	
 	if is_primary():
 		$NavigationAgent.debug_enabled = true
@@ -362,18 +357,12 @@ func is_awake(effect: bool) -> void:
 func update_client_visibility() -> void:
 	Optional.of_nullable(Finder.get_primary_actor()).map(func(primary_actor: Actor): return primary_actor.get("map")).if_present(func(primary_map: String): is_awake(primary_map == map))
 
-var debug_count = 0.0
-
 func _physics_process(delta) -> void:
 	use_state()
 	use_animation()
 	use_strategy()
 	use_move_view(delta)
 	if is_primary():
-		debug_count += delta
-		if debug_count > 1:
-			debug_count = 0
-			print("position=%s origin=%s destination=%s" % [position, origin, destination])
 		use_move_discovery()
 		use_pathing(delta)
 		click_to_move()
@@ -1070,25 +1059,6 @@ func use_pathing(delta: float) -> void:
 	fix = next_position  # Update fix to current navigation target
 	var motion = position.direction_to(next_position)
 	velocity = motion * get_speed(delta) * std.isometric_factor(motion.angle())
-	
-	# Debug information for corner pathing issues
-	if is_primary():
-		var distance_to_next = position.distance_to(next_position)
-		var distance_to_dest = position.distance_to(destination)
-		var nav_path = $NavigationAgent.get_current_navigation_path()
-		debug_count += delta
-		if debug_count > 1:
-			debug_count = 0
-			print("PATHING DEBUG:")
-			print("  position=%s next_pos=%s destination=%s" % [position, next_position, destination])
-			print("  dist_to_next=%.1f dist_to_dest=%.1f" % [distance_to_next, distance_to_dest])
-			print("  velocity=%s motion=%s" % [velocity, motion])
-			print("  nav_finished=%s target_reachable=%s" % [$NavigationAgent.is_navigation_finished(), $NavigationAgent.is_target_reachable()])
-			print("  path_points=%d agent_radius=%.1f" % [nav_path.size(), $NavigationAgent.radius])
-			if nav_path.size() > 0:
-				print("  path: %s" % nav_path)
-			print("---")
-	
 	move_and_slide()
 	
 	match substate:

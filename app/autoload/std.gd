@@ -166,35 +166,6 @@ func generate_isometric_shape(size: int, offset: Vector2i) -> PackedVector2Array
 	points.append(Vector2(-half_width + offset.x, 0 + offset.y))         
 	return points
 
-func generate_obstacle_shape(width: int, height: int, offset: Vector2i, num_points: int) -> PackedVector2Array:
-	var points := PackedVector2Array()
-	var half_width := width * 0.5
-	var half_height := height * 0.5
-	
-	# Create a shape that's optimized for isometric tiles with extra smoothing on NW/SE corners
-	# Start from the top (north) and work clockwise
-	for i in range(num_points):
-		var angle := (i * 2.0 * PI) / num_points - PI/2  # Start from top instead of right
-		
-		# Apply different scaling based on angle to smooth out the NW/SE sharp corners
-		var x_scale := half_width
-		var y_scale := half_height
-		
-		# Extra smoothing for northwest (225-315°) and southeast (45-135°) corners
-		var normalized_angle := fmod(angle + 2*PI, 2*PI)  # Normalize to 0-2π
-		
-		if (normalized_angle >= PI * 0.25 and normalized_angle <= PI * 0.75) or \
-		   (normalized_angle >= PI * 1.25 and normalized_angle <= PI * 1.75):
-			# Apply additional rounding to these problematic corners
-			x_scale *= 0.85  # Slightly reduce the width in these areas
-			y_scale *= 0.85  # Slightly reduce the height in these areas
-		
-		var x := x_scale * cos(angle) + offset.x
-		var y := y_scale * sin(angle) + offset.y
-		points.append(Vector2(x, y))
-	
-	return points
-
 func get_elliptical_grid(grid_size: float, position: Vector2, size: float) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 
