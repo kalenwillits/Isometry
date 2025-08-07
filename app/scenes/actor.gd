@@ -55,6 +55,9 @@ var last_position: Vector2 = Vector2.ZERO
 var path_recalculation_attempts: int = 0
 const MAX_STUCK_TIME: float = 3.0
 const MAX_PATH_ATTEMPTS: int = 10
+# Movement mode tracking
+var is_direct_movement_active: bool = false
+var current_input_strength: float = 0.0
 var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
@@ -595,6 +598,8 @@ func line_of_sight_to_point(point: Vector2) -> bool:
 
 func click_to_move() -> void:
 	if Input.is_action_pressed("interact"):
+		is_direct_movement_active = false  # Switch to pathfinding mode
+		current_input_strength = 0.0  # Reset input strength
 		set_destination(get_global_mouse_position())
 
 func despawn() -> void:
@@ -1102,12 +1107,15 @@ func use_pathing(delta: float) -> void:
 	var motion = position.direction_to(next_position)
 	var base_speed = get_speed(delta)
 	
+	# Apply input strength if in direct movement mode, otherwise use full speed
+	var speed_multiplier = current_input_strength if is_direct_movement_active else 1.0
+	
 	# Apply minimal isometric factor only for visual smoothness, not pathfinding accuracy
 	var isometric_adjustment = std.isometric_factor(motion.angle())
 	# Clamp the isometric factor to prevent extreme slowdowns in diagonal movement
 	isometric_adjustment = max(isometric_adjustment, 0.75)
 	
-	velocity = motion * base_speed * isometric_adjustment
+	velocity = motion * base_speed * speed_multiplier * isometric_adjustment
 	move_and_slide()
 	
 	match substate:
@@ -1129,15 +1137,36 @@ func snap_radial(radians: float) -> int:
 func get_speed(delta: float) -> float:
 	return BASE_ACTOR_SPEED * delta * speed * SPEED_NORMAL
 	
-func use_move_directly(_delta) -> void:
+func use_move_directly(delta) -> void:
+	# Get input vector - this handles both keyboard and controller
 	var motion = Input.get_vector("left", "right", "up", "down")
-	if motion.length():
-		var new_destination: Vector2 = position + motion * DESTINATION_PRECISION * 5  # Reduced multiplier for better precision
+	
+	if motion.length() > 0:
+		is_direct_movement_active = true
+		
+		# Calculate input strength based on motion magnitude
+		# For keyboard: motion will be normalized (length = 1.0)
+		# For controller: motion length varies from 0.0 to 1.0 based on stick deflection
+		current_input_strength = motion.length()
+		
+		# Set destination based on input direction using navigation
+		var direction = motion.normalized()
+		var new_destination: Vector2 = position + direction * DESTINATION_PRECISION * 5
+		
 		# Reset stuck detection when player manually moves
 		stuck_timer = 0.0
 		path_recalculation_attempts = 0
+		
+		# Use navigation system for pathing
 		set_destination(new_destination)
 		$NavigationAgent.target_position = new_destination
+		
+	else:
+		# No input - stop immediately if we were in direct movement mode
+		if is_direct_movement_active:
+			is_direct_movement_active = false
+			current_input_strength = 0.0
+			set_destination(position)  # Stop at current position
 
 
 func is_point_on_navigation_region(point: Vector2) -> bool:
