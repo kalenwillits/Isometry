@@ -11,7 +11,7 @@
 detailed documents until the user dismissises
 +++ Focus Group Management : There will be no concept of parties. Instead, each 
 user must focus all of their related party members. Focused actors will bind to bumpers + dpads. Allowing up to 12. <-- Unsure how to set/clear that as of now. Probably a sub menu off the selet button.
-
+-- To get to the self menu, use no target or target self.
 Campaign Analyzer: <-- Before loading, a campaign Analyzer should lint and provide feedback in a log file.
 
 name: Atlas Myth, Atlas Epsilon, Art of Atlas

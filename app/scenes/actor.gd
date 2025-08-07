@@ -382,7 +382,6 @@ func _physics_process(delta) -> void:
 		use_move_directly(delta)
 		use_actions()
 		use_target()
-		use_line_of_sight()
 	if is_npc() and std.is_host_or_server():
 		use_pathing(delta)
 		
@@ -884,10 +883,10 @@ func get_sprite_margin() -> Vector2i:
 	
 func visible_to_primary(effect: bool) -> void:
 	if effect: 
-		modulate.a = 0.0
+		modulate.a = 1.0
 		add_to_group(Group.IS_VISIBLE)
 	else:
-		modulate.a = 1.0
+		modulate.a = 0.0
 		remove_from_group(Group.IS_VISIBLE)
 	visible = effect
 	
@@ -1049,21 +1048,6 @@ func _calculate_sprite_offset() -> Vector2i:
 	var result: Vector2i = -actual_size
 	result.x += ((full_size.x / 2) - (margin.x))
 	return result
-	
-var _use_line_of_sight_tick: int = 0
-func use_line_of_sight() -> void:
-	if in_view.size() == 0: return
-	var actor_name_per_tick: String = in_view.keys()[_use_line_of_sight_tick % in_view.size()]
-	var other: Actor = Finder.select(actor_name_per_tick)
-	if line_of_sight_to_point(other.get_position()):
-		if !other.is_in_group(Group.LINE_OF_SIGHT):
-			other.add_to_group(Group.LINE_OF_SIGHT)
-			line_of_sight_entered.emit(other)
-	else:
-		if other.is_in_group(Group.LINE_OF_SIGHT):
-			other.remove_from_group(Group.LINE_OF_SIGHT)
-			line_of_sight_exited.emit(other)
-	_use_line_of_sight_tick += 1
 
 func use_pathing(delta: float) -> void:
 	# Anti-stuck mechanism - detect if actor is not moving
@@ -1269,12 +1253,10 @@ func _on_sprite_animation_changed():
 	$Sprite.play()  # Without this, the animation freezes
 	
 func _on_line_of_sight_entered(other: Actor) -> void:
-	other.fader.fade()
-	other.visible_to_primary(true)
+	pass
 	
 func _on_line_of_sight_exited(other: Actor) -> void:
-	other.fader.fade()
-	other.visible_to_primary(false)
+	pass
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
