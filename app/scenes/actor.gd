@@ -11,15 +11,15 @@ enum SubState {
 const BASE_TILE_SIZE: float = 32.0
 const BASE_ACTOR_SPEED: float = 10.0
 const SPEED_NORMAL: float = 500.0
-const DESTINATION_PRECISION: float = 1.1
+const DESTINATION_PRECISION: float = 8.0  # Increased for better isometric handling
 const VIEW_SPEED: float = 4
 
-# Navigation constants
-#const NAV_AGENT_RADIUS: float = 16.0  # Half tile size for collision radius
-const NAV_NEIGHBOR_DISTANCE: float = 32.0
-const NAV_PATH_DESIRED_DISTANCE: float = 8.0  # Quarter tile for path points
-const NAV_TARGET_DESIRED_DISTANCE: float = DESTINATION_PRECISION  # Use existing precision
-const NAV_PATH_MAX_DISTANCE: float = 32.0  # 4x tile size for path recalculation
+# Navigation constants - improved for isometric movement
+const NAV_AGENT_RADIUS: float = 12.0  # Slightly smaller than tile for smooth movement
+const NAV_NEIGHBOR_DISTANCE: float = 48.0  # Increased for better pathfinding
+const NAV_PATH_DESIRED_DISTANCE: float = 4.0  # Smaller for more precise following
+const NAV_TARGET_DESIRED_DISTANCE: float = 6.0  # Separate from DESTINATION_PRECISION
+const NAV_PATH_MAX_DISTANCE: float = 64.0  # Increased recalculation distance
 
 @export var token: PackedByteArray
 @export var display_name: String
@@ -49,6 +49,12 @@ var target_groups_counter: Dictionary
 var in_view: Dictionary # A Dictionary[StringName, Integer] of actors that are currently in view of this actor. The value is the total number of actors in the view when entered.
 var track_index: int = 0 # Identifies what index in a npc's track array to follow
 var discovery: Dictionary = {}
+# Navigation loop protection
+var stuck_timer: float = 0.0
+var last_position: Vector2 = Vector2.ZERO
+var path_recalculation_attempts: int = 0
+const MAX_STUCK_TIME: float = 3.0
+const MAX_PATH_ATTEMPTS: int = 10
 var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
@@ -311,7 +317,11 @@ func _ready() -> void:
 	
 	# Configure NavigationAgent2D for all actors (primary and NPCs)
 	var actor_ent: Entity = Repo.select(actor)
-	$NavigationAgent.radius = actor_ent.base
+	$NavigationAgent.radius = NAV_AGENT_RADIUS
+	$NavigationAgent.neighbor_distance = NAV_NEIGHBOR_DISTANCE
+	$NavigationAgent.path_desired_distance = NAV_PATH_DESIRED_DISTANCE
+	$NavigationAgent.target_desired_distance = NAV_TARGET_DESIRED_DISTANCE
+	$NavigationAgent.path_max_distance = NAV_PATH_MAX_DISTANCE
 	
 	if is_primary():
 		$NavigationAgent.debug_enabled = true
@@ -441,7 +451,10 @@ func use_move_view(delta: float) -> void:
 		var direction: Vector2 = last_viewshape_destination.direction_to(last_viewshape_origin) 
 		var offset_distance: float = view * VIEW_SPEED
 		var viewpoint: Vector2 = -direction * offset_distance
-		viewpoint.y *= std.isometric_factor(origin.angle_to(destination)) / 2
+		# Apply isometric factor but clamp it to prevent extreme distortion
+		var viewpoint_isometric_factor = std.isometric_factor(origin.angle_to(destination))
+		viewpoint_isometric_factor = max(viewpoint_isometric_factor, 0.5)  # Prevent too much Y compression
+		viewpoint.y *= viewpoint_isometric_factor / 2
 		var viewshape_distance_to_viewpoint: float = view_shape.position.distance_to(viewpoint)
 		var acceleration: float = viewshape_distance_to_viewpoint * delta * VIEW_SPEED
 		view_shape.position.x = move_toward(view_shape.position.x, viewpoint.x, acceleration)
@@ -566,7 +579,10 @@ func isometric_distance_to_actor(other: Actor) -> float:
 	return position.distance_to(other.position) * std.isometric_factor(position.angle_to(other.position))
 	
 func isometric_distance_to_point(point: Vector2) -> float:
-	return position.distance_to(point) * std.isometric_factor(position.angle_to(point))
+	var base_distance = position.distance_to(point)
+	if base_distance < 0.1:  # Avoid calculation issues with very small distances
+		return base_distance
+	return base_distance * std.isometric_factor(position.angle_to(point))
 	
 func line_of_sight_to_point(point: Vector2) -> bool:
 	var space_state = get_world_2d().direct_space_state
@@ -1045,11 +1061,35 @@ func use_line_of_sight() -> void:
 	_use_line_of_sight_tick += 1
 
 func use_pathing(delta: float) -> void:
-	# Set navigation target every frame when position != destination
-	if not position.is_equal_approx(destination):
-		$NavigationAgent.target_position = destination
+	# Anti-stuck mechanism - detect if actor is not moving
+	if position.distance_to(last_position) < 1.0:
+		stuck_timer += delta
+		if stuck_timer > MAX_STUCK_TIME:
+			# Actor is stuck, try to resolve
+			path_recalculation_attempts += 1
+			if path_recalculation_attempts > MAX_PATH_ATTEMPTS:
+				# Give up and teleport to destination
+				set_location(destination)
+				path_recalculation_attempts = 0
+				stuck_timer = 0.0
+				return
+			else:
+				# Force path recalculation
+				$NavigationAgent.target_position = destination
+				stuck_timer = 0.0
+	else:
+		stuck_timer = 0.0
+		path_recalculation_attempts = 0
+	
+	last_position = position
+	
+	# Set navigation target when destination changes
+	if position.distance_to(destination) > DESTINATION_PRECISION:
+		if destination.distance_to($NavigationAgent.target_position) > 1.0:
+			$NavigationAgent.target_position = destination
+	
 	# Check if navigation is finished (reached destination)
-	if $NavigationAgent.is_navigation_finished():
+	if $NavigationAgent.is_navigation_finished() or position.distance_to(destination) <= DESTINATION_PRECISION:
 		set_destination(position)
 		velocity = Vector2.ZERO
 		return
@@ -1057,8 +1097,17 @@ func use_pathing(delta: float) -> void:
 	# Get next navigation position and move toward it
 	var next_position = $NavigationAgent.get_next_path_position()
 	fix = next_position  # Update fix to current navigation target
+	
+	# Calculate movement WITHOUT isometric compensation (let NavigationAgent2D handle pathfinding)
 	var motion = position.direction_to(next_position)
-	velocity = motion * get_speed(delta) * std.isometric_factor(motion.angle())
+	var base_speed = get_speed(delta)
+	
+	# Apply minimal isometric factor only for visual smoothness, not pathfinding accuracy
+	var isometric_adjustment = std.isometric_factor(motion.angle())
+	# Clamp the isometric factor to prevent extreme slowdowns in diagonal movement
+	isometric_adjustment = max(isometric_adjustment, 0.75)
+	
+	velocity = motion * base_speed * isometric_adjustment
 	move_and_slide()
 	
 	match substate:
@@ -1083,8 +1132,10 @@ func get_speed(delta: float) -> float:
 func use_move_directly(_delta) -> void:
 	var motion = Input.get_vector("left", "right", "up", "down")
 	if motion.length():
-		var new_destination: Vector2 = position + motion * DESTINATION_PRECISION * 10  # 10 is as low as this will go and still register movement
-		#if is_point_on_navigation_region(new_destination):
+		var new_destination: Vector2 = position + motion * DESTINATION_PRECISION * 5  # Reduced multiplier for better precision
+		# Reset stuck detection when player manually moves
+		stuck_timer = 0.0
+		path_recalculation_attempts = 0
 		set_destination(new_destination)
 		$NavigationAgent.target_position = new_destination
 
