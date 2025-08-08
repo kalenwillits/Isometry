@@ -1066,26 +1066,6 @@ func use_line_of_sight() -> void:
 	_use_line_of_sight_tick += 1
 
 func use_pathing(delta: float) -> void:
-	# Anti-stuck mechanism - detect if actor is not moving
-	if position.distance_to(last_position) < 1.0:
-		stuck_timer += delta
-		if stuck_timer > MAX_STUCK_TIME:
-			# Actor is stuck, try to resolve
-			path_recalculation_attempts += 1
-			if path_recalculation_attempts > MAX_PATH_ATTEMPTS:
-				# Give up and teleport to destination
-				set_location(destination)
-				path_recalculation_attempts = 0
-				stuck_timer = 0.0
-				return
-			else:
-				# Force path recalculation
-				$NavigationAgent.target_position = destination
-				stuck_timer = 0.0
-	else:
-		stuck_timer = 0.0
-		path_recalculation_attempts = 0
-	
 	last_position = position
 	
 	# Set navigation target when destination changes
