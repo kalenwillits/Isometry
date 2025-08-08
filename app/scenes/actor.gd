@@ -293,7 +293,7 @@ func save() -> void:
 		io.save_json(auth.get_path(), data)
 
 func save_and_exit() -> void:
-	if OS.has_feature("trial"): return
+	if OS.has_feature("trial"): return   # The trial version will not save data
 	if !std.is_host_or_server(): return
 	on_map_exited.emit()
 	Queue.enqueue(
