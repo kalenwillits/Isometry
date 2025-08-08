@@ -66,7 +66,7 @@ func set_destination_self(self_name: String, _target_name: String, params: Dicti
 	var vertex_ent = Repo.select(params.destination)
 	Finder.get_actor(self_name).set_destination(Vector2(vertex_ent.x, vertex_ent.y))
 
-func move_map_target(self_name: String, target_name: String, params: Dictionary) -> void:
+func move_map_target(_self_name: String, target_name: String, params: Dictionary) -> void:
 	## map: KeyRef to Map.
 	## location: KeyRef to Vertex where the target actor's new position will be.
 	var pack: Dictionary = Finder.get_actor(target_name).pack()
@@ -86,7 +86,7 @@ func move_map_target(self_name: String, target_name: String, params: Dictionary)
 		.build()
 	)
 	
-func move_map_self(self_name: String, target_name: String, params: Dictionary) -> void:
+func move_map_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## map: KeyRef to Map.
 	## location: KeyRef to Vertex where the target actor's new position will be.
 	var pack: Dictionary = Finder.get_actor(self_name).pack()
@@ -113,7 +113,7 @@ func move_map_self(self_name: String, target_name: String, params: Dictionary) -
 		.build()
 	)
 
-func minus_resource_target(self_name: String, target_name: String, params: Dictionary) -> void:
+func minus_resource_target(_self_name: String, target_name: String, params: Dictionary) -> void:
 	## resource: 
 	## expression: Dice algebra to be subtracted from the target's resource
 	if target_name == "": return
@@ -126,11 +126,11 @@ func minus_resource_target(self_name: String, target_name: String, params: Dicti
 		).if_present(
 	func(resource: Entity):
 		var value: int = Dice.builder().expression(params.expression).build().evaluate()
-		var result: int = ResourceOperator.builder().actor(target_name).resource(resource).build().minus(value).get_value()
+		var _result: int = ResourceOperator.builder().actor(target_name).resource(resource).build().minus(value).get_value()
 		#Logger.debug("minus_resource_target(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])		
 	)
 
-func minus_resource_self(self_name: String, target_name: String, params: Dictionary) -> void:
+func minus_resource_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## resource: 
 	## expression: Dice algebra to be subtracted from the target's resource
 	Optional.of_nullable(
@@ -142,11 +142,11 @@ func minus_resource_self(self_name: String, target_name: String, params: Diction
 		).if_present(
 	func(resource: Entity):
 		var value: int = Dice.builder().expression(params.expression).build().evaluate()
-		var result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().minus(value).get_value()
+		var _result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().minus(value).get_value()
 		#Logger.debug("minus_resource_self(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])
 	)
 	
-func plus_resource_self(self_name: String, target_name: String, params: Dictionary) -> void:
+func plus_resource_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## resource: 
 	## expression: Dice algebra to be subtracted from the target's resource
 	Optional.of_nullable(
@@ -158,10 +158,10 @@ func plus_resource_self(self_name: String, target_name: String, params: Dictiona
 		).if_present(
 	func(resource: Entity):
 		var value: int = Dice.builder().expression(params.expression).build().evaluate()
-		var result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().plus(value).get_value()
+		var _result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().plus(value).get_value()
 	)
 
-func target_nearest(self_name: String, target_name: String, params: Dictionary) -> void:
+func target_nearest(self_name: String, _target_name: String, _params: Dictionary) -> void:
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 	self_actor.set_target(
@@ -170,7 +170,7 @@ func target_nearest(self_name: String, target_name: String, params: Dictionary) 
 		.or_else("")
 	)
 	
-func target_furthest(self_name: String, target_name: String, params: Dictionary) -> void:
+func target_furthest(self_name: String, _target_name: String, _params: Dictionary) -> void:
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.set_target(
 		self_actor.find_furthest_actor_in_view()
@@ -178,7 +178,7 @@ func target_furthest(self_name: String, target_name: String, params: Dictionary)
 		.or_else("")
 	)
 	
-func target_random(self_name: String, target_name: String, params: Dictionary) -> void:
+func target_random(self_name: String, _target_name: String, _params: Dictionary) -> void:
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.set_target(
 		self_actor.find_random_actor_in_view()
@@ -186,7 +186,7 @@ func target_random(self_name: String, target_name: String, params: Dictionary) -
 		.or_else("")
 	)
 	
-func target_lowest_resource(self_name: String, target_name: String, params: Dictionary) -> void:
+func target_lowest_resource(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## resource: Name of resource to filter on
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.set_target(
@@ -195,7 +195,7 @@ func target_lowest_resource(self_name: String, target_name: String, params: Dict
 		.or_else("")
 	)
 	
-func target_highest_resource(self_name: String, target_name: String, params: Dictionary) -> void:
+func target_highest_resource(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## resource: Name of resource to filter on
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.set_target(
@@ -204,7 +204,7 @@ func target_highest_resource(self_name: String, target_name: String, params: Dic
 		.or_else("")
 	)
 	
-func target_lowest_measure(self_name: String, target_name: String, params: Dictionary) -> void:
+func target_lowest_measure(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## resource: Name of resource to filter on
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.set_target(
@@ -213,7 +213,7 @@ func target_lowest_measure(self_name: String, target_name: String, params: Dicti
 		.or_else("")
 	)
 	
-func target_highest_measure(self_name: String, target_name: String, params: Dictionary) -> void:
+func target_highest_measure(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## resource: Name of resource to filter on
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.set_target(
@@ -222,21 +222,21 @@ func target_highest_measure(self_name: String, target_name: String, params: Dict
 		.or_else("")
 	)
 
-func move_to_target(self_name: String, target_name: String, params: Dictionary) -> void:
+func move_to_target(self_name: String, target_name: String, _params: Dictionary) -> void:
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 	Optional.of_nullable(Finder.get_actor(target_name))\
 	.map(func(t): return t.get_position())\
 	.if_present(func(pos): self_actor.set_destination(pos))
 	
-func use_track(self_name: String, target_name: String, params: Dictionary) -> void:
+func use_track(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## Designed to be use as a behavior action.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	var track_param: String = params.get("track", "")
 	var track_keys: Array = track_param.split("|")
 	self_actor.use_track(track_keys)
 
-func change_strategy(self_name: String, target_name: String, params: Dictionary) -> void:
+func change_strategy(self_name: String, _target_name: String, params: Dictionary) -> void:
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.interrupt_strategy()
 	var strategy_key: String = params.get("strategy")
@@ -246,7 +246,7 @@ func change_strategy(self_name: String, target_name: String, params: Dictionary)
 	if strategy_ent != null:
 		self_actor.set_strategy(strategy_ent)
 
-func set_speed_target(self_name: String, target_name: String, params: Dictionary) -> void:
+func set_speed_target(_self_name: String, target_name: String, params: Dictionary) -> void:
 	## speed: Float value to set target's speed to
 	if target_name == "": return
 	var target_actor: Actor = Finder.get_actor(target_name)
@@ -254,14 +254,14 @@ func set_speed_target(self_name: String, target_name: String, params: Dictionary
 	var new_speed: float = params.get("speed", 1.0)
 	target_actor.set_speed(new_speed)
 
-func set_speed_self(self_name: String, target_name: String, params: Dictionary) -> void:
+func set_speed_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## speed: Float value to set caller's speed to
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 	var new_speed: float = params.get("speed", 1.0)
 	self_actor.set_speed(new_speed)
 
-func temp_speed_target(self_name: String, target_name: String, params: Dictionary) -> void:
+func temp_speed_target(_self_name: String, target_name: String, params: Dictionary) -> void:
 	## speed: Float value to temporarily set target's speed to
 	## duration: Float time in seconds for the temporary speed change
 	if target_name == "": return
@@ -276,7 +276,7 @@ func temp_speed_target(self_name: String, target_name: String, params: Dictionar
 			target_actor.set_speed(original_speed)
 	)
 
-func temp_speed_self(self_name: String, target_name: String, params: Dictionary) -> void:
+func temp_speed_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## speed: Float value to temporarily set caller's speed to  
 	## duration: Float time in seconds for the temporary speed change
 	var self_actor: Actor = Finder.get_actor(self_name)

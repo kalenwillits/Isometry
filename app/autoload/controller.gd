@@ -100,6 +100,6 @@ func fade_and_render_map(peer_id: int, map: String) -> void:
 	Transition.fade()
 
 @rpc("any_peer", "call_local", "reliable")
-func broadcast_actor_is_despawning(peer_id: int, map: String) -> void:
+func broadcast_actor_is_despawning(peer_id: int, _map: String) -> void:
 	for targeted_by_actor: Actor in Finder.query([Group.ACTOR, str(peer_id)]):
 		targeted_by_actor.set_target("") # Clear ANY other actor from being able to target_this one

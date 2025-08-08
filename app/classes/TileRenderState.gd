@@ -50,10 +50,10 @@ class UpdateParams:
 	var distance: float
 	var radius: float
 	
-	static func create(distance: float, radius: float) -> UpdateParams:
+	static func create(dist: float, rad: float) -> UpdateParams:
 		var this = UpdateParams.new()
-		this.distance = distance
-		this.radius = radius
+		this.distance = dist
+		this.radius = rad
 		return this
 		
 func is_active() -> bool:

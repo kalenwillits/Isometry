@@ -54,7 +54,7 @@ func use_render_tile(coords: Vector2i, tile_data: TileData) -> void:
 	tile_render_state.tick(process_delta)
 	tile_data.modulate = tile_render_state.get_modulate()
 		
-func _use_tile_data_runtime_update(coords: Vector2i) -> bool:
+func _use_tile_data_runtime_update(_coords: Vector2i) -> bool:
 	return true
 	
 func _tile_data_runtime_update(coords: Vector2i, tile_data: TileData) -> void:

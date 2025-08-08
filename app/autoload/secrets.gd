@@ -88,8 +88,8 @@ class Auth extends Object:
 		return not value.is_empty() and not _contains_invalid_characters(value)
 
 	func _contains_invalid_characters(value: String) -> bool:
-		for char in INVALID_CHARACTERS:
-			if char in value:
+		for character in INVALID_CHARACTERS:
+			if character in value:
 				return true
 		return false
 

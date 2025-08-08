@@ -12,8 +12,8 @@ const CALLER_MARKER: String = ":"
 class Builder extends Object:
 	var this: Dice = Dice.new()
 	
-	func scene_tree(scene_tree: SceneTree) -> Builder:
-		this.scene_tree = scene_tree
+	func scene_tree(tree: SceneTree) -> Builder:
+		this.scene_tree = tree
 		return self
 	
 	func caller(self_name: String) -> Builder:

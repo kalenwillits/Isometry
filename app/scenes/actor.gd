@@ -77,7 +77,6 @@ signal on_map_entered()
 signal on_map_exited()
 signal line_of_sight_entered(actor)
 signal line_of_sight_exited(actor)
-signal primary(actor)
 signal action_1(actor)
 signal action_2(actor)
 signal action_3(actor)
@@ -324,7 +323,7 @@ func _ready() -> void:
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
 	
 	# Configure NavigationAgent2D for all actors (primary and NPCs)
-	var actor_ent: Entity = Repo.select(actor)
+	var _actor_ent: Entity = Repo.select(actor)
 	$NavigationAgent.radius = NAV_AGENT_RADIUS
 	$NavigationAgent.neighbor_distance = NAV_NEIGHBOR_DISTANCE
 	$NavigationAgent.path_desired_distance = NAV_PATH_DESIRED_DISTANCE
@@ -760,7 +759,7 @@ func build_target_groups_counter() -> void:
 	for group_ent in Repo.query([Group.GROUP_ENTITY]):
 		target_groups_counter[group_ent.key()] = 0
 		
-func _local_measure_handler(caller_name: String, target_name: String, expression: String) -> int:
+func _local_measure_handler(caller_name: String, target_name: String, _expression: String) -> int:
 	return Dice.builder()\
 		.scene_tree(get_tree())\
 		.target_name(target_name)\
@@ -916,7 +915,7 @@ func visible_to_primary(effect: bool) -> void:
 		remove_from_group(Group.IS_VISIBLE)
 	visible = effect
 	
-func handle_resource_change(resource: String) -> void:
+func handle_resource_change(_resource: String) -> void:
 	pass
 	
 func handle_target() -> void:
@@ -1142,7 +1141,7 @@ func snap_radial(radians: float) -> int:
 func get_speed(delta: float) -> float:
 	return BASE_ACTOR_SPEED * delta * speed * SPEED_NORMAL
 	
-func use_move_directly(delta) -> void:
+func use_move_directly(_delta) -> void:
 	# Get input vector - this handles both keyboard and controller
 	var motion = Input.get_vector("left", "right", "up", "down")
 	
@@ -1245,7 +1244,7 @@ func use_state() -> void:
 			if position.is_equal_approx(destination):
 				set_state(KeyFrames.IDLE)
 				
-func set_display_name(new_display_name: String) -> void:
+func set_display_name(_new_display_name: String) -> void:
 	$Label.set_text(display_name)
 
 func _on_heading_change(_radial):
@@ -1273,10 +1272,10 @@ func use_collisions(effect: bool) -> void:
 func _on_sprite_animation_changed():
 	$Sprite.play()  # Without this, the animation freezes
 	
-func _on_line_of_sight_entered(other: Actor) -> void:
+func _on_line_of_sight_entered(_other: Actor) -> void:
 	pass
 	
-func _on_line_of_sight_exited(other: Actor) -> void:
+func _on_line_of_sight_exited(_other: Actor) -> void:
 	pass
 
 func _on_view_box_area_entered(area: Area2D) -> void:

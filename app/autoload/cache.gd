@@ -70,9 +70,9 @@ func _handle_expiry() -> void:
 			expiry.erase(key)
 			packs.erase(key)
 
-func pack(pack: Pack) -> Variant:
-	var object: Variant = Optional.of_nullable(packs.get(pack.key)).or_else(pack.ref.call())
-	packs[pack.key] = object
+func pack(pack_data: Pack) -> Variant:
+	var object: Variant = Optional.of_nullable(packs.get(pack_data.key)).or_else(pack_data.ref.call())
+	packs[pack_data.key] = object
 	return object
 	
 func unpack(key: String) -> Variant:
@@ -80,8 +80,8 @@ func unpack(key: String) -> Variant:
 	packs.erase(key)
 	return object
 
-func pack_actor(peer_id: int, pack: Dictionary) -> void:
-	packed_actors[peer_id] = pack
+func pack_actor(peer_id: int, pack_data: Dictionary) -> void:
+	packed_actors[peer_id] = pack_data
 
 func unpack_actor(peer_id: int) -> Dictionary:
 	var result = packed_actors.get(peer_id, {}).duplicate()
