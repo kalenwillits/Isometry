@@ -173,7 +173,6 @@ func build_isometric_tilemap() -> void:
 func collect_obstacle_coordinates() -> Array[Vector2i]:
 	var map_ent = Repo.query([name]).pop_front()
 	var tilemap_ent = map_ent.tilemap.lookup()
-	var tileset_ent = tilemap_ent.tileset.lookup()
 	
 	# Collect coordinates that have collision polygons on ANY layer
 	var obstacle_coordinates: Array[Vector2i] = []
