@@ -73,6 +73,8 @@ var last_viewshape_origin: Vector2
 
 signal on_touch(actor)
 signal on_view(actor)
+signal on_map_entered()
+signal on_map_exited()
 signal line_of_sight_entered(actor)
 signal line_of_sight_exited(actor)
 signal primary(actor)
@@ -156,6 +158,8 @@ class ActorBuilder extends Object:
 			if actor_ent.hitbox: this.hitbox = actor_ent.hitbox.key()
 			if actor_ent.on_touch: this.build_on_touch_action(actor_ent.on_touch.key())
 			if actor_ent.on_view: this.build_on_view_action(actor_ent.on_view.key())
+			if actor_ent.on_map_entered: this.build_on_map_entered_action(actor_ent.on_map_entered.key())
+			if actor_ent.on_map_exited: this.build_on_map_exited_action(actor_ent.on_map_exited.key())
 			for n in range(1, 10):
 				var action_name: String = "action_%d" % n
 				if actor_ent.get(action_name): this.build_action(actor_ent.get(action_name).key(), n)
@@ -291,6 +295,7 @@ func save() -> void:
 func save_and_exit() -> void:
 	if OS.has_feature("trial"): return
 	if !std.is_host_or_server(): return
+	on_map_exited.emit()
 	Queue.enqueue(
 		Queue.Item.builder()
 			.comment("Saving actor %s to disk" % name)
@@ -353,6 +358,13 @@ func _ready() -> void:
 			.task(unpack_discovery)
 			.build()
 		)
+		if std.is_host_or_server():
+			Queue.enqueue(
+				Queue.Item.builder()
+				.comment("emit on_map_entered signal for actor %s" % name)
+				.task(func(): on_map_entered.emit())
+				.build()
+			)
 
 func schedule_render_this_actors_map() -> void:
 	Queue.enqueue(
@@ -442,8 +454,6 @@ func use_move_discovery() -> void:
 		var discovery_shape: CollisionShape2D = $DiscoveryBox.get_node_or_null("DiscoveryShape")
 		if discovery_shape:
 			discovery_shape.position = view_shape.position
-
-
 
 func use_move_view(delta: float) -> void:
 	var view_shape: CollisionShape2D = $ViewBox.get_node_or_null("ViewShape")
@@ -635,6 +645,21 @@ func build_on_view_action(value: String) -> void:
 			params[param_ent.name_] = param_ent.value
 	on_view.connect(func(target_actor): _local_passive_action_handler(target_actor, func(target_actor): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_actor.name)))
 
+func build_on_map_entered_action(value: String) -> void:
+	var action_ent = Repo.select(value)
+	var params: Dictionary = {}
+	if action_ent.parameters:
+		for param_ent in action_ent.parameters.lookup():
+			params[param_ent.name_] = param_ent.value
+	on_map_entered.connect(func(): _local_passive_action_handler(self, func(_target_actor): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, name)))
+
+func build_on_map_exited_action(value: String) -> void:
+	var action_ent = Repo.select(value)
+	var params: Dictionary = {}
+	if action_ent.parameters:
+		for param_ent in action_ent.parameters.lookup():
+			params[param_ent.name_] = param_ent.value
+	on_map_exited.connect(func(): _local_passive_action_handler(self, func(_target_actor): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, name)))
 
 func build_action(value: String, n: int) -> void:
 	var action_ent = Repo.select(value)
