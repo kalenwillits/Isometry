@@ -221,7 +221,7 @@ func is_primary() -> bool:
 func add_sound_as_child_node(sound_ent: Entity, state_key: String) -> void:
 	if sound_ent == null: return
 	var audio: AudioStreamFader2D = AudioStreamFader2D.new()
-	Optional.of_nullable(sound_ent.scale).if_present(func(scale): audio.set_scale_expression(scale))
+	Optional.of_nullable(sound_ent.scale).if_present(func(scale_value): audio.set_scale_expression(scale_value))
 	audio.name = state_key
 	audio.add_to_group(sound_ent.key())
 	audio.add_to_group(name) # Add to this actor's group
@@ -633,7 +633,7 @@ func build_on_touch_action(value: String) -> void:
 	if action_ent.parameters:
 		for param_ent in action_ent.parameters.lookup():
 			params[param_ent.name_] = param_ent.value
-	on_touch.connect(func(target_actor): _local_passive_action_handler(target_actor, func(target_actor): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_actor.name)))
+	on_touch.connect(func(target_actor): _local_passive_action_handler(target_actor, func(target_entity): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_entity.name)))
 
 
 func build_on_view_action(value: String) -> void:
@@ -642,7 +642,7 @@ func build_on_view_action(value: String) -> void:
 	if action_ent.parameters:
 		for param_ent in action_ent.parameters.lookup():
 			params[param_ent.name_] = param_ent.value
-	on_view.connect(func(target_actor): _local_passive_action_handler(target_actor, func(target_actor): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_actor.name)))
+	on_view.connect(func(target_actor): _local_passive_action_handler(target_actor, func(target_entity): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_entity.name)))
 
 func build_on_map_entered_action(value: String) -> void:
 	var action_ent = Repo.select(value)
@@ -666,11 +666,11 @@ func build_action(value: String, n: int) -> void:
 	if action_ent.parameters:
 		for param_ent in action_ent.parameters.lookup():
 			params[param_ent.name_] = param_ent.value
-	connect("action_%d" % n, func(target): _local_action_handler(
-		target, 
-		func(target): 
+	connect("action_%d" % n, func(target_actor): _local_action_handler(
+		target_actor, 
+		func(target_entity): 
 			var target_name: String
-			if target != null: target_name = target.name
+			if target_entity != null: target_name = target_entity.name
 			get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_name),
 		action_ent))
 
@@ -704,8 +704,8 @@ func set_strategy(value: Entity) -> void:
 							Finder.select(Group.ACTIONS)\
 							.invoke_action\
 							.rpc_id(1, behavior_ent.action.key(), name, Optional.of_nullable(t)\
-							.map(func(t): 
-								return t.get_name())\
+							.map(func(resolved_target): 
+								return resolved_target.get_name())\
 								.or_else("")), behavior_ent.action\
 								.lookup()))
 						.build()
@@ -767,11 +767,11 @@ func _local_measure_handler(caller_name: String, target_name: String, _expressio
 		.build()\
 		.evaluate()
 
-func _local_passive_action_handler(target: Actor, function: Callable) -> void:
+func _local_passive_action_handler(target_actor: Actor, function: Callable) -> void:
 	# Passive becuase this will not "snap" the caller to the attention of it's target
 	# Because only one client should allow the trigger, this acts as a filter
-	if target.is_primary(): 
-		function.call(target)
+	if target_actor.is_primary(): 
+		function.call(target_actor)
 		
 func _local_action_handler(target_actor: Actor, function: Callable, action_ent: Entity) -> void:
 	match substate:
@@ -779,7 +779,8 @@ func _local_action_handler(target_actor: Actor, function: Callable, action_ent: 
 			function.call(target_actor)
 			look_at_target()
 			root(action_ent.time)
-			get_tree().create_timer(action_ent.time).timeout.connect(func(): set_substate(SubState.END))
+			var timer = get_tree().create_timer(action_ent.time)
+			timer.timeout.connect(func(): set_substate(SubState.END), CONNECT_ONE_SHOT)
 
 func _local_primary_handler(target_actor: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
@@ -824,8 +825,8 @@ func build_base() -> void:
 	var base_name: String = "BaseShape"
 	var existing_base = get_node_or_null(base_name)
 	if existing_base != null:
-		existing_base.queue_free()
 		remove_child(existing_base)
+		existing_base.queue_free()
 	collision_shape.set_name(base_name)
 	add_child(collision_shape)
 	
@@ -841,6 +842,7 @@ func build_hitbox() -> void:
 	var polygon_name: String = "HitBoxPolygon"
 	var existing_polygon = $HitBox.get_node_or_null(polygon_name)
 	if existing_polygon != null:
+		$HitBox.remove_child(existing_polygon)
 		existing_polygon.queue_free()
 	$HitBox.add_child(collision_polygon)
 	collision_polygon.set_name(polygon_name)
@@ -1010,7 +1012,7 @@ func find_nearest_actor_in_view() -> Optional:
 	if distances.is_empty():
 		return Optional.of_nullable(null)
 	var min_distance = distances.values().min()
-	var nearest_actor = distances.keys().filter(func(actor): return distances[actor] == min_distance).front()
+	var nearest_actor = distances.keys().filter(func(actor_name): return distances[actor_name] == min_distance).front()
 	return Optional.of_nullable(Finder.get_actor(nearest_actor))
 
 func find_furthest_actor_in_view() -> Optional:
@@ -1018,7 +1020,7 @@ func find_furthest_actor_in_view() -> Optional:
 	if distances.is_empty():
 		return Optional.of_nullable(null)
 	var max_distance = distances.values().max()
-	var furthest_actor = distances.keys().filter(func(actor): return distances[actor] == max_distance).front()
+	var furthest_actor = distances.keys().filter(func(actor_name): return distances[actor_name] == max_distance).front()
 	return Optional.of_nullable(Finder.get_actor(furthest_actor))
 
 func find_actor_in_view_with_highest_resource(resource_name: String) -> Optional:
@@ -1026,7 +1028,7 @@ func find_actor_in_view_with_highest_resource(resource_name: String) -> Optional
 	if actor_resource_map.is_empty():
 		return Optional.of_nullable(null)
 	var max_resource = actor_resource_map.values().max()
-	var actor_with_max_resource = actor_resource_map.keys().filter(func(actor): return actor_resource_map[actor] == max_resource).front()
+	var actor_with_max_resource = actor_resource_map.keys().filter(func(actor_name): return actor_resource_map[actor_name] == max_resource).front()
 	return Optional.of_nullable(Finder.get_actor(actor_with_max_resource))
 
 func find_actor_in_view_with_lowest_resource(resource_name: String) -> Optional:
@@ -1034,7 +1036,7 @@ func find_actor_in_view_with_lowest_resource(resource_name: String) -> Optional:
 	if actor_resource_map.is_empty():
 		return Optional.of_nullable(null)
 	var min_resource = actor_resource_map.values().min()
-	var actor_with_min_resource = actor_resource_map.keys().filter(func(actor): return actor_resource_map[actor] == min_resource).front()
+	var actor_with_min_resource = actor_resource_map.keys().filter(func(actor_name): return actor_resource_map[actor_name] == min_resource).front()
 	return Optional.of_nullable(Finder.get_actor(actor_with_min_resource))
 	
 func find_actor_in_view_with_highest_measure(measure_name: String) -> Optional:
@@ -1042,7 +1044,7 @@ func find_actor_in_view_with_highest_measure(measure_name: String) -> Optional:
 	if actor_measure_map.is_empty():
 		return Optional.of_nullable(null)
 	var max_measure = actor_measure_map.values().max()
-	var actor_with_max_measure = actor_measure_map.keys().filter(func(actor): return actor_measure_map[actor] == max_measure).front()
+	var actor_with_max_measure = actor_measure_map.keys().filter(func(actor_name): return actor_measure_map[actor_name] == max_measure).front()
 	return Optional.of_nullable(Finder.get_actor(actor_with_max_measure))
 
 func find_actor_in_view_with_lowest_measure(measure_name: String) -> Optional:
@@ -1050,7 +1052,7 @@ func find_actor_in_view_with_lowest_measure(measure_name: String) -> Optional:
 	if actor_measure_map.is_empty():
 		return Optional.of_nullable(null)
 	var min_measure = actor_measure_map.values().min()
-	var actor_with_min_measure = actor_measure_map.keys().filter(func(actor): return actor_measure_map[actor] == min_measure).front()
+	var actor_with_min_measure = actor_measure_map.keys().filter(func(actor_name): return actor_measure_map[actor_name] == min_measure).front()
 	return Optional.of_nullable(Finder.get_actor(actor_with_min_measure))
 
 func find_random_actor_in_view() -> Optional:
@@ -1174,8 +1176,8 @@ func use_move_directly(_delta) -> void:
 
 
 func is_point_on_navigation_region(point: Vector2) -> bool:
-	var map = get_world_2d().navigation_map
-	var closest_point = NavigationServer2D.map_get_closest_point(map, point)
+	var navigation_map = get_world_2d().navigation_map
+	var closest_point = NavigationServer2D.map_get_closest_point(navigation_map, point)
 	var distance = point.distance_to(closest_point)
 	return distance < DESTINATION_PRECISION * 2
 

@@ -73,7 +73,7 @@ func build_audio() -> void:
 			for sound_ent in key_ref_array.lookup():
 				var audio: AudioStreamFader = AudioStreamFader.new()
 				Optional.of_nullable(sound_ent.scale)\
-					.if_present(func(scale): audio.set_scale_expression(scale))
+					.if_present(func(scale_value): audio.set_scale_expression(scale_value))
 				audio.name = sound_ent.key()
 				audio.add_to_group(name) # Add to this map's group
 				audio.add_to_group(Group.AUDIO)
@@ -198,7 +198,6 @@ func collect_obstacle_coordinates() -> Array[Vector2i]:
 func build_navigation_region(obstacle_coordinates: Array[Vector2i] = []) -> void:
 	var map_ent = Repo.query([name]).pop_front()
 	var tilemap_ent = map_ent.tilemap.lookup()
-	var tileset_ent = tilemap_ent.tileset.lookup()
 	
 	# Collect all navigable tile positions across all layers, excluding obstacle coordinates
 	var navigable_positions: Array[Vector2i] = []

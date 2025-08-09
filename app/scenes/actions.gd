@@ -271,10 +271,11 @@ func temp_speed_target(_self_name: String, target_name: String, params: Dictiona
 	var duration: float = params.get("duration", 1.0)
 	var original_speed: float = target_actor.speed
 	target_actor.set_speed(new_speed)
-	get_tree().create_timer(duration).timeout.connect(func(): 
+	var timer = get_tree().create_timer(duration)
+	timer.timeout.connect(func(): 
 		if target_actor != null and is_instance_valid(target_actor):
 			target_actor.set_speed(original_speed)
-	)
+	, CONNECT_ONE_SHOT)
 
 func temp_speed_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## speed: Float value to temporarily set caller's speed to  
@@ -285,8 +286,9 @@ func temp_speed_self(self_name: String, _target_name: String, params: Dictionary
 	var duration: float = params.get("duration", 1.0)
 	var original_speed: float = self_actor.speed
 	self_actor.set_speed(new_speed)
-	get_tree().create_timer(duration).timeout.connect(func():
+	var timer = get_tree().create_timer(duration)
+	timer.timeout.connect(func():
 		if self_actor != null and is_instance_valid(self_actor):
 			self_actor.set_speed(original_speed)
-	)
+	, CONNECT_ONE_SHOT)
 # ----------------------------------------------------------------------- Actions #
