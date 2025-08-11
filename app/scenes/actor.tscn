@@ -53,22 +53,6 @@ collision_layer = 0
 collision_mask = 0
 input_pickable = true
 script = ExtResource("1_y2kqt")
-token = null
-display_name = null
-origin = null
-destination = null
-fix = null
-speed = null
-heading = null
-state = null
-substate = null
-sprite = null
-base = null
-actor = null
-hitbox = null
-map = null
-target = null
-resources = null
 
 [node name="Synchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_bd4xq")
