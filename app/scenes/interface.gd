@@ -1,7 +1,7 @@
 extends Node
 
 func _ready() -> void:
-	add_to_group(Group.INTEFACE)
+	add_to_group(Group.INTERFACE)
 	
 func _process(_delta: float) -> void:
 	update_primary_actor_info()

@@ -50,13 +50,14 @@ func get_dir() -> String:
 	var path_arr = OS.get_executable_path().split("/")
 	return "/".join(path_arr.slice(0, -1)) + "/"
 
-func load_asset(key: String, map_name: String, flag: int = 0):
+func load_asset(key: String, campaign_name: String, flag: int = 0):
+	## Dynamic return type
 	var archive := ZIPReader.new()
 	var path: String = Path.builder()\
 		.root()\
 		.part(get_dir())\
 		.part(Cache.dir)\
-		.part(map_name)\
+		.part(campaign_name)\
 		.extension(".zip")\
 		.build()\
 		.render()

@@ -1,0 +1,58 @@
+[gd_scene load_steps=3 format=3 uid="uid://doj5tijrttd2p"]
+
+[ext_resource type="Script" uid="uid://dhir245787tvl" path="res://scenes/action_widget.gd" id="1_wmx76"]
+[ext_resource type="PackedScene" uid="uid://birocdyfqq03p" path="res://scenes/action_block.tscn" id="2_8t3br"]
+
+[node name="ActionWidget" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_wmx76")
+
+[node name="GridContainer" type="GridContainer" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -104.0
+offset_top = -104.0
+grow_horizontal = 0
+grow_vertical = 0
+columns = 3
+
+[node name="ActionBlock1" parent="GridContainer" instance=ExtResource("2_8t3br")]
+layout_mode = 2
+action_id = 1
+
+[node name="ActionBlock2" parent="GridContainer" instance=ExtResource("2_8t3br")]
+layout_mode = 2
+action_id = 2
+
+[node name="ActionBlock3" parent="GridContainer" instance=ExtResource("2_8t3br")]
+layout_mode = 2
+action_id = 3
+
+[node name="ActionBlock4" parent="GridContainer" instance=ExtResource("2_8t3br")]
+layout_mode = 2
+action_id = 4
+
+[node name="ActionBlock5" parent="GridContainer" instance=ExtResource("2_8t3br")]
+layout_mode = 2
+action_id = 5
+
+[node name="ActionBlock6" parent="GridContainer" instance=ExtResource("2_8t3br")]
+layout_mode = 2
+action_id = 6
+
+[node name="ActionBlock7" parent="GridContainer" instance=ExtResource("2_8t3br")]
+layout_mode = 2
+action_id = 7
+
+[node name="ActionBlock8" parent="GridContainer" instance=ExtResource("2_8t3br")]
+layout_mode = 2
+action_id = 8
+
+[node name="ActionBlock9" parent="GridContainer" instance=ExtResource("2_8t3br")]
+layout_mode = 2
+action_id = 9

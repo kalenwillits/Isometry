@@ -37,6 +37,8 @@ const NAV_PATH_MAX_DISTANCE: float = 64.0  # Increased recalculation distance
 @export var map: String = ""
 @export var target: String = ""
 @export var resources: Dictionary = {}
+@export var action_1: String = ""
+# TODO - write the rest of the actions 2-9
 
 var fader: Fader
 var peer_id: int = 0
@@ -159,9 +161,6 @@ class ActorBuilder extends Object:
 			if actor_ent.on_view: this.build_on_view_action(actor_ent.on_view.key())
 			if actor_ent.on_map_entered: this.build_on_map_entered_action(actor_ent.on_map_entered.key())
 			if actor_ent.on_map_exited: this.build_on_map_exited_action(actor_ent.on_map_exited.key())
-			for n in range(1, 10):
-				var action_name: String = "action_%d" % n
-				if actor_ent.get(action_name): this.build_action(actor_ent.get(action_name).key(), n)
 			# build resources
 			for resource_ent in Repo.query([Group.RESOURCE_ENTITY]):
 				this.resources[resource_ent.key()] = this.resources.get(resource_ent.key(), resource_ent.default)
@@ -318,6 +317,10 @@ func _ready() -> void:
 	Trigger.new().arm("sprite").action(build_sprite).deploy(self)
 	Trigger.new().arm("map").action(update_client_visibility).deploy(self)
 	Trigger.new().arm("state").action(_on_state_change).deploy(self)
+	var actor_ent: Entity = Repo.select(actor)
+	for n in range(1, 10):
+		var action_name: String = "action_%d" % n
+		Trigger.new().arm(action_name).action(func(): build_action(n))
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	$HitBox.area_entered.connect(_on_hit_box_body_entered)
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
@@ -373,6 +376,20 @@ func schedule_render_this_actors_map() -> void:
 			.condition(func(): return get_tree().get_first_node_in_group(str(multiplayer.get_unique_id())) != null)
 			.build()
 		)
+		
+func schedule_render_this_actors_action_icons() -> void:
+	var actor_ent: Entity = Repo.select(actor)
+	if actor_ent == null: return
+	for n: int in range(1, 10):
+		var action_name: String = "action_%d" % n
+		if actor_ent.get(action_name) == null: continue
+		var action_ent: Entity = Repo.select(actor_ent.get(action_name))
+		Queue.enqueue(
+		Queue.Item.builder()
+		.comment("Schedule render new action_%s for actor %s" % [n, name])
+		.task(func(): Finder.select(Group.UI_ACTION_BLOCK_N % n).render(action_ent.key()))
+		.build()
+	)
 
 func is_awake(effect: bool) -> void:
 	# TODO -- This could be renamed to make more sense
@@ -621,6 +638,11 @@ func move(coordinates: Vector2) -> void:
 	origin = coordinates
 	destination = coordinates 
 	
+func set_action_1(value: String) -> void:
+	action_1 = value
+	
+# TODO - Write the rest of the of the set_action_ functions 2-9
+	
 func set_hitbox(value: String) -> void:
 	hitbox = value
 	
@@ -660,8 +682,12 @@ func build_on_map_exited_action(value: String) -> void:
 			params[param_ent.name_] = param_ent.value
 	on_map_exited.connect(func(): _local_passive_action_handler(self, func(_target_actor): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, name)))
 
-func build_action(value: String, n: int) -> void:
-	var action_ent = Repo.select(value)
+func build_action(n: int) -> void:
+	var actor_ent: Entity = Repo.select(actor)
+	if actor_ent == null: return
+	var action_name: String = "action_%d" % n
+	var action_ent: Entity = Repo.select(action_name)
+	if action_ent == null: return
 	var params: Dictionary = {}
 	if action_ent.parameters:
 		for param_ent in action_ent.parameters.lookup():
@@ -671,8 +697,7 @@ func build_action(value: String, n: int) -> void:
 		func(target_entity): 
 			var target_name: String
 			if target_entity != null: target_name = target_entity.name
-			get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_name),
-		action_ent))
+			Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, action_ent.key(), name, target_name), action_ent))
 
 func build_measure(value: String) -> Callable:
 	return Optional.of(Repo.select(value))\
