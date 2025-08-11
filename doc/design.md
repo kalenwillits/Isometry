@@ -47,3 +47,14 @@ Resource number formats:
 
 
 
+
+++ Actions: 
+There should be 3 types of actions:
+- 1 shot: press once and trigger once
+- Hold: Continues to run while held down
+- Toggle: Toggles on and off
+
+The UI should display the state of the action as;
+- ARMED
+- ACTIVE
+- DISABLED
