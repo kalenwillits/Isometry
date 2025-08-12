@@ -1,6 +1,26 @@
 extends CharacterBody2D
 class_name Actor
 
+# Action signals for skills
+signal action_1_start(target_actor: Actor)
+signal action_1_end(target_actor: Actor)
+signal action_2_start(target_actor: Actor)
+signal action_2_end(target_actor: Actor)
+signal action_3_start(target_actor: Actor)
+signal action_3_end(target_actor: Actor)
+signal action_4_start(target_actor: Actor)
+signal action_4_end(target_actor: Actor)
+signal action_5_start(target_actor: Actor)
+signal action_5_end(target_actor: Actor)
+signal action_6_start(target_actor: Actor)
+signal action_6_end(target_actor: Actor)
+signal action_7_start(target_actor: Actor)
+signal action_7_end(target_actor: Actor)
+signal action_8_start(target_actor: Actor)
+signal action_8_end(target_actor: Actor)
+signal action_9_start(target_actor: Actor)
+signal action_9_end(target_actor: Actor)
+
 enum SubState {
 	IDLE,
 	START,
@@ -77,15 +97,8 @@ signal on_map_entered()
 signal on_map_exited()
 signal line_of_sight_entered(actor)
 signal line_of_sight_exited(actor)
-signal action_1(actor)
-signal action_2(actor)
-signal action_3(actor)
-signal action_4(actor)
-signal action_5(actor)
-signal action_6(actor)
-signal action_7(actor)
-signal action_8(actor)
-signal action_9(actor)
+# Dynamic skill signals will be created at runtime
+var skill_signals: Dictionary = {}
 
 signal heading_change(heading)
 
@@ -159,9 +172,14 @@ class ActorBuilder extends Object:
 			if actor_ent.on_view: this.build_on_view_action(actor_ent.on_view.key())
 			if actor_ent.on_map_entered: this.build_on_map_entered_action(actor_ent.on_map_entered.key())
 			if actor_ent.on_map_exited: this.build_on_map_exited_action(actor_ent.on_map_exited.key())
-			for n in range(1, 10):
-				var action_name: String = "action_%d" % n
-				if actor_ent.get(action_name): this.build_action(actor_ent.get(action_name).key(), n)
+			if actor_ent.skills:
+				var skills_list = actor_ent.skills.lookup()
+				if skills_list:
+					var max_skills = min(skills_list.size(), 9)  # Limit to 9 skills
+					for i in range(max_skills):
+						var skill_ent = skills_list[i]
+						if skill_ent:
+							this.build_skill(skill_ent, i + 1)
 			# build resources
 			for resource_ent in Repo.query([Group.RESOURCE_ENTITY]):
 				this.resources[resource_ent.key()] = this.resources.get(resource_ent.key(), resource_ent.default)
@@ -245,12 +263,16 @@ func build_audio() -> void:
 		.map(func(animation_key): return animation_key.lookup())\
 		.if_present(
 			func(animation_ent):
-				for state_name in KeyFrames.list():
-					Optional.of_nullable(animation_ent.get(state_name))\
-					.map(func(key_frame_key): return key_frame_key.lookup())\
-					.map(func(key_frame_ent): return key_frame_ent.sound)\
-					.map(func(sound_key): return sound_key.lookup()
-				).if_present(func(sound_ent): add_sound_as_child_node(sound_ent, state_name)))
+				if animation_ent.keyframes:
+					var keyframes_list = animation_ent.keyframes.lookup()
+					if keyframes_list:
+						for keyframe_ref in keyframes_list:
+							var keyframe_ent = keyframe_ref
+							if keyframe_ent and keyframe_ent.key():
+								var state_name = keyframe_ent.key()
+								Optional.of_nullable(keyframe_ent.sound)\
+								.map(func(sound_key): return sound_key.lookup())\
+								.if_present(func(sound_ent): add_sound_as_child_node(sound_ent, state_name)))
 
 func promote_substate() -> void:
 	if is_multiplayer_authority() or (is_npc() and (Cache.network == Network.Mode.SERVER or Cache.network == Network.Mode.HOST)):
@@ -331,17 +353,20 @@ func _ready() -> void:
 	$NavigationAgent.path_max_distance = NAV_PATH_MAX_DISTANCE
 	var actor_ent: Entity = Repo.select(actor)
 	if is_primary():
-		for n: int in range(1, 10):
-			var action_name: String = "action_%d" % n
-			if !actor_ent.get(action_name): continue
-			var action_ent: Entity = Repo.select(actor_ent.get(action_name).key())
-			if action_ent == null: continue
-			Queue.enqueue(
-	  			Queue.Item.builder()
-	 			.comment("Schedule render new action_%s for actor %s" % [n, name])
-   				.task(func(): Finder.select(Group.UI_ACTION_BLOCK_N % n).render(action_ent.key()))
-	 			.build()
-  			)
+		if actor_ent and actor_ent.skills:
+			var skills_list = actor_ent.skills.lookup()
+			if skills_list:
+				var max_skills = min(skills_list.size(), 9)  # Limit to 9 for UI compatibility
+				for i in range(max_skills):
+					var skill_ent = skills_list[i]
+					if skill_ent and skill_ent.key():
+						var slot_number = i + 1
+						Queue.enqueue(
+							Queue.Item.builder()
+							.comment("Schedule render new skill_%s for actor %s" % [slot_number, name])
+							.task(func(): Finder.select(Group.UI_ACTION_BLOCK_N % slot_number).render(skill_ent.key()))
+							.build()
+						)
 		$NavigationAgent.debug_enabled = true
 		$NavigationAgent.debug_use_custom = true
 		build_discoverybox(view)
@@ -493,33 +518,73 @@ func use_strategy() -> void:
 			.build())
 
 func use_actions() -> void:
-	if Input.is_action_just_released("action_1"):
-		set_state(KeyFrames.ACTION_1)
-		emit_signal("action_1", resolve_target())
-	if Input.is_action_just_released("action_2"):
-		set_state(KeyFrames.ACTION_2)
-		emit_signal("action_2", resolve_target())
-	if Input.is_action_just_released("action_3"):
-		set_state(KeyFrames.ACTION_3)
-		emit_signal("action_3", resolve_target())
-	if Input.is_action_just_released("action_4"):
-		set_state(KeyFrames.ACTION_4)
-		emit_signal("action_4", resolve_target())
-	if Input.is_action_just_released("action_5"):
-		set_state(KeyFrames.ACTION_5)
-		emit_signal("action_5", resolve_target())
-	if Input.is_action_just_released("action_6"):
-		set_state(KeyFrames.ACTION_6)
-		emit_signal("action_6", resolve_target())
-	if Input.is_action_just_released("action_7"):
-		set_state(KeyFrames.ACTION_7)
-		emit_signal("action_7", resolve_target())
-	if Input.is_action_just_released("action_8"):
-		set_state(KeyFrames.ACTION_8)
-		emit_signal("action_8", resolve_target())
-	if Input.is_action_just_released("action_9"):
-		set_state(KeyFrames.ACTION_9)
-		emit_signal("action_9", resolve_target())
+	var actor_ent = Repo.select(actor)
+	if !actor_ent or !actor_ent.skills: return
+	
+	# Limit to 9 skills maximum to maintain action_1-9 compatibility
+	var skills_list = actor_ent.skills.lookup()
+	if !skills_list: return
+	
+	var max_skills = min(skills_list.size(), 9)
+	
+	for i in range(max_skills):
+		var skill_ent = skills_list[i]
+		if !skill_ent: continue
+		
+		var skill_key = skill_ent.key()
+		if !skill_key: continue
+		
+		var action_name = "action_%d" % (i + 1)
+		
+		# Handle skill start (button press)
+		if Input.is_action_just_pressed(action_name) and skill_ent.start:
+			var start_signal = "action_%d_start" % (i + 1)
+			emit_skill_signal(start_signal, resolve_target())
+			
+		# Handle skill end (button release)
+		if Input.is_action_just_released(action_name) and skill_ent.end:
+			var end_signal = "action_%d_end" % (i + 1)
+			emit_skill_signal(end_signal, resolve_target())
+
+func emit_skill_signal(skill_event: String, target_actor: Actor) -> void:
+	# Emit the appropriate static signal
+	match skill_event:
+		"action_1_start":
+			action_1_start.emit(target_actor)
+		"action_1_end":
+			action_1_end.emit(target_actor)
+		"action_2_start":
+			action_2_start.emit(target_actor)
+		"action_2_end":
+			action_2_end.emit(target_actor)
+		"action_3_start":
+			action_3_start.emit(target_actor)
+		"action_3_end":
+			action_3_end.emit(target_actor)
+		"action_4_start":
+			action_4_start.emit(target_actor)
+		"action_4_end":
+			action_4_end.emit(target_actor)
+		"action_5_start":
+			action_5_start.emit(target_actor)
+		"action_5_end":
+			action_5_end.emit(target_actor)
+		"action_6_start":
+			action_6_start.emit(target_actor)
+		"action_6_end":
+			action_6_end.emit(target_actor)
+		"action_7_start":
+			action_7_start.emit(target_actor)
+		"action_7_end":
+			action_7_end.emit(target_actor)
+		"action_8_start":
+			action_8_start.emit(target_actor)
+		"action_8_end":
+			action_8_end.emit(target_actor)
+		"action_9_start":
+			action_9_start.emit(target_actor)
+		"action_9_end":
+			action_9_end.emit(target_actor)
 
 func use_target() -> void:
 	if Input.is_action_just_pressed("increment_target"):
@@ -671,19 +736,60 @@ func build_on_map_exited_action(value: String) -> void:
 			params[param_ent.name_] = param_ent.value
 	on_map_exited.connect(func(): _local_passive_action_handler(self, func(_target_actor): Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, value, name, name)))
 
-func build_action(value: String, n: int) -> void:
-	var action_ent = Repo.select(value)
-	var params: Dictionary = {}
-	if action_ent.parameters:
-		for param_ent in action_ent.parameters.lookup():
-			params[param_ent.name_] = param_ent.value
-	connect("action_%d" % n, func(target_actor): _local_action_handler(
-		target_actor, 
-		func(target_entity): 
-			var target_name: String
-			if target_entity != null: target_name = target_entity.name
-			get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, value, name, target_name),
-		action_ent))
+func build_skill(skill_ent: Entity, slot_number: int) -> void:
+	if !skill_ent:
+		return
+	
+	var skill_key = skill_ent.key()
+	if !skill_key:
+		return
+	
+	# Use static signals based on slot number
+	var start_signal_name = "action_%d_start" % slot_number
+	var end_signal_name = "action_%d_end" % slot_number
+	
+	# Connect start action
+	if skill_ent.start:
+		var start_action_ent = skill_ent.start.lookup()
+		if start_action_ent:
+			connect(start_signal_name, func(target_actor): 
+				_local_action_handler(
+					target_actor, 
+					func(target_entity): 
+						var target_name: String = target_entity.name if target_entity else ""
+						
+						# Set animation keyframe from action entity
+						var keyframe = "tool"  # default
+						if "keyframe" in start_action_ent and start_action_ent.keyframe:
+							keyframe = start_action_ent.keyframe
+						
+						# Set animation state and configure SubState lifecycle
+						set_state(keyframe)
+						use_animation()
+						
+						# Configure ActionTimer with action duration
+						var action_time = 1.0
+						if "time" in start_action_ent and start_action_ent.time:
+							action_time = start_action_ent.time
+						$ActionTimer.wait_time = action_time
+						$ActionTimer.start()
+						
+						# Set SubState to USE for proper lifecycle management
+						substate = SubState.USE
+						get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, skill_ent.start.key(), name, target_name),
+					start_action_ent))
+	
+	# Connect end action
+	if skill_ent.end:
+		var end_action_ent = skill_ent.end.lookup()
+		if end_action_ent:
+			connect(end_signal_name, func(target_actor):
+				_local_action_handler(
+					target_actor, 
+					func(target_entity): 
+						var target_name: String = target_entity.name if target_entity else ""
+						get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, skill_ent.end.key(), name, target_name),
+					end_action_ent))
 
 func build_measure(value: String) -> Callable:
 	return Optional.of(Repo.select(value))\
@@ -960,21 +1066,28 @@ func build_sprite() -> void:
 	var sprite_frames: SpriteFrames = SpriteFrames.new()
 	var animation_ent = sprite_ent.animation.lookup()
 	sprite_frames.remove_animation("default") # default has no meaning in isometric space
-	for key_frame_name in KeyFrames.list():
-		if animation_ent.get(key_frame_name) == null: continue
-		var key_frame_ent = animation_ent.get(key_frame_name).lookup()
-		for radial in std.RADIALS.keys():
-			var animation_radial_name: String = "%s:%s" % [key_frame_name, radial]
-			sprite_frames.add_animation(animation_radial_name)
-			for frame in key_frame_ent.get(radial):
-				sprite_frames.add_frame(
-					animation_radial_name, 
-						build_frame(
-							frame,
-							get_sprite_size(),
-							sprite_ent.texture,
-						)
-					);
+	
+	# Build animations from dynamic keyframes array
+	if animation_ent.keyframes:
+		var keyframes_list = animation_ent.keyframes.lookup()
+		if keyframes_list:
+			for keyframe_ref in keyframes_list:
+				var key_frame_ent = keyframe_ref
+				if key_frame_ent and key_frame_ent.key():
+					var key_frame_name = key_frame_ent.key()
+					for radial in std.RADIALS.keys():
+						var animation_radial_name: String = "%s:%s" % [key_frame_name, radial]
+						sprite_frames.add_animation(animation_radial_name)
+						if key_frame_ent.get(radial):  # Check if radial direction exists
+							for frame in key_frame_ent.get(radial):
+								sprite_frames.add_frame(
+									animation_radial_name, 
+										build_frame(
+											frame,
+											get_sprite_size(),
+											sprite_ent.texture,
+										)
+									)
 		setup_sprite.call_deferred(sprite_frames)
 		move_label()
 		Queue.enqueue(
@@ -1209,8 +1322,15 @@ func set_location(point: Vector2) -> void:
 	set_origin(point)
 	
 func use_animation():
-	if $Sprite.sprite_frames.has_animation("%s:%s" % [state, heading]):
-		$Sprite.animation = "%s:%s" % [state, heading]
+	# Support both static KeyFrames and dynamic skill animations
+	var animation_key = "%s:%s" % [state, heading]
+	if $Sprite.sprite_frames.has_animation(animation_key):
+		$Sprite.animation = animation_key
+	else:
+		# Fallback to idle if animation doesn't exist
+		var idle_key = "%s:%s" % [KeyFrames.IDLE, heading]
+		if $Sprite.sprite_frames.has_animation(idle_key):
+			$Sprite.animation = idle_key
 
 func set_remote_transform_target(node: Node) -> void:
 	$RemoteTransform2D.remote_path = node.get_path()

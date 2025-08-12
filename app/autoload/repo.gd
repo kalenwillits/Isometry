@@ -24,6 +24,7 @@ const _entities: Dictionary = {
 	"Trigger": preload("res://entities/Trigger.gd"),
 	"Timer": preload("res://entities/Timer.gd"),
 	"Strategy": preload("res://entities/Strategy.gd"),
+	"Skill": preload("res://entities/Skill.gd"),
 	"Behavior": preload("res://entities/Behavior.gd"),
 	"Measure": preload("res://entities/Measure.gd"),
 	"Parallax": preload("res://entities/Parallax.gd"),

@@ -19,10 +19,15 @@ func update_primary_actor_info() -> void:
 			set_heading(primary_actor.heading)
 			set_state(primary_actor.state)
 			set_target(primary_actor.target)
-			for n in range(1, 10):
-				var action_name: String = "action_%d" % n
-				if actor_ent.get(action_name): 
-					$DebugView/VBox/HBox/VBoxLeft/VBoxBot.get_node("ActionLabel%s" % n).set_text("%s: %s" % [n, actor_ent.get(action_name).key()])	
+			if actor_ent.skills:
+				var skills_list = actor_ent.skills.lookup()
+				if skills_list:
+					var max_skills = min(skills_list.size(), 9)
+					for i in range(max_skills):
+						var skill_ent = skills_list[i]
+						if skill_ent and skill_ent.key():
+							var slot_number = i + 1
+							$DebugView/VBox/HBox/VBoxLeft/VBoxBot.get_node("ActionLabel%s" % slot_number).set_text("%s: %s" % [slot_number, skill_ent.key()])	
 
 func set_display_name(value: String) -> void:
 	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/DisplayNameLabel.set_text("DISPLAY NAME: %s" % value)

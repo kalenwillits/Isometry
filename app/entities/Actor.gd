@@ -10,15 +10,7 @@ var on_touch: KeyRef # Action
 var on_view: KeyRef # Action
 var on_map_entered: KeyRef # Action
 var on_map_exited: KeyRef # Action
-var action_1: KeyRef # Action
-var action_2: KeyRef # Action
-var action_3: KeyRef # Action
-var action_4: KeyRef # Action
-var action_5: KeyRef # Action
-var action_6: KeyRef # Action
-var action_7: KeyRef # Action
-var action_8: KeyRef # Action
-var action_9: KeyRef # Actiom
+var skills: KeyRefArray # Skill (max 9 entries)
 var resources: KeyRefArray # Resource
 var groups: KeyRefArray # Group
 var triggers: KeyRefArray # Trigger
