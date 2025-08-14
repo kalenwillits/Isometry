@@ -160,7 +160,7 @@ class ActorBuilder extends Object:
 		return self
 
 	func build() -> Actor:
-		var actor_ent = Repo.query([this.actor]).pop_front()
+		var actor_ent = Repo.query([this.actor]).pop_front()	
 		if actor_ent:
 			this.build_viewbox(actor_ent.view)
 			this.view = actor_ent.view
@@ -190,6 +190,7 @@ class ActorBuilder extends Object:
 				this.username = _username
 				this.set_token(Secret.encrypt("%s.%s" % [_username, _password]))
 			this.set_display_name(this.display_name)
+			this.set_speed(this.speed)  # Copy builder speed to actor instance
 		return this
 		
 static func builder() -> ActorBuilder:
@@ -275,12 +276,17 @@ func build_audio() -> void:
 								.if_present(func(sound_ent): add_sound_as_child_node(sound_ent, state_name)))
 
 func promote_substate() -> void:
-	if is_multiplayer_authority() or (is_npc() and (Cache.network == Network.Mode.SERVER or Cache.network == Network.Mode.HOST)):
+	if is_primary() or (is_npc() and (Cache.network == Network.Mode.SERVER or Cache.network == Network.Mode.HOST)):
 		substate = clamp(SubState.IDLE, SubState.END, substate + 1)
 		
 func set_substate(value: SubState) -> void:
-	if is_multiplayer_authority() or (is_npc() and (Cache.network == Network.Mode.SERVER or Cache.network == Network.Mode.HOST)):
+	var can_change = is_primary() or (is_npc() and (Cache.network == Network.Mode.SERVER or Cache.network == Network.Mode.HOST))
+	if is_primary():
+		DebugLogger.log("set_substate: %s -> %s, can_change=%s, is_auth=%s, peer_id=%s" % [substate, value, can_change, is_multiplayer_authority(), peer_id], name)
+	if can_change:
 		substate = value
+	elif is_primary():
+		DebugLogger.log("set_substate: BLOCKED - cannot change substate!", name)
 
 func _enter_tree():
 	set_name(str(peer_id) if peer_id > 0 else str(-randi_range(1, 9_999_999)))
@@ -685,7 +691,10 @@ func click_to_move() -> void:
 	if Input.is_action_pressed("interact"):
 		is_direct_movement_active = false  # Switch to pathfinding mode
 		current_input_strength = 0.0  # Reset input strength
-		set_destination(get_global_mouse_position())
+		var mouse_pos = get_global_mouse_position()
+		if is_primary():
+			DebugLogger.log("click_to_move: setting dest to %s" % mouse_pos, name)
+		set_destination(mouse_pos)
 
 func despawn() -> void:
 	set_process(false)
@@ -891,13 +900,24 @@ func _local_passive_action_handler(target_actor: Actor, function: Callable) -> v
 		function.call(target_actor)
 		
 func _local_action_handler(target_actor: Actor, function: Callable, action_ent: Entity) -> void:
+	if is_primary():
+		DebugLogger.log("_local_action_handler: substate=%s, ActionTimer.stopped=%s" % [substate, $ActionTimer.is_stopped()], name)
 	match substate:
 		SubState.IDLE, SubState.START:  # Cooldowns mechanic
-			function.call(target_actor)
-			look_at_target()
-			root(action_ent.time)
-			var timer = get_tree().create_timer(action_ent.time)
-			timer.timeout.connect(func(): set_substate(SubState.END), CONNECT_ONE_SHOT)
+			# Prevent concurrent skill actions by checking if we're already processing one
+			if $ActionTimer.is_stopped():  # Only allow if no action timer is running
+				if is_primary():
+					DebugLogger.log("_local_action_handler: executing action", name)
+				function.call(target_actor)
+				look_at_target()
+				root(action_ent.time)
+				var timer = get_tree().create_timer(action_ent.time)
+				timer.timeout.connect(func(): set_substate(SubState.END), CONNECT_ONE_SHOT)
+			elif is_primary():
+				DebugLogger.log("_local_action_handler: blocked by running ActionTimer", name)
+		_:
+			if is_primary():
+				DebugLogger.log("_local_action_handler: blocked by substate %s" % substate, name)
 
 func _local_primary_handler(target_actor: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
@@ -983,6 +1003,8 @@ func root(time: float) -> void:
 	for dict in $ActionTimer.timeout.get_connections():
 		$ActionTimer.timeout.disconnect(dict.callable)
 	if time <= 0.0: return
+	if is_primary():
+		DebugLogger.log("root: caching speed %s and setting to 0 for time %s" % [speed, time], name)
 	speed_cache_value = speed
 	set_speed(0)
 	$ActionTimer.wait_time = time
@@ -991,8 +1013,12 @@ func root(time: float) -> void:
 
 func unroot() -> void:
 	$ActionTimer.stop()
-	set_speed(speed_cache_value)
-	speed_cache_value = 0
+	# Defensive check to prevent speed corruption from overlapping calls
+	if speed_cache_value > 0:
+		if is_primary():
+			DebugLogger.log("unroot: restoring speed from %s to %s" % [speed, speed_cache_value], name)
+		set_speed(speed_cache_value)
+		speed_cache_value = 0
 
 func set_sprite(value: String) -> void:
 	sprite = value
@@ -1218,6 +1244,10 @@ func use_line_of_sight() -> void:
 func use_pathing(delta: float) -> void:
 	last_position = position
 	
+	# DEBUG: Log movement state
+	if is_primary():
+		DebugLogger.log("use_pathing: pos=%s, dest=%s, dist=%.2f, substate=%s" % [position, destination, position.distance_to(destination), substate], name)
+	
 	# Set navigation target when destination changes
 	if position.distance_to(destination) > DESTINATION_PRECISION:
 		if destination.distance_to($NavigationAgent.target_position) > 1.0:
@@ -1272,6 +1302,8 @@ func use_move_directly(_delta) -> void:
 	var motion = Input.get_vector("left", "right", "up", "down")
 	
 	if motion.length() > 0:
+		if is_primary():
+			DebugLogger.log("use_move_directly: motion=%s, substate=%s" % [motion, substate], name)
 		is_direct_movement_active = true
 		
 		# Calculate input strength based on motion magnitude
@@ -1307,6 +1339,8 @@ func is_point_on_navigation_region(point: Vector2) -> bool:
 
 func set_destination(point: Vector2) -> void:
 	## Where the actor is headed to.
+	if is_primary():
+		DebugLogger.log("set_destination: from %s to %s, speed=%s, substate=%s" % [position, point, speed, substate], name)
 	set_origin(position)
 	destination = point
 	fix = point  # Set fix to destination, will be updated by NavigationAgent2D in use_pathing()
