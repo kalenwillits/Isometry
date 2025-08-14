@@ -7,7 +7,7 @@ func load_json(json_file_path: String):
 		var json = JSON.new()
 		var error = json.parse(file.get_as_text())
 		if error:
-			Logger.error(json.get_error_message())
+			Logger.error(json.get_error_message(), self)
 			result = error
 		else:
 			result = json.get_data()
@@ -20,7 +20,7 @@ func parse_json(json_string: String):
 	if json.parse(json_string) == OK:
 		return json.get_data()
 	else:
-		Logger.error(json.get_error_message())
+		Logger.error(json.get_error_message(), self)
 		
 func save_buffer(path: String, data: PackedByteArray) -> void:
 	var file = FileAccess.open(path, FileAccess.WRITE)

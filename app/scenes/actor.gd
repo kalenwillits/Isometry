@@ -282,11 +282,11 @@ func promote_substate() -> void:
 func set_substate(value: SubState) -> void:
 	var can_change = is_primary() or (is_npc() and (Cache.network == Network.Mode.SERVER or Cache.network == Network.Mode.HOST))
 	if is_primary():
-		DebugLogger.log("set_substate: %s -> %s, can_change=%s, is_auth=%s, peer_id=%s" % [substate, value, can_change, is_multiplayer_authority(), peer_id], name)
+		Logger.debug("set_substate: %s -> %s, can_change=%s, is_auth=%s, peer_id=%s" % [substate, value, can_change, is_multiplayer_authority(), peer_id], self)
 	if can_change:
 		substate = value
 	elif is_primary():
-		DebugLogger.log("set_substate: BLOCKED - cannot change substate!", name)
+		Logger.debug("set_substate: BLOCKED - cannot change substate!", self)
 
 func _enter_tree():
 	set_name(str(peer_id) if peer_id > 0 else str(-randi_range(1, 9_999_999)))
@@ -693,7 +693,7 @@ func click_to_move() -> void:
 		current_input_strength = 0.0  # Reset input strength
 		var mouse_pos = get_global_mouse_position()
 		if is_primary():
-			DebugLogger.log("click_to_move: setting dest to %s" % mouse_pos, name)
+			Logger.debug("click_to_move: setting dest to %s" % mouse_pos, self)
 		set_destination(mouse_pos)
 
 func despawn() -> void:
@@ -901,23 +901,23 @@ func _local_passive_action_handler(target_actor: Actor, function: Callable) -> v
 		
 func _local_action_handler(target_actor: Actor, function: Callable, action_ent: Entity) -> void:
 	if is_primary():
-		DebugLogger.log("_local_action_handler: substate=%s, ActionTimer.stopped=%s" % [substate, $ActionTimer.is_stopped()], name)
+		Logger.debug("_local_action_handler: substate=%s, ActionTimer.stopped=%s" % [substate, $ActionTimer.is_stopped()], self)
 	match substate:
 		SubState.IDLE, SubState.START:  # Cooldowns mechanic
 			# Prevent concurrent skill actions by checking if we're already processing one
 			if $ActionTimer.is_stopped():  # Only allow if no action timer is running
 				if is_primary():
-					DebugLogger.log("_local_action_handler: executing action", name)
+					Logger.debug("_local_action_handler: executing action", self)
 				function.call(target_actor)
 				look_at_target()
 				root(action_ent.time)
 				var timer = get_tree().create_timer(action_ent.time)
 				timer.timeout.connect(func(): set_substate(SubState.END), CONNECT_ONE_SHOT)
 			elif is_primary():
-				DebugLogger.log("_local_action_handler: blocked by running ActionTimer", name)
+				Logger.debug("_local_action_handler: blocked by running ActionTimer", self)
 		_:
 			if is_primary():
-				DebugLogger.log("_local_action_handler: blocked by substate %s" % substate, name)
+				Logger.debug("_local_action_handler: blocked by substate %s" % substate, self)
 
 func _local_primary_handler(target_actor: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
@@ -1004,7 +1004,7 @@ func root(time: float) -> void:
 		$ActionTimer.timeout.disconnect(dict.callable)
 	if time <= 0.0: return
 	if is_primary():
-		DebugLogger.log("root: caching speed %s and setting to 0 for time %s" % [speed, time], name)
+		Logger.debug("root: caching speed %s and setting to 0 for time %s" % [speed, time], self)
 	speed_cache_value = speed
 	set_speed(0)
 	$ActionTimer.wait_time = time
@@ -1016,7 +1016,7 @@ func unroot() -> void:
 	# Defensive check to prevent speed corruption from overlapping calls
 	if speed_cache_value > 0:
 		if is_primary():
-			DebugLogger.log("unroot: restoring speed from %s to %s" % [speed, speed_cache_value], name)
+			Logger.debug("unroot: restoring speed from %s to %s" % [speed, speed_cache_value], self)
 		set_speed(speed_cache_value)
 		speed_cache_value = 0
 
@@ -1246,7 +1246,7 @@ func use_pathing(delta: float) -> void:
 	
 	# DEBUG: Log movement state
 	if is_primary():
-		DebugLogger.log("use_pathing: pos=%s, dest=%s, dist=%.2f, substate=%s" % [position, destination, position.distance_to(destination), substate], name)
+		Logger.debug("use_pathing: pos=%s, dest=%s, dist=%.2f, substate=%s" % [position, destination, position.distance_to(destination), substate], self)
 	
 	# Set navigation target when destination changes
 	if position.distance_to(destination) > DESTINATION_PRECISION:
@@ -1303,7 +1303,7 @@ func use_move_directly(_delta) -> void:
 	
 	if motion.length() > 0:
 		if is_primary():
-			DebugLogger.log("use_move_directly: motion=%s, substate=%s" % [motion, substate], name)
+			Logger.debug("use_move_directly: motion=%s, substate=%s" % [motion, substate], self)
 		is_direct_movement_active = true
 		
 		# Calculate input strength based on motion magnitude
@@ -1340,7 +1340,7 @@ func is_point_on_navigation_region(point: Vector2) -> bool:
 func set_destination(point: Vector2) -> void:
 	## Where the actor is headed to.
 	if is_primary():
-		DebugLogger.log("set_destination: from %s to %s, speed=%s, substate=%s" % [position, point, speed, substate], name)
+		Logger.debug("set_destination: from %s to %s, speed=%s, substate=%s" % [position, point, speed, substate], self)
 	set_origin(position)
 	destination = point
 	fix = point  # Set fix to destination, will be updated by NavigationAgent2D in use_pathing()
@@ -1421,7 +1421,9 @@ func _on_state_change() -> void:
 	set_substate(SubState.START)
 
 func _on_hit_box_body_entered(other):
+	Logger.trace("Actor %s: hitbox collision with %s" % [name, other.name if other != self else "self"], self)
 	if other != self and $HitboxTriggerCooldownTimer.is_stopped():
+		Logger.debug("Actor %s: triggering on_touch event for %s" % [name, other.name], self)
 		$HitboxTriggerCooldownTimer.start()
 		other.get_parent().on_touch.emit(self)
 		
@@ -1447,8 +1449,10 @@ func _on_line_of_sight_exited(_other: Actor) -> void:
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
+	Logger.trace("Actor %s: view box area entered by %s" % [name, other.name if other != self else "self"], self)
 	if other == self: return
 	in_view[other.get_name()] = in_view.size()
+	Logger.debug("Actor %s: added %s to view (total in view: %d)" % [name, other.name, in_view.size()], self)
 	if is_primary():
 		other.fader.fade()
 		other.visible_to_primary(true)
@@ -1458,8 +1462,10 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 
 func _on_view_box_area_exited(area: Area2D) -> void:
 	var other = area.get_parent()
+	Logger.trace("Actor %s: view box area exited by %s" % [name, other.name if other != self else "self"], self)
 	if other == self: return
 	in_view.erase(other.get_name())
+	Logger.debug("Actor %s: removed %s from view (remaining in view: %d)" % [name, other.name, in_view.size()], self)
 	var other_name: String = other.get_name()
 	var this_actor_name: String = get_name()
 	other.remove_from_group(Group.LINE_OF_SIGHT)
@@ -1492,5 +1498,7 @@ func _on_tree_exiting() -> void:
 	Controller.broadcast_actor_is_despawning.rpc_id(1, peer_id, map)
 
 func _on_discovery_box_body_entered(tileMapLayer: FadingTileMapLayer) -> void:
+	Logger.trace("Actor %s: discovery box collision with tilemap layer %s" % [name, tileMapLayer.name if tileMapLayer else "unknown"], self)
 	if tileMapLayer is FadingTileMapLayer:
+		Logger.debug("Actor %s: setting discovery source for tilemap layer %s" % [name, tileMapLayer.name], self)
 		tileMapLayer.set_discovery_source(self)

@@ -28,6 +28,7 @@ static func builder() -> MapBuilder:
 	return MapBuilder.new()
 
 func _ready() -> void:
+	Logger.info("Initializing map: %s" % name, self)
 	add_to_group(Group.MAP)
 	add_to_group(name)
 	Queue.enqueue(
@@ -36,6 +37,7 @@ func _ready() -> void:
 		.task(build_parallax_layers)
 		.build()
 	)
+	Logger.debug("Queued parallax layer build for map: %s" % name, self)
 	Queue.enqueue(
 		Queue.Item.builder()
 		.comment("build isometric tilemap in map %s" % name)
@@ -43,21 +45,25 @@ func _ready() -> void:
 		.condition(func(): return Repo.get_child_count() != 0)
 		.build()
 	)
+	Logger.debug("Queued tilemap build for map: %s" % name, self)
 	Queue.enqueue(
 		Queue.Item.builder()
 		.comment("build sound on map %s audio stream" % name)
 		.task(build_audio)
 		.build()
 	)
+	Logger.debug("Queued audio build for map: %s" % name, self)
 	
 func build_complete() -> bool:
 	return _build_complete
 	
 func build_parallax_layers() -> void:
+	Logger.debug("Building parallax layers for map: %s" % name, self)
 	var map_ent = Repo.query([name]).pop_front()
 	Optional.of_nullable(map_ent.background).if_present(
 		func(key_ref_array):
 			for parallax_ent in key_ref_array.lookup():
+				Logger.trace("Creating parallax layer: %s for map: %s" % [parallax_ent.name, name], self)
 				var parallax_scene = Scene.parralax.instantiate()
 				parallax_scene.name = parallax_ent.name
 				parallax_scene.load_texture(parallax_ent.texture)
@@ -67,10 +73,12 @@ func build_parallax_layers() -> void:
 	)
 	
 func build_audio() -> void:
+	Logger.debug("Building audio for map: %s" % name, self)
 	var map_ent = Repo.query([name]).pop_front()
 	Optional.of_nullable(map_ent.audio).if_present(
 		func(key_ref_array):
 			for sound_ent in key_ref_array.lookup():
+				Logger.trace("Creating audio stream: %s for map: %s" % [sound_ent.key(), name], self)
 				var audio: AudioStreamFader = AudioStreamFader.new()
 				Optional.of_nullable(sound_ent.scale)\
 					.if_present(func(scale_value): audio.set_scale_expression(scale_value))
@@ -89,6 +97,7 @@ func build_audio() -> void:
 	)
 
 func build_isometric_tilemap() -> void:
+	Logger.debug("Building isometric tilemap for map: %s" % name, self)
 	var map_ent = Repo.query([name]).pop_front()
 	var tilemap_ent = map_ent.tilemap.lookup()
 	var tileset_ent = tilemap_ent.tileset.lookup()
@@ -130,11 +139,12 @@ func build_isometric_tilemap() -> void:
 		atlas_tile.set("physics_layer_1/polygon_0/points", discovery_vectors)
 	var layers_ent_array = tilemap_ent.layers.lookup()
 	for layer_index in range(layers_ent_array.size()):
+		var layer_ent = layers_ent_array[layer_index]
+		Logger.trace("Creating tilemap layer %s for map %s" % [layer_ent.key(), name], self)
 		var tilemap_layer := FadingTileMapLayer.new()
 		tilemap_layer.add_to_group(name)
 		tilemap_layer.add_to_group(Group.MAP_LAYER)
 		tilemap_layer.enabled = false # Sets visibilty and collisions off by default
-		var layer_ent = layers_ent_array[layer_index]
 		tilemap_layer.name = layer_ent.key()
 		tilemap_layer.tile_set = tileset
 		tilemap_layer.y_sort_enabled = layer_ent.ysort
@@ -166,7 +176,9 @@ func build_isometric_tilemap() -> void:
 	Queue.enqueue(
 		Queue.Item.builder()
 		.comment("Set build complete in map")
-		.task(func(): _build_complete = true)
+		.task(func(): 
+			_build_complete = true
+			Logger.info("Map build complete: %s" % name, self))
 		.build()
 	)
 

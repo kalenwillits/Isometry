@@ -1,14 +1,20 @@
 extends Node
+
+func _ready():
+	pass
 	
 @rpc("any_peer", "reliable")
 func authenticate_and_spawn_actor(peer_id: int, token: PackedByteArray) -> void:
+	Logger.info("Authentication request received for peer_id=%s" % peer_id, self)
 	Queue.enqueue(
 			Queue.Item.builder()
 			.comment("Spawn actor for new authenticated login %s" % peer_id)
 			.condition(func(): return Secret.public_key != null)
 			.task(func():
 				var auth: Secret.Auth = Secret.Auth.builder().token(token).build()
+				Logger.debug("Validating auth token for peer_id=%s" % peer_id, self)
 				if auth.is_valid():
+					Logger.info("Authentication successful for user=%s, peer_id=%s" % [auth.get_username(), peer_id], self)
 					var main_ent = Repo.select(Group.MAIN_ENTITY)
 					var data: Dictionary = {
 						"peer_id": peer_id, 
@@ -17,10 +23,15 @@ func authenticate_and_spawn_actor(peer_id: int, token: PackedByteArray) -> void:
 						"speed": main_ent.actor.lookup().speed
 					}
 					if FileAccess.file_exists(auth.get_path()): 
+						Logger.debug("Loading existing player data from %s" % auth.get_path(), self)
 						var result = io.load_json(auth.get_path())
 						if result:
 							data.merge(result, false) # False because we do not want to overwrite the new peer id
+							Logger.trace("Merged player data: %s" % data, self)
+					Logger.debug("Spawning actor with data: peer_id=%s, name=%s, speed=%s" % [data.peer_id, data.name, data.speed], self)
 					Finder.select(Group.SPAWNER).spawn(data)
+				else:
+					Logger.warn("Authentication failed for peer_id=%s - invalid token" % peer_id, self)
 				)
 			.build()
 		)
@@ -28,6 +39,7 @@ func authenticate_and_spawn_actor(peer_id: int, token: PackedByteArray) -> void:
 
 @rpc("authority", "reliable")
 func request_token_from_peer() -> void:
+	Logger.info("Token request received from server", self)
 	Queue.enqueue(
 			Queue.Item.builder()
 			.comment("Authenticating with server")
@@ -45,6 +57,7 @@ func request_token_from_peer() -> void:
 
 @rpc("any_peer", "reliable")
 func get_public_key(peer_id: int) -> void:
+	Logger.debug("Public key request from peer_id=%s" % peer_id, self)
 	if Cache.network == Network.Mode.HOST or Cache.network == Network.Mode.SERVER:
 		Queue.enqueue(
 			Queue.Item.builder()
@@ -57,11 +70,13 @@ func get_public_key(peer_id: int) -> void:
 
 @rpc("any_peer", "reliable")
 func set_public_key(public_key: String) -> void:
+	Logger.debug("Received public key from server (length=%s)" % public_key.length(), self)
 	if Cache.network == Network.Mode.CLIENT:
 		Secret.set_public_key(public_key)
 
 @rpc("any_peer", "call_local", "reliable")
 func request_spawn_actor(peer_id: int) -> void:
+	Logger.debug("Spawn actor request for peer_id=%s" % peer_id, self)
 	Queue.enqueue(
 		Queue.Item.builder()
 		.comment("request_spawn_actor")
@@ -72,6 +87,7 @@ func request_spawn_actor(peer_id: int) -> void:
 	
 @rpc("authority", "call_local", "reliable")
 func render_map(map: String) -> void:
+	Logger.info("Rendering map: %s" % map, self)
 	for map_node in Finder.query([Group.MAP]):
 		Queue.enqueue(
 		Queue.Item.builder()
@@ -101,11 +117,13 @@ func render_map(map: String) -> void:
 
 @rpc("authority", "call_local", "reliable")
 func fade_and_render_map(peer_id: int, map: String) -> void:
+	Logger.info("Initiating map transition to %s for peer_id=%s" % [map, peer_id], self)
 	Transition.at_next_fade(func(): Controller.render_map(map))
 	Transition.at_next_fade(func(): Controller.request_spawn_actor.rpc_id(1, peer_id))
 	Transition.fade()
 
 @rpc("any_peer", "call_local", "reliable")
 func broadcast_actor_is_despawning(peer_id: int, _map: String) -> void:
+	Logger.info("Broadcasting actor despawn for peer_id=%s" % peer_id, self)
 	for targeted_by_actor: Actor in Finder.query([Group.ACTOR, str(peer_id)]):
 		targeted_by_actor.set_target("") # Clear ANY other actor from being able to target_this one

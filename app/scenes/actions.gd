@@ -29,7 +29,7 @@ func handle_move_actor(actor_name: String, map: String) -> void:
 	var actor = get_tree().get_first_node_in_group(actor_name)
 	if actor: 
 		if actor.map == map:
-			Logger.warn("Attempting to move actor to the same map...")
+			Logger.warn("Attempting to move actor to the same map...", self)
 		else:
 			actor.queue_free()
 
@@ -59,7 +59,7 @@ func invoke_action(action_key: String, self_name: String, target_name: String) -
 
 func echo(_self_name: String, _target_name: String, params: Dictionary) -> void:
 	## message: String
-	Logger.info(params["message"])
+	Logger.info(params["message"], self)
 	
 func set_destination_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## destination: Vertex Key

@@ -9,6 +9,7 @@ class Item extends Object:
 	var task: Callable
 	var target: Node
 	var _target_is_set: bool = false
+	var _retry_count: int = 0
 	
 	class Builder extends Object:
 		var obj: Item = Item.new()
@@ -50,7 +51,11 @@ class Item extends Object:
 
 var items: Array[Item] = []
 
+func _ready():
+	Logger.debug("Queue autoload initialized", self)
+
 func enqueue(item: Item) -> void:
+	Logger.trace("Enqueuing task: %s" % item.comment, self)
 	items.append(item)
 
 func _target_is_now_null(item: Item) -> bool:
@@ -71,12 +76,21 @@ func _call_task_safe(item: Item) -> void:
 
 func _process(_delta: float) -> void:
 	if items.size() > 0:
-		if items[0].is_expired(): 
+		var current_item = items[0]
+		if current_item.is_expired(): 
+			Logger.trace("Removing expired task: %s" % current_item.comment, self)
 			items.pop_at(0)
-		elif _target_is_now_null(items[0]):
+		elif _target_is_now_null(current_item):
+			Logger.trace("Removing task with null target: %s" % current_item.comment, self)
 			items.pop_at(0)
-		elif _call_condition_safe(items[0]):
-			_call_task_safe(items[0])
+		elif _call_condition_safe(current_item):
+			Logger.trace("Executing task: %s" % current_item.comment, self)
+			_call_task_safe(current_item)
 			items.pop_at(0)
 		else:
+			current_item._retry_count += 1
+			if current_item._retry_count > 10:
+				Logger.warn("Task stuck in queue (retried %d times): %s" % [current_item._retry_count, current_item.comment], self)
+				# Reset counter to avoid spam, but keep trying
+				current_item._retry_count = 0
 			items.append(items.pop_at(0))

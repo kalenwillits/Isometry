@@ -1,5 +1,7 @@
 extends Node
-# TODO - We could use sqlite in memory to make this WAYYY more efficient. 
+
+func _ready():
+	pass 
 
 # TODO - sort
 const _entities: Dictionary = {
@@ -37,12 +39,14 @@ signal load_failure
 func query(tags: Array) -> Array:
 	var query_tags: Array = [Group.ENTITY]
 	query_tags.append_array(tags)
-	return Finder.query(query_tags)
+	var results = Finder.query(query_tags)
+	Logger.trace("Repo query for tags %s returned %s results" % [tags, results.size()], self)
+	return results
 	
 func select(key: String) -> Entity:
 	var results = query([key])
 	if results.size() != 1:
-		Logger.warn("Repo select tag: [%s] yielded %s results..." % [key, results.size()])
+		Logger.warn("Repo select tag: [%s] yielded %s results..." % [key, results.size()], self)
 	return results.pop_front()
 	
 func extract_single_key_from_dict(dict: Dictionary, key_to_keep: String) -> Dictionary:
@@ -65,12 +69,12 @@ func add_asset_as_entities_to_tree(asset: Dictionary):
 				params.data = extract_single_key_from_dict(objdata, objkey)
 				entity.fit(params)
 				if !has_node(entity.unique_node_name()):
-					Logger.info("Successfully created Entity: %s" % entity.unique_node_name())
+					Logger.info("Successfully created Entity: %s" % entity.unique_node_name(), self)
 					add_child(entity)
 				else:
-					Logger.warn("Naming conflict detected in archive: [%s], resolve this or the map will contain missing data on load." % entity.unique_node_name())
+					Logger.warn("Naming conflict detected in archive: [%s], resolve this or the map will contain missing data on load." % entity.unique_node_name(), self)
 		else:
-			Logger.warn("Type [%s] is not recognized as a valid type and will be skipped, options are [%s]." % [objtype, _entities.keys()])
+			Logger.warn("Type [%s] is not recognized as a valid type and will be skipped, options are [%s]." % [objtype, _entities.keys()], self)
 
 func load_archive():
 	var archive: ZIPReader = ZIPReader.new()
@@ -85,7 +89,7 @@ func load_archive():
 	if archive.open(path) == OK:	
 		var all_assets: Array = archive.get_files()
 		archive.close()
-		Logger.info("Loading [%s] assets from campaign [%s]..." % [all_assets.size(), path])
+		Logger.info("Loading [%s] assets from campaign [%s]..." % [all_assets.size(), path], self)
 		for asset_filename in all_assets:
 			if asset_filename.ends_with(".json"):
 				var asset_key: String = asset_filename.split("/", true, 1)[-1]
