@@ -524,33 +524,36 @@ func use_strategy() -> void:
 			.build())
 
 func use_actions() -> void:
-	var actor_ent = Repo.select(actor)
+	var actor_ent: Entity = Repo.select(actor)
 	if !actor_ent or !actor_ent.skills: return
 	
 	# Limit to 9 skills maximum to maintain action_1-9 compatibility
-	var skills_list = actor_ent.skills.lookup()
+	var skills_list: Array = actor_ent.skills.lookup()
 	if !skills_list: return
 	
-	var max_skills = min(skills_list.size(), 9)
+	var max_skills: int = min(skills_list.size(), 9)
 	
 	for i in range(max_skills):
-		var skill_ent = skills_list[i]
+		var skill_ent: Entity = skills_list[i]
 		if !skill_ent: continue
 		
-		var skill_key = skill_ent.key()
+		var skill_key: String = skill_ent.key()
 		if !skill_key: continue
 		
-		var action_name = "action_%d" % (i + 1)
+		var action_name: String = "action_%d" % (i + 1)
+		var ui_action_block: String = Group.UI_ACTION_BLOCK_N % (i + 1)
 		
 		# Handle skill start (button press)
 		if Input.is_action_just_pressed(action_name) and skill_ent.start:
 			var start_signal = "action_%d_start" % (i + 1)
+			Finder.select(ui_action_block).press_button()
 			emit_skill_signal(start_signal, resolve_target())
 			
 		# Handle skill end (button release)
 		if Input.is_action_just_released(action_name) and skill_ent.end:
 			var end_signal = "action_%d_end" % (i + 1)
 			emit_skill_signal(end_signal, resolve_target())
+			Finder.select(ui_action_block).release_button()
 
 func emit_skill_signal(skill_event: String, target_actor: Actor) -> void:
 	# Emit the appropriate static signal

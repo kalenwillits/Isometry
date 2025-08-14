@@ -8,3 +8,4 @@ const UNDISCOVERED_TILE_TINT: float = 0.0
 const VISIBLE_TILE_TINT: float = 1.0
 
 const UI_BACKGROUND: Color = Color(0.0, 0.0, 0.0, 0.2)
+const UI_PRESSED: Color = Color(0.0, 0.0, 0.0, 0.5)
