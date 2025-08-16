@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://dluxm6e80n02y"]
+[gd_scene load_steps=4 format=3 uid="uid://dluxm6e80n02y"]
 
 [ext_resource type="Script" uid="uid://b7v1pie42hxe" path="res://scenes/interface.gd" id="1_7q01f"]
 [ext_resource type="PackedScene" uid="uid://doj5tijrttd2p" path="res://scenes/action_widget.tscn" id="2_lw6my"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/theme.res" id="2_t72xj"]
 
 [node name="Interface" type="Node"]
 script = ExtResource("1_7q01f")
@@ -113,6 +114,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme = ExtResource("2_t72xj")
 alignment = 1
 
 [node name="VBox" type="VBoxContainer" parent="DisplayView/HBox"]

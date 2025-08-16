@@ -14,12 +14,13 @@ func render(key: String) -> void:
 		load_texture(entity.icon)
 
 func load_texture(path_to_asset: String) -> void:
-	var texture = AssetLoader.builder()\
+	var texture: ImageTexture = AssetLoader.builder()\
 		.key(path_to_asset)\
 		.type(AssetLoader.Type.IMAGE)\
 		.archive(Cache.campaign)\
 		.build()\
 		.pull()
+	texture.set_size_override(Style.ICON_SIZE)
 	$Button/VBox/HBox/Button.icon = texture
 	
 func press_button() -> void:
@@ -30,3 +31,4 @@ func release_button() -> void:
 	
 func get_action_code() -> String:
 	return "action_%s" % action_id
+			

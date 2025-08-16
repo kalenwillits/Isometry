@@ -3,16 +3,17 @@
 [ext_resource type="Script" uid="uid://cbofbc2niljo8" path="res://scenes/action_block.gd" id="1_j2tux"]
 
 [node name="ActionBlock" type="Control"]
-custom_minimum_size = Vector2(32, 32)
+custom_minimum_size = Vector2(28, 28)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = -736.0
-offset_bottom = -536.0
+offset_right = -772.0
+offset_bottom = -572.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_j2tux")
+action_id = null
 
 [node name="Button" type="Control" parent="."]
 layout_mode = 1
