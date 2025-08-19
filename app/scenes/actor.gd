@@ -453,7 +453,7 @@ func _built_in_measure__line_of_sight() -> int:
 	return 0
 
 func _built_in_measure__distance_to_target() -> int:
-	var target_actor: Actor = Finder.select(target)
+	var target_actor: Actor = Finder.get_actor(target)
 	if target_actor != null:
 		return isometric_distance_to_actor(target_actor)
 	return -1
@@ -615,6 +615,8 @@ func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
 				old_actor.set_outline_color(Palette.OUTLINE_CLEAR)
 				old_actor.get_node("Label").visible = false
 		)
+		if old_target_name != "":
+			Finder.select(Group.UI_FOCUS_WIDGET).remove_plate(old_target_name)
 	
 func _handle_new_target(new_target_name: String) -> void:
 	if is_primary():
@@ -623,7 +625,9 @@ func _handle_new_target(new_target_name: String) -> void:
 				new_actor.set_outline_color(Palette.OUTLINE_SELECT)
 				new_actor.get_node("Label").visible = true
 		)
-	
+		if new_target_name != "":
+			Finder.select(Group.UI_FOCUS_WIDGET).append_plate(new_target_name)
+
 func get_target() -> String:
 	return target
 		
@@ -890,7 +894,6 @@ func build_target_groups_counter() -> void:
 		
 func _local_measure_handler(caller_name: String, target_name: String, _expression: String) -> int:
 	return Dice.builder()\
-		.scene_tree(get_tree())\
 		.target_name(target_name)\
 		.caller_name(caller_name)\
 		.build()\

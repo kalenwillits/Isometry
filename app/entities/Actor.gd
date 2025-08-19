@@ -10,6 +10,9 @@ var on_touch: KeyRef # Action
 var on_view: KeyRef # Action
 var on_map_entered: KeyRef # Action
 var on_map_exited: KeyRef # Action
+var icon: String # Path to texture asset
+var public: KeyRefArray # Resource
+var private: KeyRefArray # Resource
 var skills: KeyRefArray # Skill (max 9 entries)
 var resources: KeyRefArray # Resource
 var groups: KeyRefArray # Group

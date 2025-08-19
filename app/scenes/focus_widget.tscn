@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://bo72g0g451eom"]
+
+[ext_resource type="Script" uid="uid://ls178smjwseu" path="res://scenes/focus_widget.gd" id="1_o8jvj"]
+
+[node name="FocusWidget" type="Control"]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+script = ExtResource("1_o8jvj")
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 32.0
+grow_horizontal = 2

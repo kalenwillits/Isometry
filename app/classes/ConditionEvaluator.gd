@@ -41,8 +41,8 @@ class EvaluateParams extends Object:
 static func evaluate(params: EvaluateParams) -> bool:
 	if params.condition_key == null or params.condition_key == "": return true # if there is no condition set, automatically pass
 	var condition_ent = Repo.select(params.condition_key)
-	var lvalue: int = Dice.builder().scene_tree(Finder.get_tree()).caller(params.caller_name).target(params.target_name).expression(condition_ent.left).build().evaluate()
-	var rvalue: int = Dice.builder().scene_tree(Finder.get_tree()).caller(params.caller_name).target(params.target_name).expression(condition_ent.right).build().evaluate()
+	var lvalue: int = Dice.builder().caller(params.caller_name).target(params.target_name).expression(condition_ent.left).build().evaluate()
+	var rvalue: int = Dice.builder().caller(params.caller_name).target(params.target_name).expression(condition_ent.right).build().evaluate()
 	match OperatorSymbolMap.get(condition_ent.operator):
 		OP_EQUAL:
 			return lvalue == rvalue

@@ -44,7 +44,6 @@ func calculate_next_tick() -> void:
 		.map(func(actor): actor.target)\
 		.or_else(get_parent())
 	wait_time = Dice.builder()\
-		.scene_tree(get_tree())\
 		.caller(caller.name)\
 		.target(target.name)\
 		.expression(tick_interval_expression)\
@@ -55,7 +54,6 @@ func calculate_next_tick() -> void:
 	
 func calculate_tick_total_count() -> void:
 	_tick_total_result = Dice.builder()\
-		.scene_tree(get_tree())\
 		.caller(get_parent().name)\
 		.target(get_parent().name)\
 		.expression(tick_interval_expression)\

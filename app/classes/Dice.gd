@@ -3,7 +3,6 @@ class_name Dice
 
 var caller_name: String
 var target_name: String
-var scene_tree: SceneTree
 var expression: String
 
 const TARGET_MARKER: String = "."
@@ -11,10 +10,6 @@ const CALLER_MARKER: String = ":"
 
 class Builder extends Object:
 	var this: Dice = Dice.new()
-	
-	func scene_tree(tree: SceneTree) -> Builder:
-		this.scene_tree = tree
-		return self
 	
 	func caller(self_name: String) -> Builder:
 		this.caller_name = self_name
@@ -35,16 +30,15 @@ static func builder() -> Builder:
 	return Builder.new()
 	
 func evaluate() -> int:
-	if scene_tree != null:
-		inject_target_resources()
-		inject_caller_resources()
-		inject_target_measures()
-		inject_caller_measures()
+	inject_target_resources()
+	inject_caller_resources()
+	inject_target_measures()
+	inject_caller_measures()
 	return RollEngine.new().roll(expression)
 	
 func inject_target_resources() -> void:
 	if target_name == "": return
-	var target_actor: Actor = scene_tree.get_first_node_in_group(target_name)
+	var target_actor: Actor = Finder.get_actor(target_name)
 	if target_actor == null: return
 	for target_resource_key in target_actor.resources.keys(): # TODO use regex
 		if target_resource_key not in self.expression: continue
@@ -52,7 +46,7 @@ func inject_target_resources() -> void:
 		self.expression = self.expression.replacen(target_resource_code, str(target_actor.resources[target_resource_key]))
 	
 func inject_caller_resources() -> void:
-	var caller_actor: Actor = scene_tree.get_first_node_in_group(caller_name)
+	var caller_actor: Actor = Finder.get_actor(caller_name)
 	if caller_actor == null: return
 	for caller_resource_key in caller_actor.resources.keys(): # TODO use regex
 		if caller_resource_key not in self.expression: continue
@@ -61,7 +55,7 @@ func inject_caller_resources() -> void:
 
 func inject_target_measures() -> void:
 	if target_name == "": return
-	var target_actor: Actor = scene_tree.get_first_node_in_group(target_name)
+	var target_actor: Actor = Finder.get_actor(target_name)
 	if target_actor == null: return
 	for target_measure_key in target_actor.measures.keys(): # TODO use regex
 		if target_measure_key not in self.expression: continue
@@ -69,7 +63,7 @@ func inject_target_measures() -> void:
 		self.expression = self.expression.replacen(target_measure_code, str(target_actor.measures[target_measure_key].call()))
 	
 func inject_caller_measures() -> void:
-	var caller_actor: Actor = scene_tree.get_first_node_in_group(caller_name)
+	var caller_actor: Actor = Finder.get_actor(caller_name)
 	if caller_actor == null: return
 	for caller_measure_key in caller_actor.measures.keys(): # TODO use regex
 		if caller_measure_key not in self.expression: continue
