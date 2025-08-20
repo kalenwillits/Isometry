@@ -17,7 +17,7 @@ func _ready() -> void:
 	$HBox/TextureRect.set_texture(icon_texture)
 	set_label(actor.display_name)
 	if actor_ent.public != null:
-		for public_resource_key: String in actor_ent.public:
+		for public_resource_key: String in actor_ent.public.keys():
 			add_public_resource(public_resource_key)
 	add_to_group(Group.UI_FOCUS_PLATE)
 	add_to_group(actor.name)
@@ -29,7 +29,7 @@ func set_actor(value: String) -> void:
 	actor = value
 
 func add_public_resource(resource_key: String) -> void:
-	var resource_block = resource_block_packed_scene.instantiate()
+	var resource_block: Widget = resource_block_packed_scene.instantiate()
 	resource_block.set_actor(actor)
-	resource_block.set_key(resource_key)
+	resource_block.set_resource_key(resource_key)
 	$Grid.add_child(resource_block)
