@@ -1,9 +1,11 @@
-[gd_scene load_steps=3 format=3 uid="uid://duj0l87bk5lja"]
+[gd_scene load_steps=5 format=3 uid="uid://wcch6bcd5u7p"]
 
-[ext_resource type="Script" uid="uid://dxb34tty7suhs" path="res://scenes/focus_plate.gd" id="1_gefpo"]
-[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/theme.res" id="1_r4mos"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/theme.res" id="1_xehtx"]
+[ext_resource type="Script" uid="uid://5pkjjgcfe6ha" path="res://scenes/data_plate.gd" id="2_xehtx"]
+[ext_resource type="Script" uid="uid://w6eirmk2arqg" path="res://classes/ReverseGrid.gd" id="3_c0uob"]
+[ext_resource type="PackedScene" uid="uid://dea8pivl04usm" path="res://scenes/resource_block.tscn" id="3_xp0or"]
 
-[node name="FocusPlate" type="Control"]
+[node name="DataPlate" type="Control"]
 custom_minimum_size = Vector2(192, 28)
 layout_mode = 3
 anchors_preset = 5
@@ -13,8 +15,21 @@ offset_left = -128.0
 offset_right = 64.0
 offset_bottom = 28.0
 grow_horizontal = 2
-theme = ExtResource("1_r4mos")
-script = ExtResource("1_gefpo")
+theme = ExtResource("1_xehtx")
+script = ExtResource("2_xehtx")
+
+[node name="Grid" type="GridContainer" parent="."]
+layout_mode = 0
+offset_top = -28.0
+offset_right = 192.0
+theme_override_constants/h_separation = -2
+theme_override_constants/v_separation = -1
+columns = 6
+script = ExtResource("3_c0uob")
+metadata/_custom_type_script = "uid://w6eirmk2arqg"
+
+[node name="ResourceBlock" parent="Grid" instance=ExtResource("3_xp0or")]
+layout_mode = 2
 
 [node name="HBoxButton" type="HBoxContainer" parent="."]
 custom_minimum_size = Vector2(192, 28)
@@ -46,12 +61,3 @@ theme_override_constants/line_spacing = 0
 theme_override_constants/paragraph_spacing = 0
 horizontal_alignment = 1
 uppercase = true
-
-[node name="Grid" type="GridContainer" parent="."]
-layout_mode = 0
-offset_top = 27.0
-offset_right = 192.0
-offset_bottom = 27.0
-theme_override_constants/h_separation = -2
-theme_override_constants/v_separation = -1
-columns = 6

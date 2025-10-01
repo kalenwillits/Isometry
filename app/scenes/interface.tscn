@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://dluxm6e80n02y"]
+[gd_scene load_steps=6 format=3 uid="uid://dluxm6e80n02y"]
 
 [ext_resource type="Script" uid="uid://b7v1pie42hxe" path="res://scenes/interface.gd" id="1_7q01f"]
 [ext_resource type="PackedScene" uid="uid://doj5tijrttd2p" path="res://scenes/action_widget.tscn" id="2_lw6my"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/theme.res" id="2_t72xj"]
 [ext_resource type="PackedScene" uid="uid://bo72g0g451eom" path="res://scenes/focus_widget.tscn" id="3_s0di0"]
+[ext_resource type="PackedScene" uid="uid://wcch6bcd5u7p" path="res://scenes/data_plate.tscn" id="4_uidac"]
 
 [node name="Interface" type="Node"]
 script = ExtResource("1_7q01f")
@@ -143,6 +144,9 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_horizontal = 3
 alignment = 2
+
+[node name="DataPlate" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotLeft/VBoxBotLeft" instance=ExtResource("4_uidac")]
+layout_mode = 2
 
 [node name="HBoxBotRight" type="HBoxContainer" parent="DisplayView/HBox/VBox/HBoxBot"]
 layout_mode = 2

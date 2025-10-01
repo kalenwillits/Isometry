@@ -406,6 +406,12 @@ func _ready() -> void:
 				.task(func(): on_map_entered.emit())
 				.build()
 			)
+		Queue.enqueue(
+			Queue.Item.builder()
+			.comment("Sync data plate in ui to primary actor")
+			.task(func(): Finder.select(Group.UI_DATA_PLATE).load_actor_data())
+			.build()
+		)
 
 func schedule_render_this_actors_map() -> void:
 	Queue.enqueue(

@@ -192,3 +192,22 @@ func get_elliptical_grid(grid_size: float, position: Vector2, size: float) -> Ar
 				result.append(Vector2i(x, y))
 
 	return result
+
+func format_number(value: int) -> String:
+	if value < 0:
+		return str(value)
+	
+	if value < 1000:
+		return str(value)
+	elif value < 1000000:
+		return str(value / 1000) + "K"
+	elif value < 1000000000:
+		return str(value / 1000000) + "M"
+	elif value < 1000000000000:
+		return str(value / 1000000000) + "G"
+	elif value < 1000000000000000:
+		return str(value / 1000000000000) + "T"
+	elif value < 1000000000000000000:
+		return str(value / 1000000000000000) + "P"
+	else:
+		return str(value / 1000000000000000000) + "E"
