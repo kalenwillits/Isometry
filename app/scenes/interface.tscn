@@ -145,7 +145,18 @@ layout_mode = 2
 size_flags_horizontal = 3
 alignment = 2
 
-[node name="DataPlate" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotLeft/VBoxBotLeft" instance=ExtResource("4_uidac")]
+[node name="HBoxBotCenter" type="HBoxContainer" parent="DisplayView/HBox/VBox/HBoxBot"]
+layout_mode = 2
+alignment = 1
+
+[node name="VBoxBotCenter" type="VBoxContainer" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotCenter"]
+layout_mode = 2
+alignment = 2
+
+[node name="DataPlate" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotCenter/VBoxBotCenter" instance=ExtResource("4_uidac")]
+layout_mode = 2
+
+[node name="ActionWidget" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotCenter/VBoxBotCenter" instance=ExtResource("2_lw6my")]
 layout_mode = 2
 
 [node name="HBoxBotRight" type="HBoxContainer" parent="DisplayView/HBox/VBox/HBoxBot"]
@@ -158,6 +169,3 @@ layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
 alignment = 2
-
-[node name="ActionWidget" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotRight/VBoxBotRight" instance=ExtResource("2_lw6my")]
-layout_mode = 2
