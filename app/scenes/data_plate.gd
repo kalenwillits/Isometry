@@ -18,5 +18,6 @@ func load_actor_data() -> void:
 	
 func add_private_resource(resource_key: String) -> void:
 	var resource_block: Widget = resource_block_packed_scene.instantiate()
+	resource_block.set_actor(Finder.get_primary_actor().get_name())
 	resource_block.set_resource_key(resource_key)
 	$Grid.add_child(resource_block)
