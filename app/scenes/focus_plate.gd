@@ -7,13 +7,6 @@ const resource_block_packed_scene: PackedScene = preload("res://scenes/resource_
 func _ready() -> void:
 	var actor: Actor = Finder.get_actor(actor)
 	var actor_ent: Entity = Repo.select(actor.actor)
-	var icon_texture = AssetLoader.builder()\
-		.key(actor_ent.icon)\
-		.type(AssetLoader.Type.IMAGE)\
-		.archive(Cache.campaign)\
-		.build()\
-		.pull()
-	$HBox/TextureRect.set_texture(icon_texture)
 	set_label(actor.display_name)
 	if actor_ent.public != null:
 		for public_resource_key: String in actor_ent.public.keys():

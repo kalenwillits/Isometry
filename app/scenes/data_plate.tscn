@@ -30,34 +30,3 @@ metadata/_custom_type_script = "uid://w6eirmk2arqg"
 
 [node name="ResourceBlock" parent="Grid" instance=ExtResource("3_xp0or")]
 layout_mode = 2
-
-[node name="HBoxButton" type="HBoxContainer" parent="."]
-custom_minimum_size = Vector2(192, 28)
-layout_mode = 1
-offset_right = 192.0
-offset_bottom = 28.0
-
-[node name="Button" type="Button" parent="HBoxButton"]
-custom_minimum_size = Vector2(192, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="HBox" type="HBoxContainer" parent="."]
-custom_minimum_size = Vector2(0, 28)
-layout_mode = 1
-offset_right = 192.0
-offset_bottom = 28.0
-
-[node name="TextureRect" type="TextureRect" parent="HBox"]
-custom_minimum_size = Vector2(28, 28)
-layout_mode = 2
-expand_mode = 4
-
-[node name="Label" type="Label" parent="HBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/line_spacing = 0
-theme_override_constants/paragraph_spacing = 0
-horizontal_alignment = 1
-uppercase = true

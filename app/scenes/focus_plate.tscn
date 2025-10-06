@@ -4,23 +4,23 @@
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/theme.res" id="1_r4mos"]
 
 [node name="FocusPlate" type="Control"]
-custom_minimum_size = Vector2(192, 28)
+custom_minimum_size = Vector2(192, 16)
 layout_mode = 3
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -128.0
 offset_right = 64.0
-offset_bottom = 28.0
+offset_bottom = 16.0
 grow_horizontal = 2
 theme = ExtResource("1_r4mos")
 script = ExtResource("1_gefpo")
 
 [node name="HBoxButton" type="HBoxContainer" parent="."]
-custom_minimum_size = Vector2(192, 28)
+custom_minimum_size = Vector2(192, 16)
 layout_mode = 1
 offset_right = 192.0
-offset_bottom = 28.0
+offset_bottom = 16.0
 
 [node name="Button" type="Button" parent="HBoxButton"]
 custom_minimum_size = Vector2(192, 0)
@@ -28,30 +28,26 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="HBox" type="HBoxContainer" parent="."]
-custom_minimum_size = Vector2(0, 28)
 layout_mode = 1
 offset_right = 192.0
-offset_bottom = 28.0
-
-[node name="TextureRect" type="TextureRect" parent="HBox"]
-custom_minimum_size = Vector2(28, 28)
-layout_mode = 2
-expand_mode = 4
+offset_bottom = 16.0
 
 [node name="Label" type="Label" parent="HBox"]
+layout_direction = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/line_spacing = 0
 theme_override_constants/paragraph_spacing = 0
+text = "Test"
 horizontal_alignment = 1
 uppercase = true
 
 [node name="Grid" type="GridContainer" parent="."]
 layout_mode = 0
-offset_top = 27.0
+offset_top = 17.0
 offset_right = 192.0
-offset_bottom = 27.0
+offset_bottom = 17.0
 theme_override_constants/h_separation = -2
 theme_override_constants/v_separation = -1
 columns = 6

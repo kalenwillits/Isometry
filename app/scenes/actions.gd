@@ -26,7 +26,7 @@ func make_params(action_ent: Entity) -> Dictionary:
 	return params
 
 func handle_move_actor(actor_name: String, map: String) -> void:
-	var actor = get_tree().get_first_node_in_group(actor_name)
+	var actor = Finder.get_actor(actor_name)
 	if actor: 
 		if actor.map == map:
 			Logger.warn("Attempting to move actor to the same map...", self)
