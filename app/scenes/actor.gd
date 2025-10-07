@@ -189,7 +189,6 @@ class ActorBuilder extends Object:
 			if _username and _password:
 				this.username = _username
 				this.set_token(Secret.encrypt("%s.%s" % [_username, _password]))
-			this.set_display_name(this.display_name)
 			this.set_speed(this.speed)  # Copy builder speed to actor instance
 		return this
 		
@@ -619,7 +618,6 @@ func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
 		Optional.of_nullable(Finder.get_actor(old_target_name)).if_present(
 			func(old_actor):
 				old_actor.set_outline_color(Palette.OUTLINE_CLEAR)
-				old_actor.get_node("Label").visible = false
 		)
 		if old_target_name != "":
 			Finder.select(Group.UI_FOCUS_WIDGET).remove_plate(old_target_name)
@@ -629,7 +627,6 @@ func _handle_new_target(new_target_name: String) -> void:
 		Optional.of_nullable(Finder.get_actor(new_target_name)).if_present(
 			func(new_actor):
 				new_actor.set_outline_color(Palette.OUTLINE_SELECT)
-				new_actor.get_node("Label").visible = true
 		)
 		if new_target_name != "":
 			Finder.select(Group.UI_FOCUS_WIDGET).append_plate(new_target_name)
@@ -1080,15 +1077,11 @@ func handle_target() -> void:
 	.if_present(
 		func(target_actor): 
 			target_actor.set_outline_color(Palette.OUTLINE_SELECT)
-			$Label.visible = true
 	)
 	
 func build_fader() -> void:
 	Fader.builder().target(self).build().deploy(self)
 	fader = get_node("Fader")
-	
-func move_label() -> void:
-	$Label.position.y = -((get_sprite_size().y - get_sprite_margin().y))
 
 func build_sprite() -> void:
 	var sprite_ent = Repo.select(sprite)
@@ -1127,7 +1120,6 @@ func build_sprite() -> void:
 										)
 									)
 		setup_sprite.call_deferred(sprite_frames)
-		move_label()
 		Queue.enqueue(
 			Queue.Item.builder()
 			.comment("Build audio tracks for actor %s" % name)
@@ -1228,7 +1220,6 @@ func setup_sprite(sprite_frames: SpriteFrames) -> void:
 		$Sprite.offset = _calculate_sprite_offset()
 		$Sprite.set_sprite_frames(sprite_frames)
 		set_outline_color(Color(0, 0, 0, 0))
-		$Label.visible = false
 
 func _calculate_sprite_offset() -> Vector2i:
 	var full_size: Vector2i = get_sprite_size()
@@ -1422,9 +1413,6 @@ func use_state() -> void:
 		KeyFrames.RUN: 
 			if position.is_equal_approx(destination):
 				set_state(KeyFrames.IDLE)
-				
-func set_display_name(_new_display_name: String) -> void:
-	$Label.set_text(display_name)
 
 func _on_heading_change(_radial):
 	pass
