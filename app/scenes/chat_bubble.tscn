@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://b5imk6gfrc1d7"]
 
 [ext_resource type="Script" uid="uid://diy3tloq6rpqi" path="res://scenes/chat_bubble.gd" id="1_f8oay"]
-[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="1_qcqw1"]
+[ext_resource type="Theme" path="res://themes/DarkMode.res" id="1_qcqw1"]
 
 [node name="ChatBubble" type="Node2D"]
 position = Vector2(375, 278)

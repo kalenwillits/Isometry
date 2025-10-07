@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://dea8pivl04usm"]
 
-[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/theme.res" id="1_23yjg"]
+[ext_resource type="Theme" path="res://themes/DarkMode.res" id="1_23yjg"]
 [ext_resource type="Script" uid="uid://bo0anuw52ovsm" path="res://scenes/resource_block.gd" id="1_iih1j"]
 
 [node name="ResourceBlock" type="Control"]
