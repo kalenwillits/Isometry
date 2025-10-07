@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://b5imk6gfrc1d7"]
+
+[ext_resource type="Script" uid="uid://diy3tloq6rpqi" path="res://scenes/chat_bubble.gd" id="1_f8oay"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="1_qcqw1"]
+
+[node name="ChatBubble" type="Node2D"]
+position = Vector2(375, 278)
+script = ExtResource("1_f8oay")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="."]
+offset_right = 256.0
+offset_bottom = 76.0
+size_flags_horizontal = 4
+theme = ExtResource("1_qcqw1")
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+shortcut_keys_enabled = false
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 25.0
+one_shot = true
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
