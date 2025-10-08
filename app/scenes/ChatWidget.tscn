@@ -1,0 +1,37 @@
+[gd_scene load_steps=3 format=3 uid="uid://bxp0a6bse7b4l"]
+
+[ext_resource type="Script" uid="uid://dt5cn808yj0n0" path="res://scenes/chat_widget.gd" id="1_1f15l"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="1_5xbif"]
+
+[node name="ChatWidget" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+theme = ExtResource("1_5xbif")
+script = ExtResource("1_1f15l")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Text" type="RichTextLabel" parent="VBox"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[color=red]test check test[/color]: This is your test"
+fit_content = true
+scroll_following = true
+
+[node name="LineEdit" type="LineEdit" parent="VBox"]
+layout_mode = 2
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 60.0
+autostart = true
