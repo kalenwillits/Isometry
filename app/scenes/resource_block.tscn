@@ -1,16 +1,19 @@
 [gd_scene load_steps=3 format=3 uid="uid://dea8pivl04usm"]
 
-[ext_resource type="Theme" path="res://themes/DarkMode.res" id="1_23yjg"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="1_23yjg"]
 [ext_resource type="Script" uid="uid://bo0anuw52ovsm" path="res://scenes/resource_block.gd" id="1_iih1j"]
 
 [node name="ResourceBlock" type="Control"]
 custom_minimum_size = Vector2(28, 28)
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+anchor_left = 0.017
+anchor_top = 0.047
+anchor_right = 0.017
+anchor_bottom = 0.047
+offset_left = -13.6
+offset_top = -28.2
+offset_right = 14.4
+offset_bottom = -0.200001
 size_flags_horizontal = 3
 theme = ExtResource("1_23yjg")
 script = ExtResource("1_iih1j")

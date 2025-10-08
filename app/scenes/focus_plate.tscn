@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://duj0l87bk5lja"]
 
 [ext_resource type="Script" uid="uid://dxb34tty7suhs" path="res://scenes/focus_plate.gd" id="1_gefpo"]
-[ext_resource type="Theme" path="res://themes/DarkMode.res" id="1_r4mos"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="1_r4mos"]
 
 [node name="FocusPlate" type="Control"]
 custom_minimum_size = Vector2(192, 16)

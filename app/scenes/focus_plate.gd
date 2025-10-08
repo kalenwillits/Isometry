@@ -5,14 +5,14 @@ const resource_block_packed_scene: PackedScene = preload("res://scenes/resource_
 @export var actor: String ## The actor's name that this plate represents
 
 func _ready() -> void:
-	var actor: Actor = Finder.get_actor(actor)
-	var actor_ent: Entity = Repo.select(actor.actor)
-	set_label(actor.display_name)
+	var actor_node: Actor = Finder.get_actor(actor)
+	var actor_ent: Entity = Repo.select(actor_node.actor)
+	set_label(actor_node.display_name)
 	if actor_ent.public != null:
 		for public_resource_key: String in actor_ent.public.keys():
 			add_public_resource(public_resource_key)
 	add_to_group(Group.UI_FOCUS_PLATE)
-	add_to_group(actor.name)
+	add_to_group(actor_node.name)
 
 func set_label(value: String) -> void:
 	$HBox/Label.set_text(value)

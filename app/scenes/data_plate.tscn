@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://wcch6bcd5u7p"]
 
-[ext_resource type="Theme" path="res://themes/DarkMode.res" id="1_xehtx"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="1_xehtx"]
 [ext_resource type="Script" uid="uid://5pkjjgcfe6ha" path="res://scenes/data_plate.gd" id="2_xehtx"]
 [ext_resource type="Script" uid="uid://w6eirmk2arqg" path="res://classes/ReverseGrid.gd" id="3_c0uob"]
 [ext_resource type="PackedScene" uid="uid://dea8pivl04usm" path="res://scenes/resource_block.tscn" id="3_xp0or"]
@@ -19,7 +19,7 @@ theme = ExtResource("1_xehtx")
 script = ExtResource("2_xehtx")
 
 [node name="Grid" type="GridContainer" parent="."]
-custom_minimum_size = Vector2(284, 0)
+custom_minimum_size = Vector2(284, 28)
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
