@@ -1,64 +1,49 @@
 extends Object
-class_name Behavior
+class_name Chat
 
-var state: State = State.ACTIVE
+const TTL: int = 60 # Seconds
 
-var goals: Array # Condition Key
-var action: Callable
-
-enum State {
-	FALLBACK,
-	ACTIVE,
-	ADVANCE
-}
+var text: String
+var timestamp: int
+var expiry: int
+var author: String
 
 class Builder extends Object:
-	var this: Behavior = Behavior.new()
-	
-	func goals(value: Array) -> Builder:
-		this.goals = value
-		return self
-		
-	func action(value: Callable) -> Builder:
-		this.action = value
+	var this: Chat = Chat.new()
+
+	func text(value: String) -> Builder:
+		this.text = Chat.strip_bbcode(value).strip_edges().strip_escapes()
 		return self
 
-	func build() -> Behavior: 
-		this.state = State.ACTIVE
+	func author(value: String) -> Builder:
+		this.author = value
+		return self
+
+	func build() -> Chat:
+		this.timestamp = Time.get_unix_time_from_system()
+		this.expiry = this.timestamp + TTL
 		return this
 
 static func builder() -> Builder:
 	return Builder.new()
 
-func goals_are_met(interaction: ActorInteraction) -> bool:
-	var goal_results: Array[bool] = []
-	for condition_key in goals:
-		goal_results.append(ConditionEvaluator.evaluate(
-			ConditionEvaluator.EvaluateParams.builder()
-			.caller_name(interaction.get_caller().name)
-			.target_name(Optional.of_nullable(interaction.get_target()).map(func(t): t.name).or_else(""))
-			.condition_key(condition_key)
-			.build()
-		))
-	return goal_results.all(func(result): return result)
-	
-func get_state() -> Behavior.State:
-	return state
-	
-func get_action() -> Callable:
-	return action
-	
-func advance() -> void:
-	state = Behavior.State.ADVANCE
-	
-func fallback() -> void: 
-	state = Behavior.State.FALLBACK
-	
-func arm() -> void: 
-	state = Behavior.State.ACTIVE
-#
-#func use(interaction: ActorInteraction):
-	#if goals_are_met(interaction):
-		#state = Behavior.State.ADVANCE
-	#else:
-		#state = Behavior.State.ACTIVE
+static func strip_bbcode(value: String) -> String:
+	var regex: RegEx = RegEx.new()
+	regex.compile("\\[.*?\\]")
+	return regex.sub(value, "", true)
+
+func get_text() -> String:
+	return text
+
+func get_timestamp() -> int:
+	return timestamp
+
+func get_author() -> String:
+	return author
+
+func get_expiry() -> int:
+	return expiry
+
+func render() -> String:
+	var content: String = "[i]%s[/i]: %s" % [author, text]
+	return "\n%s" % content

@@ -67,7 +67,6 @@ func get_public_key(peer_id: int) -> void:
 			.build()
 		)
 
-
 @rpc("any_peer", "reliable")
 func set_public_key(public_key: String) -> void:
 	Logger.debug("Received public key from server (length=%s)" % public_key.length(), self)
@@ -127,3 +126,11 @@ func broadcast_actor_is_despawning(peer_id: int, _map: String) -> void:
 	Logger.info("Broadcasting actor despawn for peer_id=%s" % peer_id, self)
 	for targeted_by_actor: Actor in Finder.query([Group.ACTOR, str(peer_id)]):
 		targeted_by_actor.set_target("") # Clear ANY other actor from being able to target_this one
+
+@rpc("any_peer", "call_local", "reliable")
+func submit_chat_request_to_server(author: String, message: String) -> void:
+	broadcast_chat.rpc(author, message)
+	
+@rpc("authority", "call_local", "reliable")
+func broadcast_chat(author, message: String) -> void:
+	Finder.select(Group.UI_CHAT_WIDGET).submit_message(author, message)

@@ -1,40 +1,45 @@
 extends Widget
 
-const TICK_RATE: int = 1 # Seconds
-const DELIM: String = "\n"
+const TICK_RATE: float = 0.66 # Seconds
 
 var chat_queue: Array[Chat] = [] 
+var needs_render: bool = true
 
 func _ready() -> void:
 	$Timer.wait_time = TICK_RATE
 	$Timer.timeout.connect(_process_chat)
+	$Timer.autostart = true
+	$Timer.start()
 	$VBox/LineEdit.text_submitted.connect(_on_text_submitted)
+	add_to_group(Group.UI_CHAT_WIDGET)
 
-func submit_new_chat(new_text: String) -> void:
-	var new_chat: Chat = Chat.builder().text(new_text).build()
+func submit_message(new_text: String, author: String) -> void:
+	var new_chat: Chat = Chat.builder().text(new_text).author(author).build()
 	chat_queue.append(new_chat)
-	var rendered_chat_entry: String = new_chat.render()
-	$VBox/Text.append_text(rendered_chat_entry)
+	needs_render = true
 	
-func clean_text(text: String) -> String:
-	# TODO remove id tags
-	return text.strip_edges().strip_escapes()
-	
-func push_text(text: String, timestamp: int) -> void:
-	var line: String = "[id=%d]%s[/id]" % [timestamp, clean_text(text)]
-	$VBox/Text.append_text(line)
-
 func pop_n_chat(n: int) -> void:
-	pass
-	# TODO 
-	# Remove the botton `n` id enclosed tags and contents from $VBox/Text.text	
-	
+	if n > 0: 
+		needs_render = true
+	chat_queue = chat_queue.slice(n, chat_queue.size())
+
+func render() -> void:
+	$VBox/Text.clear()
+	for chat: Chat in chat_queue:
+		$VBox/Text.append_text(chat.render())
+	needs_render = false
 
 func _on_text_submitted(new_text: String) -> void:
-	submit_new_chat(new_text)
+	$VBox/LineEdit.clear()
+	$VBox/LineEdit.release_focus()
+	var primary_actor: Actor = Finder.get_primary_actor()
+	Controller.submit_chat_request_to_server.rpc_id(1, new_text, primary_actor.display_name)
+	#submit_message(new_text, primary_actor.display_name)
+	
 	
 func _process_chat() -> void:
 	var now: int = Time.get_unix_time_from_system()
-	for _chat: Chat in chat_queue.filter(func(chat: Chat): return chat.get_expiry() < now):
-		if chat_queue.size() > 0: chat_queue.pop_at(0)
-		
+	var num_expired_chats: int = chat_queue.filter(func(chat: Chat): return chat.get_expiry() < now).size()
+	pop_n_chat(num_expired_chats)		
+	if needs_render:
+		render()
