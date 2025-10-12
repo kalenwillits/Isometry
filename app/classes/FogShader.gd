@@ -42,8 +42,8 @@ func update_actor_position(actor: Actor) -> void:
 		
 	primary_actor = actor
 	var actor_pos = actor.global_position
-	var view_radius = actor.view * PI * 32.0  # Matches original BASE_TILE_SIZE calculation
-	
+	var view_radius = actor.perception * PI * 32.0  # Matches original BASE_TILE_SIZE calculation
+
 	shader_material.set_shader_parameter("actor_position", actor_pos)
 	shader_material.set_shader_parameter("view_radius", view_radius)
 

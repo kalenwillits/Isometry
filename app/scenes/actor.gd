@@ -60,7 +60,7 @@ const NAV_PATH_MAX_DISTANCE: float = 64.0  # Increased recalculation distance
 
 var fader: Fader
 var peer_id: int = 0
-var view: int = -1
+var perception: int = -1
 var target_queue: Array = []
 var target_groups: Array = []
 var target_group_index: int = 0
@@ -131,8 +131,8 @@ class ActorBuilder extends Object:
 		this.map = value
 		return self
 	
-	func view(value: int) -> ActorBuilder:
-		this.view = value
+	func perception(value: int) -> ActorBuilder:
+		this.perception = value
 		return self
 		
 	func base(value: int) -> ActorBuilder:
@@ -160,10 +160,10 @@ class ActorBuilder extends Object:
 		return self
 
 	func build() -> Actor:
-		var actor_ent = Repo.query([this.actor]).pop_front()	
+		var actor_ent = Repo.query([this.actor]).pop_front()
 		if actor_ent:
-			this.build_viewbox(actor_ent.view)
-			this.view = actor_ent.view
+			this.build_viewbox(actor_ent.perception)
+			this.perception = actor_ent.perception
 			this.base = actor_ent.base
 			if actor_ent.groups: this.build_target_groups(actor_ent.groups.lookup())
 			if actor_ent.sprite: this.sprite = actor_ent.sprite.key()
@@ -374,7 +374,7 @@ func _ready() -> void:
 						)
 		$NavigationAgent.debug_enabled = true
 		$NavigationAgent.debug_use_custom = true
-		build_discoverybox(view)
+		build_discoverybox(perception)
 		$DiscoveryBox.body_entered.connect(_on_discovery_box_body_entered)
 		line_of_sight_entered.connect(_on_line_of_sight_entered)
 		line_of_sight_exited.connect(_on_line_of_sight_exited)
@@ -507,8 +507,8 @@ func use_move_view(delta: float) -> void:
 		last_viewshape_destination = destination
 		last_viewshape_origin = origin
 	if view_shape:
-		var direction: Vector2 = last_viewshape_destination.direction_to(last_viewshape_origin) 
-		var offset_distance: float = view * VIEW_SPEED
+		var direction: Vector2 = last_viewshape_destination.direction_to(last_viewshape_origin)
+		var offset_distance: float = perception * VIEW_SPEED
 		var viewpoint: Vector2 = -direction * offset_distance
 		# Apply isometric factor but clamp it to prevent extreme distortion
 		var viewpoint_isometric_factor = std.isometric_factor(origin.angle_to(destination))

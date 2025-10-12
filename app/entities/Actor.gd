@@ -5,7 +5,7 @@ var sprite: KeyRef # Sprite
 var polygon: KeyRef # Polygon # TODO remove
 var base: int # Size of base
 var hitbox: KeyRef # Polygon
-var view: int
+var perception: int
 var on_touch: KeyRef # Action
 var on_view: KeyRef # Action
 var on_map_entered: KeyRef # Action
