@@ -16,6 +16,12 @@ func _ready() -> void:
 		.build()\
 		.pull()
 	$Button/Icon.set_texture(icon_texture)
+	$Button.pressed.connect(_on_button_pressed)
+
+func _on_button_pressed() -> void:
+	var entity: Entity = Repo.select(key)
+	if entity and entity.menu:
+		Finder.select(Group.INTERFACE).open_selection_menu_for_entity(key, actor)
 
 func _process(_delta: float) -> void:
 	update_timer += _delta

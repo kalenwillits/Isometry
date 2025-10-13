@@ -2,7 +2,7 @@ extends Node
 
 func _ready() -> void:
 	add_to_group(Group.INTERFACE)
-	
+
 func _process(_delta: float) -> void:
 	update_primary_actor_info()
 		
@@ -52,3 +52,32 @@ func set_state(value: String) -> void:
 	
 func set_target(value: String) -> void:
 	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/TargetLabel.set_text("TARGET: %s" % value)
+
+func open_selection_menu_for_actor(target_actor_name: String) -> void:
+	var target_actor = Finder.get_actor(target_actor_name)
+	if not target_actor:
+		Logger.warn("Target actor not found: %s" % target_actor_name, self)
+		return
+
+	var actor_ent: Entity = Repo.select(target_actor.actor)
+	if actor_ent and actor_ent.menu:
+		var menu_ent: Entity = actor_ent.menu.lookup()
+		if menu_ent:
+			var primary_actor = Finder.get_primary_actor()
+			if primary_actor:
+				$ContextMenu.open_menu(target_actor.display_name, menu_ent, primary_actor.name, target_actor_name)
+			else:
+				Logger.warn("Primary actor not found", self)
+		else:
+			Logger.warn("Menu entity not found in Repo", self)
+	else:
+		Logger.warn("Actor entity has no menu or entity not found", self)
+
+func open_selection_menu_for_entity(entity_key: String, actor_name: String) -> void:
+	var entity: Entity = Repo.select(entity_key)
+	if not entity or not entity.menu:
+		return
+
+	var menu_ent: Entity = entity.menu.lookup()
+	if menu_ent:
+		$ContextMenu.open_menu(entity.name_ if entity.get("name_") else entity_key, menu_ent, actor_name, actor_name)

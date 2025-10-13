@@ -632,6 +632,11 @@ func use_target() -> void:
 		target_group_index = increment_target_group()
 	if Input.is_action_just_pressed("decrement_target_group"):
 		target_group_index = decrement_target_group()
+	if Input.is_action_just_pressed("open_selection_menu"):
+		if target and target != "":
+			Finder.select(Group.INTERFACE).open_selection_menu_for_actor(target)
+		else:
+			Logger.warn("No target selected, cannot open menu", self)
 
 func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
 	if is_primary():

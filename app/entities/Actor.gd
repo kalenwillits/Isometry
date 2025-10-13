@@ -18,6 +18,7 @@ var skills: KeyRefArray # Skill (max 9 entries)
 var resources: KeyRefArray # Resource
 var measures: KeyRefArray # Measure
 var groups: KeyRefArray # Group
+var menu: KeyRef # Menu
 var triggers: KeyRefArray # Trigger
 var timers: KeyRefArray # Timer
 var strategy: KeyRef # Strategy

@@ -69,7 +69,14 @@ func set_destination_self(self_name: String, _target_name: String, params: Dicti
 func move_map_target(_self_name: String, target_name: String, params: Dictionary) -> void:
 	## map: KeyRef to Map.
 	## location: KeyRef to Vertex where the target actor's new position will be.
-	var pack: Dictionary = Finder.get_actor(target_name).pack()
+	var target_actor: Actor = Finder.get_actor(target_name)
+	if target_actor == null: 
+		Logger.warn("Attempted to move null actor [%s]" % target_name)
+		return
+	if target_actor.is_npc():
+		Logger.warn("move_map_target on an NPC is unsupported." % target_name)
+		return
+	var pack: Dictionary = target_actor.pack()
 	pack["map"] = params.get("map")
 	pack["location"] = params.get("location")
 	Cache.pack(Cache.Pack.builder().key(target_name).ref(func(): return pack).expiry(60).build())
@@ -89,7 +96,14 @@ func move_map_target(_self_name: String, target_name: String, params: Dictionary
 func move_map_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## map: KeyRef to Map.
 	## location: KeyRef to Vertex where the target actor's new position will be.
-	var pack: Dictionary = Finder.get_actor(self_name).pack()
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null: 
+		Logger.warn("Attempted to move null actor [%s]" % self_name)
+		return
+	if self_actor.is_npc(): 
+		Logger.warn("move_map_self on an NPC is unsupported." % self_name)
+		return
+	var pack: Dictionary = self_actor.pack()
 	pack["map"] = params.get("map")
 	pack["location"] = params.get("location")
 	Cache.pack(Cache.Pack.builder().key(self_name).ref(func(): return pack).expiry(60).build())
@@ -278,7 +292,7 @@ func temp_speed_target(_self_name: String, target_name: String, params: Dictiona
 	, CONNECT_ONE_SHOT)
 
 func temp_speed_self(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## speed: Float value to temporarily set caller's speed to  
+	## speed: Float value to temporarily set caller's speed to
 	## duration: Float time in seconds for the temporary speed change
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
@@ -291,4 +305,16 @@ func temp_speed_self(self_name: String, _target_name: String, params: Dictionary
 		if self_actor != null and is_instance_valid(self_actor):
 			self_actor.set_speed(original_speed)
 	, CONNECT_ONE_SHOT)
+
+func open_settings(_self_name: String, _target_name: String, _params: Dictionary) -> void:
+	Logger.info("Settings menu - Placeholder", self)
+
+func close_game(_self_name: String, _target_name: String, _params: Dictionary) -> void:
+	Logger.info("Close game - Placeholder", self)
+
+func show_connection_info(_self_name: String, _target_name: String, _params: Dictionary) -> void:
+	Logger.info("Connection info - Placeholder", self)
+
+func open_chat(_self_name: String, _target_name: String, _params: Dictionary) -> void:
+	Logger.info("Open chat - Placeholder", self)
 # ----------------------------------------------------------------------- Actions #
