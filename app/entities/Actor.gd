@@ -16,6 +16,7 @@ var public: KeyRefArray # Resource
 var private: KeyRefArray # Resource
 var skills: KeyRefArray # Skill (max 9 entries)
 var resources: KeyRefArray # Resource
+var measures: KeyRefArray # Measure
 var groups: KeyRefArray # Group
 var triggers: KeyRefArray # Trigger
 var timers: KeyRefArray # Timer
