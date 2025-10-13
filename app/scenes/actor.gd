@@ -61,6 +61,7 @@ const NAV_PATH_MAX_DISTANCE: float = 64.0  # Increased recalculation distance
 var fader: Fader
 var peer_id: int = 0
 var perception: int = -1
+var salience: int = -1
 var target_queue: Array = []
 var target_groups: Array = []
 var target_group_index: int = 0
@@ -83,6 +84,8 @@ var measures: Dictionary = {
 	"distance_to_destination": _built_in_measure__distance_to_destination,
 	"has_target": _built_in_measure__has_target,
 	"speed": _built_in_measure__speed,
+	"perception": _built_in_measure__perception,
+	"salience": _built_in_measure__salience,
 	"line_of_sight": _built_in_measure__line_of_sight,
 }
 var strategy: Strategy
@@ -134,7 +137,11 @@ class ActorBuilder extends Object:
 	func perception(value: int) -> ActorBuilder:
 		this.perception = value
 		return self
-		
+
+	func salience(value: int) -> ActorBuilder:
+		this.salience = value
+		return self
+
 	func base(value: int) -> ActorBuilder:
 		this.base = value
 		return self
@@ -162,8 +169,12 @@ class ActorBuilder extends Object:
 	func build() -> Actor:
 		var actor_ent = Repo.query([this.actor]).pop_front()
 		if actor_ent:
-			this.build_viewbox(actor_ent.perception)
-			this.perception = actor_ent.perception
+			if this.perception == -1:
+				this.perception = actor_ent.perception
+			this.build_viewbox(this.perception)
+			if this.salience == -1:
+				this.salience = actor_ent.salience
+			this.build_saliencebox(this.salience)
 			this.base = actor_ent.base
 			if actor_ent.groups: this.build_target_groups(actor_ent.groups.lookup())
 			if actor_ent.sprite: this.sprite = actor_ent.sprite.key()
@@ -222,6 +233,8 @@ func pack() -> Dictionary:
 		"map": map,
 		"resources": resources,
 		"speed": speed,
+		"perception": perception,
+		"salience": salience,
 	}
 	if !is_npc():
 		results["discovery"] = pack_discovery()
@@ -343,6 +356,7 @@ func _ready() -> void:
 	Trigger.new().arm("base").action(build_base).deploy(self)
 	Trigger.new().arm("hitbox").action(build_hitbox).deploy(self)
 	Trigger.new().arm("sprite").action(build_sprite).deploy(self)
+	Trigger.new().arm("salience").action(func(): build_saliencebox(salience)).deploy(self)
 	Trigger.new().arm("map").action(update_client_visibility).deploy(self)
 	Trigger.new().arm("state").action(_on_state_change).deploy(self)
 	$Sprite.set_sprite_frames(SpriteFrames.new())
@@ -473,7 +487,13 @@ func _built_in_measure__has_target() -> int:
 	
 func _built_in_measure__speed() -> float:
 	return speed
-	
+
+func _built_in_measure__perception() -> int:
+	return perception
+
+func _built_in_measure__salience() -> int:
+	return salience
+
 func resolve_target() -> Actor:
 	var target_set: Array = Finder.query([map, target])
 	if target_set.size() > 0:
@@ -951,7 +971,16 @@ func build_discoverybox(value: int) -> void:
 	discovery_shape.shape = CircleShape2D.new()
 	discovery_shape.apply_scale(Vector2(1 * value, 0.5 * value))
 	$DiscoveryBox.add_child(discovery_shape)
-	
+
+func build_saliencebox(value: int) -> void:
+	if value > 0:
+		for node in $SalienceBox.get_children(): node.queue_free()
+		var salience_shape: CollisionShape2D = CollisionShape2D.new()
+		salience_shape.name = "SalienceShape"
+		salience_shape.shape = CircleShape2D.new()
+		salience_shape.apply_scale(Vector2(1 * value, 0.5 * value))
+		$SalienceBox.add_child(salience_shape)
+
 func get_relative_camera_position() -> Vector2:
 	var view_shape: CollisionShape2D = $ViewBox.get_node_or_null("ViewShape")
 	if view_shape:
@@ -1004,7 +1033,14 @@ func set_heading(value: String) -> void:
 
 func set_speed(value: float) -> void:
 	speed = value
-	
+
+func set_salience(value: int) -> void:
+	salience = value
+	build_saliencebox(value)
+
+func get_salience() -> int:
+	return salience
+
 func set_token(value: PackedByteArray) -> void:
 	token = value
 
@@ -1433,10 +1469,10 @@ func use_collisions(effect: bool) -> void:
 	$HitBox.set_collision_layer_value(Layer.HITBOX, effect)
 	$HitBox.set_collision_mask_value(Layer.HITBOX, effect)
 	$ViewBox.set_collision_layer_value(Layer.VIEWBOX, effect)
-	$ViewBox.set_collision_mask_value(Layer.HITBOX, effect)
-	$ViewBox.set_collision_mask_value(Layer.BASE, effect)
+	$ViewBox.set_collision_mask_value(Layer.SALIENCE, effect)
 	$DiscoveryBox.set_collision_layer_value(Layer.DISCOVERY, effect)
 	$DiscoveryBox.set_collision_mask_value(Layer.DISCOVERY, effect)
+	$SalienceBox.set_collision_layer_value(Layer.SALIENCE, effect)
 	
 func _on_sprite_animation_changed():
 	$Sprite.play()  # Without this, the animation freezes

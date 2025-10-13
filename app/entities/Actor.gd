@@ -6,6 +6,7 @@ var polygon: KeyRef # Polygon # TODO remove
 var base: int # Size of base
 var hitbox: KeyRef # Polygon
 var perception: int
+var salience: int
 var on_touch: KeyRef # Action
 var on_view: KeyRef # Action
 var on_map_entered: KeyRef # Action

@@ -151,7 +151,9 @@ func spawn_actor(data: Dictionary) -> Actor:
 	.location(location)\
 	.resources(data.get("resources", {}))\
 	.discovery(data.get("discovery", {}))\
-	.speed(data.get("speed", main_ent.actor.lookup().speed))
+	.speed(data.get("speed", main_ent.actor.lookup().speed))\
+	.perception(data.get("perception", -1))\
+	.salience(data.get("salience", -1))
 	return builder.build()
 
 func _on_connected_to_server() -> void:
