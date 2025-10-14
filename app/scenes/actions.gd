@@ -317,4 +317,14 @@ func show_connection_info(_self_name: String, _target_name: String, _params: Dic
 
 func open_chat(_self_name: String, _target_name: String, _params: Dictionary) -> void:
 	Logger.info("Open chat - Placeholder", self)
+
+func open_plate(self_name: String, target_name: String, params: Dictionary) -> void:
+	## plate: KeyRef to Plate entity
+	var plate_key: String = params.get("plate", "")
+	if plate_key.is_empty():
+		Logger.warn("open_plate called without plate parameter", self)
+		return
+
+	# Call RPC on the calling client only
+	Controller.open_plate_on_client.rpc_id(self_name.to_int(), plate_key, self_name, target_name)
 # ----------------------------------------------------------------------- Actions #

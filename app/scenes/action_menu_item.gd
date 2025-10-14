@@ -10,6 +10,7 @@ const ITEM_SIZE: Vector2i = Vector2(256, 24)
 
 func _ready() -> void:
 	custom_minimum_size = ITEM_SIZE
+	button_up.connect(_on_button_up)
 
 	# Apply setup if data was set before _ready
 	if action_entity:

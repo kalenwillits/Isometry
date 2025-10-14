@@ -32,6 +32,7 @@ const _entities: Dictionary = {
 	"Parallax": preload("res://entities/Parallax.gd"),
 	"Sound": preload("res://entities/Sound.gd"),
 	"Menu": preload("res://entities/Menu.gd"),
+	"Plate": preload("res://entities/Plate.gd"),
 }
 
 signal load_complete

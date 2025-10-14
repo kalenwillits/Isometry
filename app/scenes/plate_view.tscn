@@ -1,0 +1,64 @@
+[gd_scene load_steps=3 format=3 uid="uid://c7lax5m8n3p2w"]
+
+[ext_resource type="Script" uid="uid://ckmemfp5kh7l6" path="res://scenes/plate_view.gd" id="1_plate"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
+
+[node name="PlateView" type="CanvasLayer"]
+script = ExtResource("1_plate")
+
+[node name="Overlay" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Overlay/CenterContainer"]
+custom_minimum_size = Vector2(400, 500)
+layout_mode = 2
+theme = ExtResource("2_theme")
+
+[node name="VBox" type="VBoxContainer" parent="Overlay/CenterContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+theme_override_font_sizes/font_size = 18
+text = "Plate Title"
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Overlay/CenterContainer/PanelContainer/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("2_theme")
+bbcode_enabled = true
+scroll_active = false
+
+[node name="BottomBar" type="HBoxContainer" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="PaginationLabel" type="Label" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("2_theme")
+theme_override_font_sizes/font_size = 14
+text = "Page 1/1"
+horizontal_alignment = 1

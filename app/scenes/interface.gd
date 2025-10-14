@@ -81,3 +81,11 @@ func open_selection_menu_for_entity(entity_key: String, actor_name: String) -> v
 	var menu_ent: Entity = entity.menu.lookup()
 	if menu_ent:
 		$ContextMenu.open_menu(entity.name_ if entity.get("name_") else entity_key, menu_ent, actor_name, actor_name)
+
+func open_plate_for_actor(plate_key: String, caller: String, target: String) -> void:
+	var plate_ent: Entity = Repo.select(plate_key)
+	if plate_ent == null:
+		Logger.warn("Plate entity not found: %s" % plate_key, self)
+		return
+
+	$PlateView.open_plate(plate_ent, caller, target)
