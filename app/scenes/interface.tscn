@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" uid="uid://doj5tijrttd2p" path="res://scenes/action_widget.tscn" id="2_lw6my"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_t72xj"]
 [ext_resource type="PackedScene" uid="uid://bo72g0g451eom" path="res://scenes/focus_widget.tscn" id="3_s0di0"]
-[ext_resource type="PackedScene" uid="uid://bxp0a6bse7b4l" path="res://scenes/ChatWidget.tscn" id="4_mfcci"]
+[ext_resource type="PackedScene" uid="uid://bxp0a6bse7b4l" path="res://scenes/chat_widget.tscn" id="4_mfcci"]
 [ext_resource type="PackedScene" uid="uid://wcch6bcd5u7p" path="res://scenes/data_plate.tscn" id="4_uidac"]
-[ext_resource type="PackedScene" uid="uid://c5l8u3nqg7y6f" path="res://scenes/context_menu.tscn" id="7_context"]
+[ext_resource type="PackedScene" uid="uid://c5l8u3nqg7y6f" path="res://scenes/menu_view.tscn" id="7_context"]
 
 [node name="Interface" type="Node"]
 script = ExtResource("1_7q01f")

@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://c5l8u3nqg7y6f"]
 
-[ext_resource type="Script" uid="uid://dcfyyo7lceowc" path="res://scenes/context_menu.gd" id="1_context"]
+[ext_resource type="Script" uid="uid://dcfyyo7lceowc" path="res://scenes/menu_view.gd" id="1_context"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oog6e"]
@@ -18,7 +18,7 @@ expand_margin_top = 6.0
 expand_margin_right = 6.0
 expand_margin_bottom = 6.0
 
-[node name="ContextMenu" type="CanvasLayer"]
+[node name="MenuView" type="CanvasLayer"]
 script = ExtResource("1_context")
 
 [node name="Overlay" type="Control" parent="."]
