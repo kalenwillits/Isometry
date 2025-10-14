@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://bqg8x7m5yqpw5"]
+
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="1_470jl"]
+[ext_resource type="Script" uid="uid://dk6sm4hy5fnpa" path="res://scenes/action_menu_item.gd" id="1_a1b2c"]
+
+[node name="ActionMenuItem" type="Button"]
+custom_minimum_size = Vector2(24, 256)
+offset_right = 24.0
+offset_bottom = 256.0
+theme = ExtResource("1_470jl")
+script = ExtResource("1_a1b2c")

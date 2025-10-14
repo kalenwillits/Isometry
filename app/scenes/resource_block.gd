@@ -77,7 +77,3 @@ func set_actor(value: String) -> void:
 
 func set_key(value: String) -> void:
 	key = value
-
-func set_resource_key(value: String) -> void:
-	# Backward compatibility
-	key = value
