@@ -1,7 +1,7 @@
 extends CanvasLayer
 
-const PAGE_SIZE: Vector2i = Vector2i(400, 700)
-const NEWLINE_LOOKBACK_LINES: int = 12  # How many lines to search upward for natural paragraph breaks
+const PAGE_SIZE: Vector2i = Vector2i(400, 600)
+const NEWLINE_LOOKBACK_LINES: int = 6 # How many lines to search upward for natural paragraph breaks
 
 var plate_entity: Entity
 var caller_name: String = ""
@@ -98,25 +98,20 @@ func process_text(text: String) -> String:
 
 func find_best_page_break(calculated_break_index: int, line_breaks: Array[int]) -> int:
 	# Priority 1: Look for natural newline N lines up from calculated break
-	var current_line_index = -1
-	for i in range(line_breaks.size()):
-		if line_breaks[i] >= calculated_break_index:
-			current_line_index = i
-			break
+	# Estimate ~80 characters per line for lookback range calculation
+	var chars_per_line = 80
+	var lookback_chars = NEWLINE_LOOKBACK_LINES * chars_per_line
+	var search_start = max(0, calculated_break_index - lookback_chars)
 
-	if current_line_index >= 0:
-		# Search N lines upward
-		var lookback_start = max(0, current_line_index - NEWLINE_LOOKBACK_LINES)
-		for i in range(current_line_index - 1, lookback_start - 1, -1):
-			var line_end_index = line_breaks[i]
-			# Check if this line ends with a natural newline
-			if line_end_index < processed_text.length() and processed_text[line_end_index] == "\n":
-				Logger.trace("Page break: Found newline at index %d (line %d), calculated was %d (line %d)" % [line_end_index, i, calculated_break_index, current_line_index], self)
-				return line_end_index
+	# Search backward through actual text for newline characters
+	for i in range(calculated_break_index - 1, search_start, -1):
+		if i < processed_text.length() and processed_text[i] == "\n":
+			Logger.trace("Page break: Found newline at index %d, calculated was %d (searched back %d chars)" % [i, calculated_break_index, calculated_break_index - i], self)
+			return i
 
 	# Priority 2: Look for last space before calculated break
-	var search_start = max(0, calculated_break_index - 200)
-	for i in range(calculated_break_index - 1, search_start, -1):
+	var space_search_start = max(0, calculated_break_index - 200)
+	for i in range(calculated_break_index - 1, space_search_start, -1):
 		if i < processed_text.length() and processed_text[i] == " ":
 			Logger.trace("Page break: Found space at index %d, calculated was %d" % [i, calculated_break_index], self)
 			return i

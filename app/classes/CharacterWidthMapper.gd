@@ -15,8 +15,8 @@ class_name CharacterWidthMapper
 ##
 ## HOW TO SAVE TO RES://
 ## 1. Run the game once to generate the mapping
-## 2. The mapping is saved to user://cache/character_widths.tres
-## 3. Manually copy from user:// to res://cache/ for version control
+## 2. The mapping is saved to user://assets/character_widths.tres
+## 3. Manually copy from user:// to res://assets/ for version control
 ## 4. Commit the .tres file to the repository
 ##
 ## USAGE:
@@ -25,8 +25,8 @@ class_name CharacterWidthMapper
 ## var width = mapper.get_char_width("A")
 ## var text_width = mapper.calculate_text_width("Hello World")
 
-const CACHE_PATH_USER = "user://cache/character_widths.tres"
-const CACHE_PATH_RES = "res://cache/character_widths.tres"
+const CACHE_PATH_USER = "user://assets/character_widths.tres"
+const CACHE_PATH_RES = "res://assets/character_widths.tres"
 
 var char_widths: Dictionary = {}
 var default_char_width: float = 10.0
@@ -95,8 +95,8 @@ func generate_character_widths(rich_text_label: RichTextLabel) -> void:
 
 ## Save the character width mapping to cache
 func save_to_cache() -> void:
-	# Ensure cache directory exists
-	var cache_dir = "user://cache"
+	# Ensure assets directory exists
+	var cache_dir = "user://assets"
 	if not DirAccess.dir_exists_absolute(cache_dir):
 		DirAccess.make_dir_absolute(cache_dir)
 
@@ -107,7 +107,7 @@ func save_to_cache() -> void:
 	var err = ResourceSaver.save(data_resource, CACHE_PATH_USER)
 	if err == OK:
 		Logger.info("Saved character width mapping to %s" % CACHE_PATH_USER, self)
-		Logger.info("To commit this mapping: copy from user:// to res://cache/", self)
+		Logger.info("To commit this mapping: copy from user:// to res://assets/", self)
 	else:
 		Logger.warn("Failed to save character width mapping: %d" % err, self)
 

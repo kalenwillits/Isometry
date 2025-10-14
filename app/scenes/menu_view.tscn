@@ -2,21 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dcfyyo7lceowc" path="res://scenes/menu_view.gd" id="1_context"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oog6e"]
-bg_color = Color(0, 0, 0, 0.498039)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-expand_margin_left = 6.0
-expand_margin_top = 6.0
-expand_margin_right = 6.0
-expand_margin_bottom = 6.0
+[ext_resource type="StyleBox" uid="uid://nabash6j1bgq" path="res://materials/panel.tres" id="3_hti5v"]
 
 [node name="MenuView" type="CanvasLayer"]
 script = ExtResource("1_context")
@@ -41,7 +27,7 @@ grow_vertical = 2
 custom_minimum_size = Vector2(256, 400)
 layout_mode = 2
 theme = ExtResource("2_theme")
-theme_override_styles/panel = SubResource("StyleBoxFlat_oog6e")
+theme_override_styles/panel = ExtResource("3_hti5v")
 
 [node name="VBox" type="VBoxContainer" parent="Overlay/CenterContainer/PanelContainer"]
 layout_mode = 2

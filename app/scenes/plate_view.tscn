@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://c7lax5m8n3p2w"]
+[gd_scene load_steps=4 format=3 uid="uid://c7lax5m8n3p2w"]
 
 [ext_resource type="Script" uid="uid://ckmemfp5kh7l6" path="res://scenes/plate_view.gd" id="1_plate"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
+[ext_resource type="StyleBox" uid="uid://nabash6j1bgq" path="res://materials/panel.tres" id="3_35bq7"]
 
 [node name="PlateView" type="CanvasLayer"]
 script = ExtResource("1_plate")
@@ -26,6 +27,7 @@ grow_vertical = 2
 custom_minimum_size = Vector2(400, 500)
 layout_mode = 2
 theme = ExtResource("2_theme")
+theme_override_styles/panel = ExtResource("3_35bq7")
 
 [node name="VBox" type="VBoxContainer" parent="Overlay/CenterContainer/PanelContainer"]
 layout_mode = 2
