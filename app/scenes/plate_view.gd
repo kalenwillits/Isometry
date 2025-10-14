@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const PAGE_SIZE: Vector2i = Vector2i(400, 700)
+const NEWLINE_LOOKBACK_LINES: int = 12  # How many lines to search upward for natural paragraph breaks
 
 var plate_entity: Entity
 var caller_name: String = ""
@@ -49,9 +50,7 @@ func open_plate(plate_ent: Entity, caller: String, target: String) -> void:
 		.condition(func(): return rich_text_label.size.x > 0 and rich_text_label.size.y > 0)
 		.task(func():
 			calculate_page_breaks()
-			render_page()
-			)
-		.build()
+			render_page()).build()
 	)
 
 func close_plate() -> void:
@@ -75,8 +74,8 @@ func process_text(text: String) -> String:
 
 	# Process matches in reverse order to avoid offset issues
 	for i in range(matches.size() - 1, -1, -1):
-		var match = matches[i]
-		var expression = match.get_string(1).strip_edges()
+		var match_ = matches[i]
+		var expression = match_.get_string(1).strip_edges()
 
 		# Use Dice engine to evaluate the expression
 		var dice = Dice.builder()\
@@ -93,9 +92,38 @@ func process_text(text: String) -> String:
 
 		# Replace the {{ }} block with the result
 		var result = dice.expression
-		processed = processed.substr(0, match.get_start()) + result + processed.substr(match.get_end())
+		processed = processed.substr(0, match_.get_start()) + result + processed.substr(match_.get_end())
 
 	return processed
+
+func find_best_page_break(calculated_break_index: int, line_breaks: Array[int]) -> int:
+	# Priority 1: Look for natural newline N lines up from calculated break
+	var current_line_index = -1
+	for i in range(line_breaks.size()):
+		if line_breaks[i] >= calculated_break_index:
+			current_line_index = i
+			break
+
+	if current_line_index >= 0:
+		# Search N lines upward
+		var lookback_start = max(0, current_line_index - NEWLINE_LOOKBACK_LINES)
+		for i in range(current_line_index - 1, lookback_start - 1, -1):
+			var line_end_index = line_breaks[i]
+			# Check if this line ends with a natural newline
+			if line_end_index < processed_text.length() and processed_text[line_end_index] == "\n":
+				Logger.trace("Page break: Found newline at index %d (line %d), calculated was %d (line %d)" % [line_end_index, i, calculated_break_index, current_line_index], self)
+				return line_end_index
+
+	# Priority 2: Look for last space before calculated break
+	var search_start = max(0, calculated_break_index - 200)
+	for i in range(calculated_break_index - 1, search_start, -1):
+		if i < processed_text.length() and processed_text[i] == " ":
+			Logger.trace("Page break: Found space at index %d, calculated was %d" % [i, calculated_break_index], self)
+			return i
+
+	# Priority 3: Use calculated break as-is
+	Logger.trace("Page break: Using hard break at index %d" % calculated_break_index, self)
+	return calculated_break_index
 
 func calculate_page_breaks() -> void:
 	var container_width = PAGE_SIZE.x
@@ -111,6 +139,8 @@ func calculate_page_breaks() -> void:
 	var line_height = font_size * 1.5  # Account for line spacing
 	var lines_per_page = int(container_height / line_height)
 
+	Logger.debug("Text length: %d, Line breaks: %d, Lines per page: %d" % [processed_text.length(), line_breaks.size(), lines_per_page], self)
+
 	# Calculate page breaks based on line count
 	page_breaks.clear()
 	var current_line_count = 0
@@ -119,16 +149,18 @@ func calculate_page_breaks() -> void:
 	for break_index in line_breaks:
 		current_line_count += 1
 		if current_line_count >= lines_per_page:
-			page_breaks.append(break_index)
+			# Find the best break point using priority system
+			var best_break = find_best_page_break(break_index, line_breaks)
+			page_breaks.append(best_break)
 			current_line_count = 0
-			last_break_index = break_index
+			last_break_index = best_break
 
 	# Add final page break if needed
 	if last_break_index < processed_text.length():
 		page_breaks.append(processed_text.length())
 
 	total_pages = max(1, page_breaks.size())
-	Logger.debug("Calculated %d pages for plate text" % total_pages, self)
+	Logger.debug("Calculated %d pages for plate text, page breaks at: %s" % [total_pages, str(page_breaks)], self)
 
 func render_page() -> void:
 	# Get the text slice for this page

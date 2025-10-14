@@ -135,6 +135,6 @@ func submit_chat_request_to_server(author: String, message: String) -> void:
 func broadcast_chat(author, message: String) -> void:
 	Finder.select(Group.UI_CHAT_WIDGET).submit_message(author, message)
 
-@rpc("authority", "call_remote", "reliable")
+@rpc("authority", "call_local", "reliable")
 func open_plate_on_client(plate_key: String, caller: String, target: String) -> void:
 	Finder.select(Group.INTERFACE).open_plate_for_actor(plate_key, caller, target)
