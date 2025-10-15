@@ -2,6 +2,7 @@ extends Widget
 
 @export var actor: String
 @export var key: String
+@export var check_line_of_sight: bool = false  ## If true, show "---" when out of LOS
 
 var update_timer: float = 0.0
 const UPDATE_INTERVAL: float = 0.1
@@ -37,7 +38,11 @@ func _process(_delta: float) -> void:
 
 		var value = get_value()
 		if value != null:
-			label.set_text(format_value(value))
+			# Check line of sight if enabled
+			if check_line_of_sight and not is_actor_in_line_of_sight():
+				label.set_text("---")
+			else:
+				label.set_text(format_value(value))
 
 		# Handle visibility based on reveal threshold
 		var entity: Entity = Repo.select(key)
@@ -77,3 +82,21 @@ func set_actor(value: String) -> void:
 
 func set_key(value: String) -> void:
 	key = value
+
+func set_check_line_of_sight(value: bool) -> void:
+	check_line_of_sight = value
+
+func is_actor_in_line_of_sight() -> bool:
+	if actor == null or actor.is_empty():
+		return false
+
+	var primary_actor: Actor = Finder.get_primary_actor()
+	if primary_actor == null:
+		return false
+
+	var target_actor: Actor = Finder.get_actor(actor)
+	if target_actor == null:
+		return false
+
+	# Use primary actor's line_of_sight_to_point method
+	return primary_actor.line_of_sight_to_point(target_actor.position)

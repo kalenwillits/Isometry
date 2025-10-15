@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://dluxm6e80n02y"]
+[gd_scene load_steps=13 format=3 uid="uid://dluxm6e80n02y"]
 
 [ext_resource type="Script" uid="uid://b7v1pie42hxe" path="res://scenes/interface.gd" id="1_7q01f"]
 [ext_resource type="PackedScene" uid="uid://doj5tijrttd2p" path="res://scenes/action_widget.tscn" id="2_lw6my"]
@@ -8,6 +8,10 @@
 [ext_resource type="PackedScene" uid="uid://wcch6bcd5u7p" path="res://scenes/data_plate.tscn" id="4_uidac"]
 [ext_resource type="PackedScene" uid="uid://c5l8u3nqg7y6f" path="res://scenes/menu_view.tscn" id="7_context"]
 [ext_resource type="PackedScene" uid="uid://c7lax5m8n3p2w" path="res://scenes/plate_view.tscn" id="8_plate"]
+[ext_resource type="Script" uid="uid://0xp0dpxari52" path="res://scenes/focus_widget_top_left.gd" id="9_tl_script"]
+[ext_resource type="Script" uid="uid://cuwk87xmkxhuv" path="res://scenes/focus_widget_top_right.gd" id="10_tr_script"]
+[ext_resource type="Script" uid="uid://hivqnsmmqbd3" path="res://scenes/focus_widget_bot_left.gd" id="11_bl_script"]
+[ext_resource type="Script" uid="uid://mue44t010v1g" path="res://scenes/focus_widget_bot_right.gd" id="12_br_script"]
 
 [node name="Interface" type="Node"]
 script = ExtResource("1_7q01f")
@@ -136,14 +140,31 @@ alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="FocusWidget" parent="DisplayView/HBox/VBox/HBoxTop" instance=ExtResource("3_s0di0")]
+[node name="FocusWidgetTopLeft" parent="DisplayView/HBox/VBox/HBoxTop/HBoxTopLeft" instance=ExtResource("3_s0di0")]
 layout_mode = 2
 size_flags_horizontal = 3
+script = ExtResource("9_tl_script")
+check_line_of_sight = true
+
+[node name="HBoxTopCenter" type="HBoxContainer" parent="DisplayView/HBox/VBox/HBoxTop"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TargetWidget" parent="DisplayView/HBox/VBox/HBoxTop/HBoxTopCenter" instance=ExtResource("3_s0di0")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
 
 [node name="HBoxTopRight" type="HBoxContainer" parent="DisplayView/HBox/VBox/HBoxTop"]
 layout_mode = 2
 size_flags_horizontal = 3
 alignment = 2
+
+[node name="FocusWidgetTopRight" parent="DisplayView/HBox/VBox/HBoxTop/HBoxTopRight" instance=ExtResource("3_s0di0")]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("10_tr_script")
+check_line_of_sight = true
 
 [node name="HBoxBot" type="HBoxContainer" parent="DisplayView/HBox/VBox"]
 layout_mode = 2
@@ -153,11 +174,21 @@ alignment = 1
 [node name="HBoxBotLeft" type="HBoxContainer" parent="DisplayView/HBox/VBox/HBoxBot"]
 layout_mode = 2
 size_flags_horizontal = 3
+alignment = 2
 
 [node name="VBoxBotLeft" type="VBoxContainer" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotLeft"]
 layout_mode = 2
 size_flags_horizontal = 3
 alignment = 2
+
+[node name="FocusWidgetBotLeft" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotLeft/VBoxBotLeft" instance=ExtResource("3_s0di0")]
+layout_mode = 2
+script = ExtResource("11_bl_script")
+check_line_of_sight = true
+
+[node name="Margin" type="MarginContainer" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotLeft/VBoxBotLeft"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
 
 [node name="HBoxBotCenter" type="HBoxContainer" parent="DisplayView/HBox/VBox/HBoxBot"]
 layout_mode = 2
@@ -184,9 +215,18 @@ alignment = 2
 
 [node name="VBoxBotRight" type="VBoxContainer" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotRight"]
 layout_mode = 2
-size_flags_horizontal = 8
+size_flags_horizontal = 3
 size_flags_vertical = 8
 alignment = 2
+
+[node name="FocusWidgetBotRight" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotRight/VBoxBotRight" instance=ExtResource("3_s0di0")]
+layout_mode = 2
+script = ExtResource("12_br_script")
+check_line_of_sight = true
+
+[node name="Margin" type="MarginContainer" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotRight/VBoxBotRight"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
 
 [node name="ContextMenu" parent="." instance=ExtResource("7_context")]
 visible = false

@@ -70,6 +70,11 @@ var target_groups_counter: Dictionary
 var in_view: Dictionary # A Dictionary[StringName, Integer] of actors that are currently in view of this actor. The value is the total number of actors in the view when entered.
 var track_index: int = 0 # Identifies what index in a npc's track array to follow
 var discovery: Dictionary = {}
+# Focus slot storage - 4 corner saved targets
+var focus_top_left: String = ""
+var focus_top_right: String = ""
+var focus_bot_left: String = ""
+var focus_bot_right: String = ""
 # Navigation loop protection
 var stuck_timer: float = 0.0
 var last_position: Vector2 = Vector2.ZERO
@@ -638,6 +643,42 @@ func use_target() -> void:
 		else:
 			Logger.warn("No target selected, cannot open menu", self)
 
+	# Focus slot handling - top left
+	if Input.is_action_just_pressed("clear_focus_top_left"):
+		clear_focus_slot("top_left")
+	elif Input.is_action_just_pressed("focus_top_left"):
+		if get_focus_slot("top_left") == "":
+			store_focus_in_slot("top_left")
+		else:
+			select_focus_from_slot("top_left")
+
+	# Focus slot handling - top right
+	if Input.is_action_just_pressed("clear_focus_top_right"):
+		clear_focus_slot("top_right")
+	elif Input.is_action_just_pressed("focus_top_right"):
+		if get_focus_slot("top_right") == "":
+			store_focus_in_slot("top_right")
+		else:
+			select_focus_from_slot("top_right")
+
+	# Focus slot handling - bottom left
+	if Input.is_action_just_pressed("clear_focus_bot_left"):
+		clear_focus_slot("bot_left")
+	elif Input.is_action_just_pressed("focus_bot_left"):
+		if get_focus_slot("bot_left") == "":
+			store_focus_in_slot("bot_left")
+		else:
+			select_focus_from_slot("bot_left")
+
+	# Focus slot handling - bottom right
+	if Input.is_action_just_pressed("clear_focus_bot_right"):
+		clear_focus_slot("bot_right")
+	elif Input.is_action_just_pressed("focus_bot_right"):
+		if get_focus_slot("bot_right") == "":
+			store_focus_in_slot("bot_right")
+		else:
+			select_focus_from_slot("bot_right")
+
 func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
 	if is_primary():
 		Optional.of_nullable(Finder.get_actor(old_target_name)).if_present(
@@ -645,7 +686,7 @@ func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
 				old_actor.set_outline_color(Palette.OUTLINE_CLEAR)
 		)
 		if old_target_name != "":
-			Finder.select(Group.UI_FOCUS_WIDGET).remove_plate(old_target_name)
+			Finder.select(Group.UI_TARGET_WIDGET).remove_plate(old_target_name)
 	
 func _handle_new_target(new_target_name: String) -> void:
 	if is_primary():
@@ -654,7 +695,9 @@ func _handle_new_target(new_target_name: String) -> void:
 				new_actor.set_outline_color(Palette.OUTLINE_SELECT)
 		)
 		if new_target_name != "":
-			Finder.select(Group.UI_FOCUS_WIDGET).append_plate(new_target_name)
+			var target_widget = Finder.select(Group.UI_TARGET_WIDGET)
+			target_widget.set_check_line_of_sight(true)  # Enable LOS checking for target widget
+			target_widget.append_plate(new_target_name)
 
 func get_target() -> String:
 	return target
@@ -678,6 +721,86 @@ func decrement_target_group() -> int:
 	
 func get_target_group() -> String:
 	return get_targetable_groups()[target_group_index]
+
+# Focus slot management
+func store_focus_in_slot(slot: String) -> void:
+	if not is_primary(): return
+	if target == "": return  # Can't store empty target
+
+	match slot:
+		"top_left":
+			focus_top_left = target
+			Finder.select(Group.UI_FOCUS_WIDGET_TOP_LEFT).append_plate(target)
+		"top_right":
+			focus_top_right = target
+			Finder.select(Group.UI_FOCUS_WIDGET_TOP_RIGHT).append_plate(target)
+		"bot_left":
+			focus_bot_left = target
+			Finder.select(Group.UI_FOCUS_WIDGET_BOT_LEFT).append_plate(target)
+		"bot_right":
+			focus_bot_right = target
+			Finder.select(Group.UI_FOCUS_WIDGET_BOT_RIGHT).append_plate(target)
+
+func select_focus_from_slot(slot: String) -> void:
+	if not is_primary(): return
+
+	var stored_target: String = ""
+	match slot:
+		"top_left":
+			stored_target = focus_top_left
+		"top_right":
+			stored_target = focus_top_right
+		"bot_left":
+			stored_target = focus_bot_left
+		"bot_right":
+			stored_target = focus_bot_right
+
+	if stored_target != "":
+		# Check if the stored actor still exists and is visible
+		var stored_actor = Finder.query([map, Group.IS_VISIBLE, stored_target]).pop_front()
+		if stored_actor != null:
+			set_target(stored_target)
+		else:
+			# Actor no longer exists or not visible, clear the slot
+			clear_focus_slot(slot)
+
+func clear_focus_slot(slot: String) -> void:
+	if not is_primary(): return
+
+	var old_target: String = ""
+	match slot:
+		"top_left":
+			old_target = focus_top_left
+			focus_top_left = ""
+			if old_target != "":
+				Finder.select(Group.UI_FOCUS_WIDGET_TOP_LEFT).remove_plate(old_target)
+		"top_right":
+			old_target = focus_top_right
+			focus_top_right = ""
+			if old_target != "":
+				Finder.select(Group.UI_FOCUS_WIDGET_TOP_RIGHT).remove_plate(old_target)
+		"bot_left":
+			old_target = focus_bot_left
+			focus_bot_left = ""
+			if old_target != "":
+				Finder.select(Group.UI_FOCUS_WIDGET_BOT_LEFT).remove_plate(old_target)
+		"bot_right":
+			old_target = focus_bot_right
+			focus_bot_right = ""
+			if old_target != "":
+				Finder.select(Group.UI_FOCUS_WIDGET_BOT_RIGHT).remove_plate(old_target)
+
+func get_focus_slot(slot: String) -> String:
+	match slot:
+		"top_left":
+			return focus_top_left
+		"top_right":
+			return focus_top_right
+		"bot_left":
+			return focus_bot_left
+		"bot_right":
+			return focus_bot_right
+	return ""
 
 func find_next_target() -> String:
 	var actors = Finder.query([map, Group.IS_VISIBLE, get_target_group()])

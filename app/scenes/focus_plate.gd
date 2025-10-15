@@ -3,8 +3,11 @@ extends Widget
 const resource_block_packed_scene: PackedScene = preload("res://scenes/resource_block.tscn")
 
 @export var actor: String ## The actor's name that this plate represents
+@export var check_line_of_sight: bool = false ## If true, resource blocks will show "---" when out of LOS
 
 func _ready() -> void:
+	if actor == null: return
+	if actor == "": return
 	var actor_node: Actor = Finder.get_actor(actor)
 	var actor_ent: Entity = Repo.select(actor_node.actor)
 	set_label(actor_node.display_name)
@@ -30,4 +33,12 @@ func add_public_resource(resource_key: String) -> void:
 	var resource_block: Widget = resource_block_packed_scene.instantiate()
 	resource_block.set_actor(actor)
 	resource_block.set_key(resource_key)
+	resource_block.set_check_line_of_sight(check_line_of_sight)
 	$Grid.add_child(resource_block)
+
+func set_check_line_of_sight(value: bool) -> void:
+	check_line_of_sight = value
+	# Update existing resource blocks
+	for child in $Grid.get_children():
+		if child.has_method("set_check_line_of_sight"):
+			child.set_check_line_of_sight(value)
