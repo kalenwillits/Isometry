@@ -1,7 +1,8 @@
 extends CanvasLayer
 
-const PAGE_SIZE: Vector2i = Vector2i(400, 600)
-const NEWLINE_LOOKBACK_LINES: int = 6 # How many lines to search upward for natural paragraph breaks
+const PAGE_SIZE: Vector2i = Vector2i(408, 512)
+# TODO - This NEWLINE_LOOKBACK_LINES feature does not actually work, fix or remove it.
+const NEWLINE_LOOKBACK_LINES: int = 9 # How many lines to search upward for natural paragraph breaks
 
 var plate_entity: Entity
 var caller_name: String = ""
@@ -76,20 +77,17 @@ func process_text(text: String) -> String:
 	for i in range(matches.size() - 1, -1, -1):
 		var match_ = matches[i]
 		var expression = match_.get_string(1).strip_edges()
-
 		# Use Dice engine to evaluate the expression
 		var dice = Dice.builder()\
 			.caller(caller_name)\
 			.target(target_name)\
 			.expression(expression)\
 			.build()
-
 		# Run injection methods
 		dice.inject_target_resources()
 		dice.inject_caller_resources()
 		dice.inject_target_measures()
 		dice.inject_caller_measures()
-
 		# Replace the {{ }} block with the result
 		var result = dice.expression
 		processed = processed.substr(0, match_.get_start()) + result + processed.substr(match_.get_end())

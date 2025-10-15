@@ -1169,12 +1169,16 @@ func build_sprite() -> void:
 		)
 		
 func get_resource(resource_name: String) -> int:
-	## Returns -1 if resource does not exist
-	return resources.get(resource_name, -1)
+	## Returns 0 if resource does not exist
+	return resources.get(resource_name, 0)
 	
 func get_measure(measure_name: String) -> int:
-	## Returns -1 if measure does not exist
-	return Optional.of_nullable(measures.get(measure_name)).map(func(measure): return measure.call()).or_else(-1)
+	## Returns 0 if measure does not exist
+	var measure_func: Callable = measures.get(measure_name)
+	if measure_func == null: return 0
+	var measure_result: int = measure_func.call()
+	if measure_result == null: return 0
+	return measure_result
 		
 func map_relative_distance_to_in_view_actors() -> Dictionary:
 	var results: Dictionary = {}

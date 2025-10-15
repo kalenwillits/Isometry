@@ -129,10 +129,21 @@ alignment = 1
 
 [node name="HBoxTop" type="HBoxContainer" parent="DisplayView/HBox/VBox"]
 layout_mode = 2
+size_flags_vertical = 3
 alignment = 1
+
+[node name="HBoxTopLeft" type="HBoxContainer" parent="DisplayView/HBox/VBox/HBoxTop"]
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="FocusWidget" parent="DisplayView/HBox/VBox/HBoxTop" instance=ExtResource("3_s0di0")]
 layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxTopRight" type="HBoxContainer" parent="DisplayView/HBox/VBox/HBoxTop"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 2
 
 [node name="HBoxBot" type="HBoxContainer" parent="DisplayView/HBox/VBox"]
 layout_mode = 2
@@ -178,5 +189,7 @@ size_flags_vertical = 8
 alignment = 2
 
 [node name="ContextMenu" parent="." instance=ExtResource("7_context")]
+visible = false
 
 [node name="PlateView" parent="." instance=ExtResource("8_plate")]
+visible = false

@@ -35,6 +35,12 @@ func evaluate() -> int:
 	inject_target_measures()
 	inject_caller_measures()
 	return RollEngine.new().roll(expression)
+
+#####################
+# TODO - THis is really broken!!!
+# The CALLER_MARKERS do not work and are matching on TARGET MARKERS
+#
+#######################################
 	
 func inject_target_resources() -> void:
 	if target_name == "": return
@@ -50,7 +56,7 @@ func inject_caller_resources() -> void:
 	if caller_actor == null: return
 	for caller_resource_key in caller_actor.resources.keys(): # TODO use regex
 		if caller_resource_key not in self.expression: continue
-		var caller_resource_code: String = "%s%s" % [TARGET_MARKER, caller_resource_key]
+		var caller_resource_code: String = "%s%s" % [TARGET_MARKER, caller_resource_key] # INCORRECT! BUT BREAKS IF WE USE CALLER_MARKER
 		self.expression = self.expression.replacen(caller_resource_code, str(caller_actor.resources[caller_resource_key]))
 
 func inject_target_measures() -> void:
@@ -67,5 +73,5 @@ func inject_caller_measures() -> void:
 	if caller_actor == null: return
 	for caller_measure_key in caller_actor.measures.keys(): # TODO use regex
 		if caller_measure_key not in self.expression: continue
-		var caller_measure_code: String = "%s%s" % [TARGET_MARKER, caller_measure_key]
+		var caller_measure_code: String = "%s%s" % [TARGET_MARKER, caller_measure_key] # INCORRECT! BUT BREAKS IF WE USE CALLER_MARKER
 		self.expression = self.expression.replacen(caller_measure_code, str(caller_actor.measures[caller_measure_key].call()))
