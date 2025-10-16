@@ -144,7 +144,7 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_horizontal = 3
 script = ExtResource("9_tl_script")
-check_line_of_sight = true
+check_in_view = true
 
 [node name="HBoxTopCenter" type="HBoxContainer" parent="DisplayView/HBox/VBox/HBoxTop"]
 layout_mode = 2
@@ -164,7 +164,7 @@ alignment = 2
 layout_mode = 2
 size_flags_horizontal = 3
 script = ExtResource("10_tr_script")
-check_line_of_sight = true
+check_in_view = true
 
 [node name="HBoxBot" type="HBoxContainer" parent="DisplayView/HBox/VBox"]
 layout_mode = 2
@@ -184,7 +184,7 @@ alignment = 2
 [node name="FocusWidgetBotLeft" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotLeft/VBoxBotLeft" instance=ExtResource("3_s0di0")]
 layout_mode = 2
 script = ExtResource("11_bl_script")
-check_line_of_sight = true
+check_in_view = true
 
 [node name="Margin" type="MarginContainer" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotLeft/VBoxBotLeft"]
 custom_minimum_size = Vector2(0, 56)
@@ -222,7 +222,7 @@ alignment = 2
 [node name="FocusWidgetBotRight" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotRight/VBoxBotRight" instance=ExtResource("3_s0di0")]
 layout_mode = 2
 script = ExtResource("12_br_script")
-check_line_of_sight = true
+check_in_view = true
 
 [node name="Margin" type="MarginContainer" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotRight/VBoxBotRight"]
 custom_minimum_size = Vector2(0, 56)

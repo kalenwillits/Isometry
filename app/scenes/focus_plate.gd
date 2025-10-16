@@ -3,12 +3,18 @@ extends Widget
 const resource_block_packed_scene: PackedScene = preload("res://scenes/resource_block.tscn")
 
 @export var actor: String ## The actor's name that this plate represents
-@export var check_line_of_sight: bool = false ## If true, resource blocks will show "---" when out of LOS
+@export var check_in_view: bool = false ## If true, resource blocks will show "---" when out of view
+
+var update_timer: float = 0.0
+const UPDATE_INTERVAL: float = 0.1
 
 func _ready() -> void:
 	if actor == null: return
 	if actor == "": return
 	var actor_node: Actor = Finder.get_actor(actor)
+	if actor_node == null: 
+		queue_free()
+		return
 	var actor_ent: Entity = Repo.select(actor_node.actor)
 	set_label(actor_node.display_name)
 	if actor_ent.public != null:
@@ -33,12 +39,21 @@ func add_public_resource(resource_key: String) -> void:
 	var resource_block: Widget = resource_block_packed_scene.instantiate()
 	resource_block.set_actor(actor)
 	resource_block.set_key(resource_key)
-	resource_block.set_check_line_of_sight(check_line_of_sight)
+	resource_block.set_check_in_view(check_in_view)
 	$Grid.add_child(resource_block)
 
-func set_check_line_of_sight(value: bool) -> void:
-	check_line_of_sight = value
+func set_check_in_view(value: bool) -> void:
+	check_in_view = value
 	# Update existing resource blocks
 	for child in $Grid.get_children():
-		if child.has_method("set_check_line_of_sight"):
-			child.set_check_line_of_sight(value)
+		if child.has_method("set_check_in_view"):
+			child.set_check_in_view(value)
+
+func _process(delta: float) -> void:
+	update_timer += delta
+	if update_timer >= UPDATE_INTERVAL:
+		update_timer = 0.0
+		if check_in_view:
+			var primary_actor: Actor = Finder.get_primary_actor()
+			var is_self: bool = primary_actor and actor == primary_actor.name
+			modulate.a = 0.5 if primary_actor and not is_self and not actor in primary_actor.in_view else 1.0

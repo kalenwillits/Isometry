@@ -647,37 +647,41 @@ func use_target() -> void:
 	if Input.is_action_just_pressed("clear_focus_top_left"):
 		clear_focus_slot("top_left")
 	elif Input.is_action_just_pressed("focus_top_left"):
-		if get_focus_slot("top_left") == "":
-			store_focus_in_slot("top_left")
-		else:
+		var stored = get_focus_slot("top_left")
+		if stored != "":
 			select_focus_from_slot("top_left")
+		elif target != "":
+			store_focus_in_slot("top_left")
 
 	# Focus slot handling - top right
 	if Input.is_action_just_pressed("clear_focus_top_right"):
 		clear_focus_slot("top_right")
 	elif Input.is_action_just_pressed("focus_top_right"):
-		if get_focus_slot("top_right") == "":
-			store_focus_in_slot("top_right")
-		else:
+		var stored = get_focus_slot("top_right")
+		if stored != "":
 			select_focus_from_slot("top_right")
+		elif target != "":
+			store_focus_in_slot("top_right")
 
 	# Focus slot handling - bottom left
 	if Input.is_action_just_pressed("clear_focus_bot_left"):
 		clear_focus_slot("bot_left")
 	elif Input.is_action_just_pressed("focus_bot_left"):
-		if get_focus_slot("bot_left") == "":
-			store_focus_in_slot("bot_left")
-		else:
+		var stored = get_focus_slot("bot_left")
+		if stored != "":
 			select_focus_from_slot("bot_left")
+		elif target != "":
+			store_focus_in_slot("bot_left")
 
 	# Focus slot handling - bottom right
 	if Input.is_action_just_pressed("clear_focus_bot_right"):
 		clear_focus_slot("bot_right")
 	elif Input.is_action_just_pressed("focus_bot_right"):
-		if get_focus_slot("bot_right") == "":
-			store_focus_in_slot("bot_right")
-		else:
+		var stored = get_focus_slot("bot_right")
+		if stored != "":
 			select_focus_from_slot("bot_right")
+		elif target != "":
+			store_focus_in_slot("bot_right")
 
 func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
 	if is_primary():
@@ -696,7 +700,7 @@ func _handle_new_target(new_target_name: String) -> void:
 		)
 		if new_target_name != "":
 			var target_widget = Finder.select(Group.UI_TARGET_WIDGET)
-			target_widget.set_check_line_of_sight(true)  # Enable LOS checking for target widget
+			target_widget.set_check_in_view(true)  # Enable in-view checking for target widget
 			target_widget.append_plate(new_target_name)
 
 func get_target() -> String:
@@ -726,6 +730,9 @@ func get_target_group() -> String:
 func store_focus_in_slot(slot: String) -> void:
 	if not is_primary(): return
 	if target == "": return  # Can't store empty target
+
+	# Don't overwrite if slot already has a target
+	if get_focus_slot(slot) != "": return
 
 	match slot:
 		"top_left":
@@ -760,9 +767,7 @@ func select_focus_from_slot(slot: String) -> void:
 		var stored_actor = Finder.query([map, Group.IS_VISIBLE, stored_target]).pop_front()
 		if stored_actor != null:
 			set_target(stored_target)
-		else:
-			# Actor no longer exists or not visible, clear the slot
-			clear_focus_slot(slot)
+		# If actor is out of view, do nothing (keep focus stored but don't change target)
 
 func clear_focus_slot(slot: String) -> void:
 	if not is_primary(): return
