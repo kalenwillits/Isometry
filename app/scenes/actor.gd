@@ -49,7 +49,7 @@ const NAV_PATH_MAX_DISTANCE: float = 64.0  # Increased recalculation distance
 @export var speed: float = 1.0
 @export var heading: String = "S"
 @export var state: String = "idle"
-@export var substate: SubState  # TODO - use to get status of current state loop
+@export var substate: SubState 
 @export var sprite: String = ""
 @export var base: int = 0
 @export var actor: String = ""
@@ -67,6 +67,7 @@ var target_group: String = ""
 var target_group_index: int = 0
 var speed_cache_value: float # Used to store speed value inbetween temporary changes
 var in_view: Dictionary # A Dictionary[StringName, Integer] of actors that are currently in view of this actor. The value is the total number of actors in the view when entered.
+var visible_groups: Dictionary = {} # A Dictionary[String, Integer] tracking count of visible actors per group
 var track_index: int = 0 # Identifies what index in a npc's track array to follow
 var discovery: Dictionary = {}
 # Focus slot storage - 4 corner saved targets
@@ -378,6 +379,7 @@ func _ready() -> void:
 	$NavigationAgent.path_max_distance = NAV_PATH_MAX_DISTANCE
 	var actor_ent: Entity = Repo.select(actor)
 	if is_primary():
+		visible_groups = {}  # Initialize group tracking for primary actor
 		if actor_ent and actor_ent.skills:
 			var skills_list = actor_ent.skills.lookup()
 			if skills_list:
@@ -441,7 +443,6 @@ func schedule_render_this_actors_map() -> void:
 		)
 
 func is_awake(effect: bool) -> void:
-	# TODO -- This could be renamed to make more sense
 	use_collisions(effect)
 	
 func update_client_visibility() -> void:
@@ -712,8 +713,14 @@ func set_target(value: String) -> void:
 	_handle_new_target(value)	
 
 func get_targetable_groups() -> Array:
-	# TODO - implement target groups logic
-	return []
+	var targetable: Array = [Group.DEFAULT_TARGET_GROUP]  # Always include default
+
+	# Add groups that have visible actors
+	for group_key in visible_groups.keys():
+		if visible_groups[group_key] > 0:
+			targetable.append(group_key)
+
+	return targetable
 
 func increment_target_group() -> int:
 	return (target_group_index + 1) % get_targetable_groups().size()
@@ -1619,6 +1626,12 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 	if is_primary():
 		other.fader.fade()
 		other.visible_to_primary(true)
+
+		# Track group visibility
+		if other.target_group != "":
+			if not visible_groups.has(other.target_group):
+				visible_groups[other.target_group] = 0
+			visible_groups[other.target_group] += 1
 	self.on_view.emit(other)
 
 func _on_view_box_area_exited(area: Area2D) -> void:
@@ -1630,6 +1643,25 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 	var other_name: String = other.get_name()
 	var this_actor_name: String = get_name()
 	other.remove_from_group(Group.LINE_OF_SIGHT)
+
+	# Use fader callback to defer group counter decrement until visibility transition completes
+	other.fader.at_next_appear(
+		func():
+			Optional.of_nullable(Finder.get_actor(this_actor_name))\
+			.if_present(
+				func(this_actor):
+					# Decrement group visibility tracking
+					if this_actor.is_primary() and other.target_group != "":
+						if this_actor.visible_groups.has(other.target_group):
+							this_actor.visible_groups[other.target_group] -= 1
+							if this_actor.visible_groups[other.target_group] <= 0:
+								this_actor.visible_groups.erase(other.target_group)
+					# Clear target if the exiting actor was targeted
+					if other.get_name() == this_actor.get_target():
+						this_actor.set_target("")
+					other.visible_to_primary(false)
+			)
+	)
 	other.fader.appear()
 
 func is_npc() -> bool:
