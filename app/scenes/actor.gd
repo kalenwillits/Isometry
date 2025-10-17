@@ -63,10 +63,9 @@ var peer_id: int = 0
 var perception: int = -1
 var salience: int = -1
 var target_queue: Array = []
-var target_groups: Array = []
+var target_group: String = ""
 var target_group_index: int = 0
 var speed_cache_value: float # Used to store speed value inbetween temporary changes
-var target_groups_counter: Dictionary
 var in_view: Dictionary # A Dictionary[StringName, Integer] of actors that are currently in view of this actor. The value is the total number of actors in the view when entered.
 var track_index: int = 0 # Identifies what index in a npc's track array to follow
 var discovery: Dictionary = {}
@@ -181,7 +180,9 @@ class ActorBuilder extends Object:
 				this.salience = actor_ent.salience
 			this.build_saliencebox(this.salience)
 			this.base = actor_ent.base
-			if actor_ent.groups: this.build_target_groups(actor_ent.groups.lookup())
+			if actor_ent.group:
+				this.target_group = actor_ent.group.key()
+				this.add_to_group(this.target_group)
 			if actor_ent.sprite: this.sprite = actor_ent.sprite.key()
 			if actor_ent.hitbox: this.hitbox = actor_ent.hitbox.key()
 			if actor_ent.on_touch: this.build_on_touch_action(actor_ent.on_touch.key())
@@ -401,7 +402,6 @@ func _ready() -> void:
 		fader.fade()
 		set_camera_target()
 		Transition.appear()
-		build_target_groups_counter()
 		is_awake(true)
 		visible_to_primary(true)
 		schedule_render_this_actors_map()
@@ -712,10 +712,8 @@ func set_target(value: String) -> void:
 	_handle_new_target(value)	
 
 func get_targetable_groups() -> Array:
-	var targetable_keys: Array = []
-	for key in target_groups_counter.keys():
-		if target_groups_counter[key] > 0: targetable_keys.append(key)
-	return targetable_keys
+	# TODO - implement target groups logic
+	return []
 
 func increment_target_group() -> int:
 	return (target_group_index + 1) % get_targetable_groups().size()
@@ -724,7 +722,10 @@ func decrement_target_group() -> int:
 	return max((target_group_index - 1), 0)
 	
 func get_target_group() -> String:
-	return get_targetable_groups()[target_group_index]
+	var targetable_groups: Array = get_targetable_groups()
+	if targetable_groups.size() > 0:
+		return targetable_groups[target_group_index]
+	return ""
 
 # Focus slot management
 func store_focus_in_slot(slot: String) -> void:
@@ -1036,17 +1037,6 @@ func build_timers() -> void:
 							).build()))
 					.build()
 				)
-
-func build_target_groups(groups: Array) -> void:
-	target_groups = [Group.DEFAULT_TARGET_GROUP]
-	for group in groups:
-		add_to_group(group.key())
-		target_groups.append(group.key())
-	
-func build_target_groups_counter() -> void:
-	target_groups_counter = { Group.DEFAULT_TARGET_GROUP: 1 }
-	for group_ent in Repo.query([Group.GROUP_ENTITY]):
-		target_groups_counter[group_ent.key()] = 0
 		
 func _local_measure_handler(caller_name: String, target_name: String, _expression: String) -> int:
 	return Dice.builder()\
@@ -1629,8 +1619,6 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 	if is_primary():
 		other.fader.fade()
 		other.visible_to_primary(true)
-		for target_group_key in other.target_groups:
-			target_groups_counter[target_group_key] = target_groups_counter[target_group_key] + 1
 	self.on_view.emit(other)
 
 func _on_view_box_area_exited(area: Area2D) -> void:
@@ -1642,21 +1630,6 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 	var other_name: String = other.get_name()
 	var this_actor_name: String = get_name()
 	other.remove_from_group(Group.LINE_OF_SIGHT)
-	other.fader.at_next_appear(
-		func(): 
-			Optional.of_nullable(Finder.get_actor(other_name))\
-			.if_present(
-				func(other_actor):
-					for target_group_key in other.target_groups:
-						Optional.of_nullable(Finder.get_actor(this_actor_name))\
-						.if_present(
-							func(this_actor):
-								this_actor.target_groups_counter[target_group_key] = this_actor.target_groups_counter[target_group_key] - 1
-								if other_actor.name == this_actor.get_target(): this_actor.set_target("")
-						)
-					other_actor.visible_to_primary(false)
-					)
-			)
 	other.fader.appear()
 
 func is_npc() -> bool:
