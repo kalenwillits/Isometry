@@ -65,6 +65,7 @@ var salience: int = -1
 var target_queue: Array = []
 var target_group: String = ""
 var target_group_index: int = 0
+var group_outline_color: Color = Color.WHITE  # Stores RGB from group, alpha modified for states
 var speed_cache_value: float # Used to store speed value inbetween temporary changes
 var in_view: Dictionary # A Dictionary[StringName, Integer] of actors that are currently in view of this actor. The value is the total number of actors in the view when entered.
 var visible_groups: Dictionary = {} # A Dictionary[String, Integer] tracking count of visible actors per group
@@ -113,6 +114,7 @@ signal heading_change(heading)
 class ActorBuilder extends Object:
 	var _username: String
 	var _password: String
+	var _group_outline_color: Color = Color.WHITE
 	var this: Actor = Scene.actor.instantiate()
 	
 	func username(value: String) -> ActorBuilder:
@@ -184,6 +186,10 @@ class ActorBuilder extends Object:
 			if actor_ent.group:
 				this.target_group = actor_ent.group.key()
 				this.add_to_group(this.target_group)
+				# Store outline color from group to apply after sprite setup
+				var group_ent = actor_ent.group.lookup()
+				if group_ent and group_ent.color:
+					_group_outline_color = this.parse_hex_color(group_ent.color)
 			if actor_ent.sprite: this.sprite = actor_ent.sprite.key()
 			if actor_ent.hitbox: this.hitbox = actor_ent.hitbox.key()
 			if actor_ent.on_touch: this.build_on_touch_action(actor_ent.on_touch.key())
@@ -208,6 +214,7 @@ class ActorBuilder extends Object:
 				this.username = _username
 				this.set_token(Secret.encrypt("%s.%s" % [_username, _password]))
 			this.set_speed(this.speed)  # Copy builder speed to actor instance
+			this.group_outline_color = _group_outline_color  # Transfer group color to instance
 		return this
 		
 static func builder() -> ActorBuilder:
@@ -252,6 +259,38 @@ func get_outline_color() -> Color:
 
 func set_outline_color(value: Color) -> void:
 	$Sprite.material.set_shader_parameter("color", value)
+
+func set_outline_opacity(opacity: float) -> void:
+	var current_color = get_outline_color()
+	current_color.a = opacity
+	set_outline_color(current_color)
+
+func get_outline_opacity() -> float:
+	return get_outline_color().a
+
+func parse_hex_color(hex_string: String) -> Color:
+	# Parse hex color string (e.g., "#FF0000" or "FF0000")
+	if hex_string == "":
+		return Color.WHITE
+
+	var hex = hex_string.strip_edges()
+	if hex.begins_with("#"):
+		hex = hex.substr(1)
+
+	# Validate hex string length
+	if hex.length() != 6:
+		return Color.WHITE
+
+	# Parse RGB components
+	var r = hex.substr(0, 2).hex_to_int()
+	var g = hex.substr(2, 2).hex_to_int()
+	var b = hex.substr(4, 2).hex_to_int()
+
+	# Check if parsing was successful
+	if r < 0 or g < 0 or b < 0 or r > 255 or g > 255 or b > 255:
+		return Color.WHITE
+
+	return Color(r / 255.0, g / 255.0, b / 255.0, 1.0)
 	
 func is_primary() -> bool:
 	return peer_id > 0 and is_multiplayer_authority() and multiplayer.get_unique_id() == peer_id
@@ -688,7 +727,7 @@ func _handle_target_is_no_longer_targeted(old_target_name: String) -> void:
 	if is_primary():
 		Optional.of_nullable(Finder.get_actor(old_target_name)).if_present(
 			func(old_actor):
-				old_actor.set_outline_color(Palette.OUTLINE_CLEAR)
+				old_actor.set_outline_opacity(0.0)
 		)
 		if old_target_name != "":
 			Finder.select(Group.UI_TARGET_WIDGET).remove_plate(old_target_name)
@@ -697,7 +736,7 @@ func _handle_new_target(new_target_name: String) -> void:
 	if is_primary():
 		Optional.of_nullable(Finder.get_actor(new_target_name)).if_present(
 			func(new_actor):
-				new_actor.set_outline_color(Palette.OUTLINE_SELECT)
+				new_actor.set_outline_opacity(0.666)
 		)
 		if new_target_name != "":
 			var target_widget = Finder.select(Group.UI_TARGET_WIDGET)
@@ -1241,8 +1280,8 @@ func handle_resource_change(_resource: String) -> void:
 func handle_target() -> void:
 	Optional.of_nullable(Finder.get_actor(target))\
 	.if_present(
-		func(target_actor): 
-			target_actor.set_outline_color(Palette.OUTLINE_SELECT)
+		func(target_actor):
+			target_actor.set_outline_opacity(0.666)
 	)
 	
 func build_fader() -> void:
@@ -1389,7 +1428,10 @@ func setup_sprite(sprite_frames: SpriteFrames) -> void:
 		## Setting up a sprite sheet dynamically is a touchy thing. It must be started in this order.
 		$Sprite.offset = _calculate_sprite_offset()
 		$Sprite.set_sprite_frames(sprite_frames)
-		set_outline_color(Color(0, 0, 0, 0))
+		# Set group color with zero opacity (will be made visible when actor enters view)
+		var initial_color = group_outline_color
+		initial_color.a = 0.0
+		set_outline_color(initial_color)
 
 func _calculate_sprite_offset() -> Vector2i:
 	var full_size: Vector2i = get_sprite_size()
@@ -1626,6 +1668,9 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 	if is_primary():
 		other.fader.fade()
 		other.visible_to_primary(true)
+		# Show outline with group color (unless targeting changes it)
+		if other.get_name() != target:
+			other.set_outline_opacity(0.333)  # OUTLINE_HOVER opacity
 
 		# Track group visibility
 		if other.target_group != "":
