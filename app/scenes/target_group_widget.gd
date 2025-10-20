@@ -8,6 +8,7 @@ signal group_dot_clicked(group_key: String)
 # Dictionary mapping group_key -> Label node
 var group_dots: Dictionary = {}
 var current_selected_group: String = ""
+var target_group_status_packed_scene: PackedScene = preload("res://scenes/target_group_status.tscn")
 
 func _ready() -> void:
 	add_to_group(Group.UI_TARGET_GROUP_WIDGET)
@@ -54,7 +55,7 @@ func _add_group_dot(group_key: String) -> void:
 	var color: Color = _parse_hex_color(group_ent.color)
 
 	# Create label with colored dot
-	var label: Label = Label.new()
+	var label: Label = target_group_status_packed_scene.instantiate()
 	label.text = "○"  # Unicode open circle (unselected state)
 	label.add_theme_color_override("font_color", color)
 	label.name = group_key

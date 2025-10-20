@@ -766,16 +766,19 @@ func get_targetable_groups() -> Array:
 	return targetable
 
 func increment_target_group() -> int:
-	return (target_group_index + 1) % get_targetable_groups().size()
+	return min(target_group_index + 1, get_targetable_groups().size())
 
 func decrement_target_group() -> int:
 	return max((target_group_index - 1), 0)
 	
+func get_target_group_index() -> int:
+	return min(target_group_index, get_targetable_groups().size() - 1)
+	
 func get_target_group() -> String:
+	var target_group_index: int = get_target_group_index()
 	var targetable_groups: Array = get_targetable_groups()
-	if targetable_groups.size() > 0:
-		return targetable_groups[target_group_index]
-	return ""
+	if targetable_groups.is_empty(): return ""
+	return targetable_groups[target_group_index]
 
 # Focus slot management
 func store_focus_in_slot(slot: String) -> void:
@@ -1681,7 +1684,7 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 			if not visible_groups.has(other.target_group):
 				visible_groups[other.target_group] = 0
 			visible_groups[other.target_group] += 1
-			# Emit signal for UI updates
+			# Emit signal for UI updates		
 			visible_groups_changed.emit(visible_groups)
 	self.on_view.emit(other)
 
