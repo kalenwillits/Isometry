@@ -156,16 +156,10 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="TargetGroupWidget" parent="DisplayView/HBox/VBox/HBoxTop/HBoxTopCenter/VBoxTopCenter" instance=ExtResource("5_tgw")]
-custom_minimum_size = Vector2(0, 24)
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
 [node name="TargetWidget" parent="DisplayView/HBox/VBox/HBoxTop/HBoxTopCenter/VBoxTopCenter" instance=ExtResource("3_s0di0")]
-custom_minimum_size = Vector2(0, 24)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 0
-
-[node name="TargetWidget2" parent="DisplayView/HBox/VBox/HBoxTop/HBoxTopCenter/VBoxTopCenter" instance=ExtResource("3_s0di0")]
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 size_flags_horizontal = 3

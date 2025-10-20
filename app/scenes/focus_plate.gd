@@ -16,9 +16,11 @@ func _ready() -> void:
 		queue_free()
 		return
 	var actor_ent: Entity = Repo.select(actor_node.actor)
-	set_label(actor_node.display_name)
 
-	# Set group label with color
+	# Set actor name label
+	set_actor_label(actor_node.display_name)
+
+	# Set group label if actor has a valid group
 	if actor_node.target_group != "" and actor_node.target_group != Group.DEFAULT_TARGET_GROUP:
 		var group_ent: Entity = Repo.select(actor_node.target_group)
 		if group_ent != null:
@@ -51,9 +53,17 @@ func _ready() -> void:
 	add_to_group(Group.UI_FOCUS_PLATE)
 	add_to_group(actor_node.name)
 
-func set_label(value: String) -> void:
-	$HBox/Label.set_text(value)
-	
+func set_actor_label(text: String) -> void:
+	$VBox/HBox/ActorLabel.text = text
+
+func set_group_label(text: String, color: Color) -> void:
+	$VBox/GroupLabel.text = text
+	$VBox/GroupLabel.add_theme_color_override("font_color", color)
+	$VBox/GroupLabel.visible = true
+
+func hide_group_label() -> void:
+	$VBox/GroupLabel.visible = false
+
 func set_actor(value: String) -> void:
 	actor = value
 
@@ -66,21 +76,9 @@ func add_public_resource(resource_key: String) -> void:
 
 func set_check_in_view(value: bool) -> void:
 	check_in_view = value
-	# Update existing resource blocks
 	for child in $Grid.get_children():
 		if child.has_method("set_check_in_view"):
 			child.set_check_in_view(value)
-
-func set_group_label(group_name: String, color: Color) -> void:
-	$GroupLabel.set_text(group_name)
-	$GroupLabel.add_theme_color_override("font_color", color)
-	# Add outline effect
-	$GroupLabel.add_theme_color_override("font_outline_color", color)
-	$GroupLabel.add_theme_constant_override("outline_size", 2)
-	$GroupLabel.visible = true
-
-func hide_group_label() -> void:
-	$GroupLabel.visible = false
 
 func _parse_hex_color(hex_string: String) -> Color:
 	# Parse hex color string (e.g., "#FF0000" or "FF0000")

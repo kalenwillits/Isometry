@@ -421,6 +421,12 @@ func _ready() -> void:
 	var actor_ent: Entity = Repo.select(actor)
 	if is_primary():
 		visible_groups = {}  # Initialize group tracking for primary actor
+
+		# Add primary actor's own group to visible groups
+		if target_group != "" and target_group != Group.DEFAULT_TARGET_GROUP:
+			visible_groups[target_group] = 1
+			visible_groups_changed.emit(visible_groups)
+
 		if actor_ent and actor_ent.skills:
 			var skills_list = actor_ent.skills.lookup()
 			if skills_list:
@@ -766,7 +772,7 @@ func get_targetable_groups() -> Array:
 	return targetable
 
 func increment_target_group() -> int:
-	return min(target_group_index + 1, get_targetable_groups().size())
+	return min(target_group_index + 1, max(get_targetable_groups().size() - 1, 0))
 
 func decrement_target_group() -> int:
 	return max((target_group_index - 1), 0)

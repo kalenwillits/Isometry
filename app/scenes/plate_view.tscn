@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ckmemfp5kh7l6" path="res://scenes/plate_view.gd" id="1_plate"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
-[ext_resource type="StyleBox" uid="uid://nabash6j1bgq" path="res://materials/panel.tres" id="3_35bq7"]
+[ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_35bq7"]
 
 [node name="PlateView" type="CanvasLayer"]
 script = ExtResource("1_plate")
