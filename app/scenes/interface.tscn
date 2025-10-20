@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://dluxm6e80n02y"]
+[gd_scene load_steps=14 format=3 uid="uid://dluxm6e80n02y"]
 
 [ext_resource type="Script" uid="uid://b7v1pie42hxe" path="res://scenes/interface.gd" id="1_7q01f"]
 [ext_resource type="PackedScene" uid="uid://doj5tijrttd2p" path="res://scenes/action_widget.tscn" id="2_lw6my"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://bo72g0g451eom" path="res://scenes/focus_widget.tscn" id="3_s0di0"]
 [ext_resource type="PackedScene" uid="uid://bxp0a6bse7b4l" path="res://scenes/chat_widget.tscn" id="4_mfcci"]
 [ext_resource type="PackedScene" uid="uid://wcch6bcd5u7p" path="res://scenes/data_plate.tscn" id="4_uidac"]
+[ext_resource type="PackedScene" uid="uid://d0wh1foyn3y0t" path="res://scenes/target_group_widget.tscn" id="5_tgw"]
 [ext_resource type="PackedScene" uid="uid://c5l8u3nqg7y6f" path="res://scenes/menu_view.tscn" id="7_context"]
 [ext_resource type="PackedScene" uid="uid://c7lax5m8n3p2w" path="res://scenes/plate_view.tscn" id="8_plate"]
 [ext_resource type="Script" uid="uid://0xp0dpxari52" path="res://scenes/focus_widget_top_left.gd" id="9_tl_script"]
@@ -150,7 +151,22 @@ check_in_view = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TargetWidget" parent="DisplayView/HBox/VBox/HBoxTop/HBoxTopCenter" instance=ExtResource("3_s0di0")]
+[node name="VBoxTopCenter" type="VBoxContainer" parent="DisplayView/HBox/VBox/HBoxTop/HBoxTopCenter"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TargetGroupWidget" parent="DisplayView/HBox/VBox/HBoxTop/HBoxTopCenter/VBoxTopCenter" instance=ExtResource("5_tgw")]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+
+[node name="TargetWidget" parent="DisplayView/HBox/VBox/HBoxTop/HBoxTopCenter/VBoxTopCenter" instance=ExtResource("3_s0di0")]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="TargetWidget2" parent="DisplayView/HBox/VBox/HBoxTop/HBoxTopCenter/VBoxTopCenter" instance=ExtResource("3_s0di0")]
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0

@@ -110,6 +110,8 @@ signal line_of_sight_exited(actor)
 var skill_signals: Dictionary = {}
 
 signal heading_change(heading)
+signal visible_groups_changed(visible_groups: Dictionary)
+signal target_group_changed(group_key: String)
 
 class ActorBuilder extends Object:
 	var _username: String
@@ -675,8 +677,10 @@ func use_target() -> void:
 		target_queue.clear()
 	if Input.is_action_just_pressed("increment_target_group"):
 		target_group_index = increment_target_group()
+		target_group_changed.emit(get_target_group())
 	if Input.is_action_just_pressed("decrement_target_group"):
 		target_group_index = decrement_target_group()
+		target_group_changed.emit(get_target_group())
 	if Input.is_action_just_pressed("open_selection_menu"):
 		if target and target != "":
 			Finder.select(Group.INTERFACE).open_selection_menu_for_actor(target)
@@ -1677,6 +1681,8 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 			if not visible_groups.has(other.target_group):
 				visible_groups[other.target_group] = 0
 			visible_groups[other.target_group] += 1
+			# Emit signal for UI updates
+			visible_groups_changed.emit(visible_groups)
 	self.on_view.emit(other)
 
 func _on_view_box_area_exited(area: Area2D) -> void:
@@ -1701,6 +1707,8 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 							this_actor.visible_groups[other.target_group] -= 1
 							if this_actor.visible_groups[other.target_group] <= 0:
 								this_actor.visible_groups.erase(other.target_group)
+							# Emit signal for UI updates
+							this_actor.visible_groups_changed.emit(this_actor.visible_groups)
 					# Clear target if the exiting actor was targeted
 					if other.get_name() == this_actor.get_target():
 						this_actor.set_target("")
