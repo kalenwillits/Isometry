@@ -675,9 +675,13 @@ func emit_skill_signal(skill_event: String, target_actor: Actor) -> void:
 
 func use_target() -> void:
 	if Input.is_action_just_pressed("increment_target"):
-		set_target(find_next_target())
+		var next = find_next_target()
+		if next != target:  # Only set if different to avoid plate deletion bug
+			set_target(next)
 	if Input.is_action_just_pressed("decrement_target"):
-		set_target(find_prev_target())
+		var prev = find_prev_target()
+		if prev != target:  # Only set if different to avoid plate deletion bug
+			set_target(prev)
 	if Input.is_action_just_pressed("clear_target"):
 		set_target("")
 		target_queue.clear()
@@ -877,7 +881,8 @@ func find_next_target() -> String:
 		if !(next_actor.name in target_queue):
 			target_queue.append(next_actor.name)
 			return next_actor.name
-	return ""
+	# If no actors available, keep current target (don't untarget)
+	return target
 
 func find_prev_target() -> String:
 	var actors = Finder.query([map, Group.IS_VISIBLE, get_target_group()])
@@ -885,11 +890,12 @@ func find_prev_target() -> String:
 	if target_queue.size() >= actors.size():
 		target_queue.clear()
 	while !actors.is_empty():
-		var next_actor = actors.pop_front()			
+		var next_actor = actors.pop_front()
 		if !(next_actor.name in target_queue):
 			target_queue.append(next_actor.name)
 			return next_actor.name
-	return ""
+	# If no actors available, keep current target (don't untarget)
+	return target
 
 func isometric_distance_to_actor(other: Actor) -> float:
 	if other == null: return 0.0
