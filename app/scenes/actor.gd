@@ -829,7 +829,7 @@ func select_focus_from_slot(slot: String) -> void:
 	if stored_target != "":
 		# Check if the stored actor still exists and is visible
 		var stored_actor = Finder.query([map, Group.IS_VISIBLE, stored_target]).pop_front()
-		if stored_actor != null:
+		if stored_actor != null and stored_target != target:  # Only set if different
 			set_target(stored_target)
 		# If actor is out of view, do nothing (keep focus stored but don't change target)
 
