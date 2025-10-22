@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://byqwla6i5l8r1"]
 
-[ext_resource type="Script" path="res://scenes/focus_plate_bot_left.gd" id="1_gefpo"]
+[ext_resource type="Script" path="res://scenes/focus_plate.gd" id="1_gefpo"]
 [ext_resource type="Script" path="res://classes/BottomUpGrid.gd" id="1_botup"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="1_r4mos"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_hrv8t"]

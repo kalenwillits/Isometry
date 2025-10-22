@@ -147,10 +147,15 @@ func update_cardinal_label() -> void:
 		$VBox/HBox/CardinalLabel.text = "    "
 		return
 
+	# Hide direction if actor is out of sight
+	if actor not in primary_actor.in_view:
+		$VBox/HBox/CardinalLabel.text = " ---"
+		return
+
 	# Calculate distance
 	var distance = primary_actor.global_position.distance_to(target_actor.global_position)
 
-	# Hide direction if very close (within 50 units)
+	# Hide direction if very close (within 9 units)
 	if distance < 9.0:
 		$VBox/HBox/CardinalLabel.text = "    "
 		return
