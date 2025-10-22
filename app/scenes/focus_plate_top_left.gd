@@ -117,19 +117,19 @@ func get_direction_display(direction: String) -> String:
 		"NE":
 			return "↗ NE"
 		"E":
-			return "→ E "
+			return "→ E"
 		"SE":
 			return "↘ SE"
 		"S":
-			return "↓ S "
+			return "↓ S"
 		"SW":
 			return "↙ SW"
 		"W":
-			return "← W "
+			return "← W"
 		"NW":
 			return "↖ NW"
 		_:
-			return " ---"
+			return ""
 
 func update_cardinal_label() -> void:
 	var primary_actor: Actor = Finder.get_primary_actor()
@@ -139,20 +139,20 @@ func update_cardinal_label() -> void:
 
 	# Don't show direction for self
 	if actor == primary_actor.name:
-		$VBox/HBox/CardinalLabel.text = "    "
+		$VBox/HBox/CardinalLabel.text = ""
 		return
 
 	var target_actor: Actor = Finder.get_actor(actor)
 	if target_actor == null:
-		$VBox/HBox/CardinalLabel.text = "    "
+		$VBox/HBox/CardinalLabel.text = ""
 		return
 
 	# Calculate distance
 	var distance = primary_actor.global_position.distance_to(target_actor.global_position)
 
 	# Hide direction if very close (within 50 units)
-	if distance < 9.0:
-		$VBox/HBox/CardinalLabel.text = "    "
+	if distance < 50.0:
+		$VBox/HBox/CardinalLabel.text = ""
 		return
 
 	# Calculate and display direction
