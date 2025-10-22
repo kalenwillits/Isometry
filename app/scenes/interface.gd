@@ -93,6 +93,9 @@ func open_plate_for_actor(plate_key: String, caller: String, target: String) -> 
 func open_global_menu() -> void:
 	$GlobalMenuView.open_menu()
 
+func open_system_menu() -> void:
+	$SystemMenuView.open_menu()
+
 func open_close_confirmation() -> void:
 	$ConfirmationModal.open_modal(
 		"Are you sure you want to quit?",
@@ -106,6 +109,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Check if any menu is currently visible
 		if $GlobalMenuView.visible:
 			# GlobalMenuView handles its own escape
+			return
+		elif $SystemMenuView.visible:
+			# SystemMenuView handles its own escape
 			return
 		elif $ContextMenu.visible:
 			# ContextMenu handles its own escape

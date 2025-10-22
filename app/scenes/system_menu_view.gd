@@ -4,41 +4,52 @@ var selected_index: int = 0
 
 func _ready() -> void:
 	visible = false
-	add_to_group(Group.GLOBAL_MENU)
+	add_to_group(Group.SYSTEM_MENU)
 	_create_menu_items()
 
 func _create_menu_items() -> void:
-	# Create "Map" button
-	var map_button = Button.new()
-	map_button.custom_minimum_size = Vector2(256, 24)
-	map_button.text = "Map"
-	map_button.pressed.connect(_on_map_button_pressed)
-	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(map_button)
+	# Create "Display" button
+	var display_button = Button.new()
+	display_button.custom_minimum_size = Vector2(256, 24)
+	display_button.text = "Display"
+	display_button.pressed.connect(_on_display_button_pressed)
+	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(display_button)
 
-	# Create "Resources" button
-	var resources_button = Button.new()
-	resources_button.custom_minimum_size = Vector2(256, 24)
-	resources_button.text = "Resources"
-	resources_button.pressed.connect(_on_resources_button_pressed)
-	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(resources_button)
+	# Create "Keybinds" button
+	var keybinds_button = Button.new()
+	keybinds_button.custom_minimum_size = Vector2(256, 24)
+	keybinds_button.text = "Keybinds"
+	keybinds_button.pressed.connect(_on_keybinds_button_pressed)
+	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(keybinds_button)
 
-	# Create "System" button
-	var system_button = Button.new()
-	system_button.custom_minimum_size = Vector2(256, 24)
-	system_button.text = "System"
-	system_button.pressed.connect(_on_system_button_pressed)
-	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(system_button)
+	# Create "Settings" button
+	var settings_button = Button.new()
+	settings_button.custom_minimum_size = Vector2(256, 24)
+	settings_button.text = "Settings"
+	settings_button.pressed.connect(_on_settings_button_pressed)
+	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(settings_button)
 
-func _on_map_button_pressed() -> void:
-	# Placeholder for map functionality
+	# Create "Exit" button
+	var exit_button = Button.new()
+	exit_button.custom_minimum_size = Vector2(256, 24)
+	exit_button.text = "Exit"
+	exit_button.pressed.connect(_on_exit_button_pressed)
+	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(exit_button)
+
+func _on_display_button_pressed() -> void:
+	# Placeholder for display functionality
 	close_menu()
 
-func _on_resources_button_pressed() -> void:
-	# Placeholder for resources functionality
+func _on_keybinds_button_pressed() -> void:
+	# Placeholder for keybinds functionality
 	close_menu()
 
-func _on_system_button_pressed() -> void:
-	get_parent().open_system_menu()
+func _on_settings_button_pressed() -> void:
+	# Placeholder for settings functionality
+	close_menu()
+
+func _on_exit_button_pressed() -> void:
+	get_parent().open_close_confirmation()
 	close_menu()
 
 func open_menu() -> void:
