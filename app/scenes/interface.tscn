@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://dluxm6e80n02y"]
+[gd_scene load_steps=16 format=3 uid="uid://dluxm6e80n02y"]
 
 [ext_resource type="Script" uid="uid://b7v1pie42hxe" path="res://scenes/interface.gd" id="1_7q01f"]
 [ext_resource type="PackedScene" uid="uid://doj5tijrttd2p" path="res://scenes/action_widget.tscn" id="2_lw6my"]
@@ -13,6 +13,8 @@
 [ext_resource type="Script" uid="uid://cuwk87xmkxhuv" path="res://scenes/focus_widget_top_right.gd" id="10_tr_script"]
 [ext_resource type="Script" uid="uid://hivqnsmmqbd3" path="res://scenes/focus_widget_bot_left.gd" id="11_bl_script"]
 [ext_resource type="Script" uid="uid://mue44t010v1g" path="res://scenes/focus_widget_bot_right.gd" id="12_br_script"]
+[ext_resource type="PackedScene" uid="uid://cghvp3k5m8yxe" path="res://scenes/global_menu_view.tscn" id="13_global_menu"]
+[ext_resource type="PackedScene" uid="uid://b0vk5n8h1ydji" path="res://scenes/confirmation_modal.tscn" id="14_confirmation"]
 
 [node name="Interface" type="Node"]
 script = ExtResource("1_7q01f")
@@ -243,3 +245,7 @@ visible = false
 
 [node name="PlateView" parent="." instance=ExtResource("8_plate")]
 visible = false
+
+[node name="GlobalMenuView" parent="." instance=ExtResource("13_global_menu")]
+
+[node name="ConfirmationModal" parent="." instance=ExtResource("14_confirmation")]

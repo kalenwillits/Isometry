@@ -1,0 +1,86 @@
+extends CanvasLayer
+
+var on_yes_callback: Callable
+var on_no_callback: Callable
+var selected_button: int = 1  # 0 = Yes, 1 = No (default to No for safety)
+
+func _ready() -> void:
+	visible = false
+	add_to_group(Group.CONFIRMATION_MODAL)
+	$Overlay/CenterContainer/PanelContainer/VBox/ButtonBox/YesButton.pressed.connect(_on_yes_pressed)
+	$Overlay/CenterContainer/PanelContainer/VBox/ButtonBox/NoButton.pressed.connect(_on_no_pressed)
+
+func open_modal(question: String, yes_callback: Callable, no_callback: Callable = Callable()) -> void:
+	$Overlay/CenterContainer/PanelContainer/VBox/QuestionLabel.text = question
+	on_yes_callback = yes_callback
+	on_no_callback = no_callback
+	selected_button = 1  # Default to No
+	update_button_highlight()
+	visible = true
+
+func close_modal() -> void:
+	visible = false
+	on_yes_callback = Callable()
+	on_no_callback = Callable()
+
+func _on_yes_pressed() -> void:
+	if on_yes_callback.is_valid():
+		on_yes_callback.call()
+	close_modal()
+
+func _on_no_pressed() -> void:
+	if on_no_callback.is_valid():
+		on_no_callback.call()
+	close_modal()
+
+func update_button_highlight() -> void:
+	var yes_button = $Overlay/CenterContainer/PanelContainer/VBox/ButtonBox/YesButton
+	var no_button = $Overlay/CenterContainer/PanelContainer/VBox/ButtonBox/NoButton
+
+	if selected_button == 0:
+		yes_button.modulate = Color(1.5, 1.5, 1.5, 1.0)  # Highlight
+		no_button.modulate = Color(1.0, 1.0, 1.0, 1.0)   # Normal
+	else:
+		yes_button.modulate = Color(1.0, 1.0, 1.0, 1.0)  # Normal
+		no_button.modulate = Color(1.5, 1.5, 1.5, 1.0)   # Highlight
+
+func move_selection_left() -> void:
+	selected_button = 0  # Yes
+	update_button_highlight()
+
+func move_selection_right() -> void:
+	selected_button = 1  # No
+	update_button_highlight()
+
+func activate_selected() -> void:
+	if selected_button == 0:
+		_on_yes_pressed()
+	else:
+		_on_no_pressed()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not visible:
+		return
+
+	if event.is_action_pressed("menu_cancel"):
+		# Escape acts as "No"
+		_on_no_pressed()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("menu_accept"):
+		# Enter activates selected button
+		activate_selected()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_left"):
+		move_selection_left()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_right"):
+		move_selection_right()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_up"):
+		# Tab-like behavior
+		move_selection_left()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_down"):
+		# Tab-like behavior
+		move_selection_right()
+		get_viewport().set_input_as_handled()

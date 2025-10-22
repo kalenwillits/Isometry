@@ -89,3 +89,34 @@ func open_plate_for_actor(plate_key: String, caller: String, target: String) -> 
 		return
 
 	$PlateView.open_plate(plate_ent, caller, target)
+
+func open_global_menu() -> void:
+	$GlobalMenuView.open_menu()
+
+func open_close_confirmation() -> void:
+	$ConfirmationModal.open_modal(
+		"Are you sure you want to quit?",
+		func(): get_tree().quit(),  # Yes callback
+		func(): pass  # No callback (just closes modal)
+	)
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Check if escape key is pressed
+	if event.is_action_pressed("menu_cancel"):
+		# Check if any menu is currently visible
+		if $GlobalMenuView.visible:
+			# GlobalMenuView handles its own escape
+			return
+		elif $ContextMenu.visible:
+			# ContextMenu handles its own escape
+			return
+		elif $PlateView.visible:
+			# PlateView handles its own escape
+			return
+		elif $ConfirmationModal.visible:
+			# ConfirmationModal handles its own escape
+			return
+		else:
+			# No menus open - open global menu
+			open_global_menu()
+			get_viewport().set_input_as_handled()
