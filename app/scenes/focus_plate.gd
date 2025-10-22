@@ -210,7 +210,7 @@ func update_cardinal_label() -> void:
 
 	# Calculate distance
 	var distance = primary_actor.global_position.distance_to(target_actor.global_position)
-
+	
 	# Hide direction if very close (within 9 units)
 	if distance < 9.0:
 		$VBox/HBox/CardinalLabel.text = "    "

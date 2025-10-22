@@ -96,6 +96,9 @@ func open_global_menu() -> void:
 func open_system_menu() -> void:
 	$SystemMenuView.open_menu()
 
+func open_resources_menu() -> void:
+	$ResourcesMenuView.open_menu()
+
 func open_close_confirmation() -> void:
 	$ConfirmationModal.open_modal(
 		"Are you sure you want to quit?",
@@ -112,6 +115,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		elif $SystemMenuView.visible:
 			# SystemMenuView handles its own escape
+			return
+		elif $ResourcesMenuView.visible:
+			# ResourcesMenuView handles its own escape
 			return
 		elif $ContextMenu.visible:
 			# ContextMenu handles its own escape

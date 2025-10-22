@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://dluxm6e80n02y"]
+[gd_scene load_steps=18 format=3 uid="uid://dluxm6e80n02y"]
 
 [ext_resource type="Script" uid="uid://b7v1pie42hxe" path="res://scenes/interface.gd" id="1_7q01f"]
 [ext_resource type="PackedScene" uid="uid://doj5tijrttd2p" path="res://scenes/action_widget.tscn" id="2_lw6my"]
@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" uid="uid://cghvp3k5m8yxe" path="res://scenes/global_menu_view.tscn" id="13_global_menu"]
 [ext_resource type="PackedScene" uid="uid://b0vk5n8h1ydji" path="res://scenes/confirmation_modal.tscn" id="14_confirmation"]
 [ext_resource type="PackedScene" uid="uid://bw6j5yh8k2m3n" path="res://scenes/system_menu_view.tscn" id="15_system_menu"]
+[ext_resource type="PackedScene" uid="uid://cq8v3k5n2p4ym" path="res://scenes/resources_menu_view.tscn" id="16_resources_menu"]
 
 [node name="Interface" type="Node"]
 script = ExtResource("1_7q01f")
@@ -250,5 +251,7 @@ visible = false
 [node name="GlobalMenuView" parent="." instance=ExtResource("13_global_menu")]
 
 [node name="SystemMenuView" parent="." instance=ExtResource("15_system_menu")]
+
+[node name="ResourcesMenuView" parent="." instance=ExtResource("16_resources_menu")]
 
 [node name="ConfirmationModal" parent="." instance=ExtResource("14_confirmation")]

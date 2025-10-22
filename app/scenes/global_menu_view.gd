@@ -34,7 +34,7 @@ func _on_map_button_pressed() -> void:
 	close_menu()
 
 func _on_resources_button_pressed() -> void:
-	# Placeholder for resources functionality
+	get_parent().open_resources_menu()
 	close_menu()
 
 func _on_system_button_pressed() -> void:

@@ -19,6 +19,10 @@ func _ready() -> void:
 	$Button/Icon.set_texture(icon_texture)
 	$Button.pressed.connect(_on_button_pressed)
 
+	# Set tooltip from entity
+	if entity.get("tooltip"):
+		$Button.tooltip_text = entity.tooltip
+
 func _on_button_pressed() -> void:
 	var entity: Entity = Repo.select(key)
 	if entity and entity.menu:
