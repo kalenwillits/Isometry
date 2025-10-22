@@ -131,6 +131,62 @@ func get_direction_display(direction: String) -> String:
 		_:
 			return " ---"
 
+func check_line_of_sight(from_actor: Actor, to_actor: Actor) -> bool:
+	# Check if there's a clear line of sight (no walls blocking)
+	if from_actor == null or to_actor == null:
+		return false
+	return from_actor.line_of_sight_to_point(to_actor.global_position)
+
+func check_reverse_vision(target_actor: Actor, primary_actor: Actor) -> bool:
+	# Check if target actor can see the primary actor
+	if target_actor == null or primary_actor == null:
+		return false
+	return primary_actor.name in target_actor.in_view
+
+func check_mutual_targeting(target_actor: Actor, primary_actor: Actor) -> bool:
+	# Check if target actor is targeting the primary actor
+	if target_actor == null or primary_actor == null:
+		return false
+	return target_actor.target == primary_actor.name
+
+func update_vision_state_label() -> void:
+	var primary_actor: Actor = Finder.get_primary_actor()
+	if primary_actor == null:
+		$VBox/HBox/VisionStateLabel.text = ""
+		return
+
+	# Don't show vision state for self
+	if actor == primary_actor.name:
+		$VBox/HBox/VisionStateLabel.text = "    "
+		return
+
+	var target_actor: Actor = Finder.get_actor(actor)
+	if target_actor == null:
+		$VBox/HBox/VisionStateLabel.text = "    "
+		return
+
+	# Hide vision state if actor is out of view
+	if actor not in primary_actor.in_view:
+		$VBox/HBox/VisionStateLabel.text = "    "
+		return
+
+	# Build symbol string in fixed order: vision, los, targeted
+	var symbols: String = ""
+
+	# ◉ = Target has primary actor in view
+	if check_reverse_vision(target_actor, primary_actor):
+		symbols += "◉ "
+
+	# ▲ = Line of sight
+	if check_line_of_sight(primary_actor, target_actor):
+		symbols += "▲ "
+
+	# ⌖ = Target is targeting primary actor
+	if check_mutual_targeting(target_actor, primary_actor):
+		symbols += "⌖ "
+
+	$VBox/HBox/VisionStateLabel.text = symbols
+
 func update_cardinal_label() -> void:
 	var primary_actor: Actor = Finder.get_primary_actor()
 	if primary_actor == null:
@@ -192,6 +248,8 @@ func _process(delta: float) -> void:
 	update_timer += delta
 	if update_timer >= UPDATE_INTERVAL:
 		update_timer = 0.0
+		# Update vision state label
+		update_vision_state_label()
 		# Update cardinal direction label
 		update_cardinal_label()
 		# Update visibility alpha for out-of-view actors

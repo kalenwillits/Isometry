@@ -82,6 +82,14 @@ horizontal_alignment = 1
 vertical_alignment = 1
 uppercase = true
 
+[node name="VisionStateLabel" type="Label" parent="VBox/HBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_o28qo")
+theme_override_font_sizes/font_size = 10
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="CardinalLabel" type="Label" parent="VBox/HBox"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("3_o28qo")

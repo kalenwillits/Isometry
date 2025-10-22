@@ -42,8 +42,20 @@ layout_mode = 2
 theme_override_constants/separation = 0
 alignment = 1
 
+[node name="MarginLeft" type="MarginContainer" parent="VBox/HBox"]
+custom_minimum_size = Vector2(4, 0)
+layout_mode = 2
+
+[node name="VisionStateLabel" type="Label" parent="VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_o28qo")
+theme_override_font_sizes/font_size = 10
+vertical_alignment = 1
+
 [node name="ActorLabel" type="Label" parent="VBox/HBox"]
 clip_contents = true
+custom_minimum_size = Vector2(124, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
@@ -52,15 +64,20 @@ theme_override_font_sizes/font_size = 12
 text = "Actor Display name"
 horizontal_alignment = 1
 vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
 
 [node name="CardinalLabel" type="Label" parent="VBox/HBox"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("3_o28qo")
 theme_override_font_sizes/font_size = 10
-horizontal_alignment = 1
+horizontal_alignment = 2
 vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 1
 
-[node name="Margin" type="MarginContainer" parent="VBox/HBox"]
+[node name="MarginRight" type="MarginContainer" parent="VBox/HBox"]
 custom_minimum_size = Vector2(4, 0)
 layout_mode = 2
 
