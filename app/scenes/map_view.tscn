@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://dq7v4k6n3r50p"]
+[gd_scene load_steps=6 format=3 uid="uid://dq7v4k6n3r50p"]
 
 [ext_resource type="Script" path="res://scenes/map_view.gd" id="1_script"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_panel"]
 [ext_resource type="Script" path="res://scenes/player_marker.gd" id="4_marker"]
+[ext_resource type="Script" path="res://scenes/camera_viewport_indicator.gd" id="5_viewport_indicator"]
 
 [node name="MapView" type="CanvasLayer"]
 visible = false
@@ -57,6 +58,10 @@ render_target_update_mode = 0
 
 [node name="Camera" type="Camera2D" parent="Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport"]
 enabled = true
+
+[node name="CameraViewportIndicator" type="Node2D" parent="Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport"]
+z_index = 101
+script = ExtResource("5_viewport_indicator")
 
 [node name="PlayerMarker" type="Node2D" parent="Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport"]
 z_index = 100

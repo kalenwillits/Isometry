@@ -16,7 +16,7 @@ func load_texture(path_to_asset: String) -> void:
 		.pull()
 	$Layer.set_mirroring(Vector2(texture.get_width(), texture.get_height()))
 	$Layer/Sprite.texture = texture
-	
+
 func _format_effect(value: float) -> float:
 	## Allows users to think in whole numbers.
 	return value / SCALAR

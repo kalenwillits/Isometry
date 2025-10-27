@@ -3,6 +3,7 @@ extends CanvasLayer
 @onready var viewport: SubViewport = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport
 @onready var viewport_camera: Camera2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/Camera
 @onready var player_marker: Node2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/PlayerMarker
+@onready var camera_viewport_indicator: Node2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/CameraViewportIndicator
 
 const TILE_SIZE: Vector2 = Vector2(32, 16)  # Isometric tile size from Map.gd
 const PLAYER_MARKER_RADIUS: float = 8.0
@@ -64,11 +65,14 @@ func open_view() -> void:
 	# Clone map layers with only discovered tiles
 	clone_map_layers(map_node, primary_actor)
 
+	# Calculate zoom to fit discovered area (this also calculates map center)
+	var map_center = calculate_and_set_zoom(primary_actor)
+
+	# Clone parallax backgrounds and position them at map center
+	clone_parallax_backgrounds(map_node, map_center)
+
 	# Position player marker
 	position_player_marker(primary_actor)
-
-	# Calculate zoom to fit discovered area
-	calculate_and_set_zoom(primary_actor)
 
 	Logger.info("Map view opened successfully", self)
 	visible = true
@@ -78,10 +82,28 @@ func close_view() -> void:
 	clear_viewport()
 
 func clear_viewport() -> void:
-	# Remove all children except camera and player marker
+	# Remove all children except camera, player marker, and camera viewport indicator
 	for child in viewport.get_children():
-		if child != viewport_camera and child != player_marker:
+		if child != viewport_camera and child != player_marker and child != camera_viewport_indicator:
 			child.queue_free()
+
+func clone_parallax_backgrounds(map_node: Map, center_position: Vector2) -> void:
+	# Get all ParallaxBackground children from the map
+	var parallax_bgs = map_node.get_children().filter(func(child): return child is ParallaxBackground)
+
+	for original_parallax_bg in parallax_bgs:
+		# Clone the entire ParallaxBackground node structure
+		var cloned_parallax_bg = original_parallax_bg.duplicate()
+		cloned_parallax_bg.name = original_parallax_bg.name + "_Clone"
+
+		# Set scroll offset to 0 for static view
+		cloned_parallax_bg.scroll_offset = Vector2.ZERO
+		cloned_parallax_bg.scroll_base_offset = Vector2.ZERO
+
+		viewport.add_child(cloned_parallax_bg)
+
+		# Move to back
+		viewport.move_child(cloned_parallax_bg, 0)
 
 func clone_map_layers(map_node: Map, primary_actor: Actor) -> void:
 	# Get all TileMapLayer children from the map
@@ -128,7 +150,7 @@ func position_player_marker(primary_actor: Actor) -> void:
 	player_marker.global_position = primary_actor.global_position
 	player_marker.queue_redraw()
 
-func calculate_and_set_zoom(primary_actor: Actor) -> void:
+func calculate_and_set_zoom(primary_actor: Actor) -> Vector2:
 	# Collect all discovered tile coordinates
 	var discovered_coords: Array[Vector2i] = []
 
@@ -145,7 +167,7 @@ func calculate_and_set_zoom(primary_actor: Actor) -> void:
 		map_node = get_tree().get_first_node_in_group(map_key) as Map
 
 	if not map_node:
-		return
+		return primary_actor.global_position
 
 	var layers = map_node.get_children().filter(func(child): return child is TileMapLayer)
 
@@ -161,7 +183,7 @@ func calculate_and_set_zoom(primary_actor: Actor) -> void:
 		# Default zoom if no tiles discovered
 		viewport_camera.zoom = Vector2(1.0, 1.0)
 		viewport_camera.position = primary_actor.global_position
-		return
+		return primary_actor.global_position
 
 	# Calculate bounds of discovered area in map coordinates
 	var bounds := calculate_bounds(discovered_coords, layers[0] if layers.size() > 0 else null)
@@ -178,8 +200,11 @@ func calculate_and_set_zoom(primary_actor: Actor) -> void:
 	# Clamp zoom to reasonable values
 	zoom_level = clamp(zoom_level, 0.1, 10.0)
 
+	var center_position = bounds.get_center()
 	viewport_camera.zoom = Vector2(zoom_level, zoom_level)
-	viewport_camera.position = bounds.get_center()
+	viewport_camera.position = center_position
+
+	return center_position
 
 func calculate_bounds(coords: Array[Vector2i], reference_layer: TileMapLayer) -> Rect2:
 	if coords.is_empty() or reference_layer == null:
@@ -227,6 +252,42 @@ func _process(delta: float) -> void:
 		var primary_actor: Actor = Finder.get_primary_actor()
 		if primary_actor:
 			position_player_marker(primary_actor)
+			update_camera_viewport_indicator()
+
+func update_camera_viewport_indicator() -> void:
+	# Check if indicator exists and is valid
+	if not camera_viewport_indicator or not is_instance_valid(camera_viewport_indicator):
+		return
+
+	# Get the main game camera
+	var game_camera = Finder.select(Group.CAMERA) as Camera2D
+	if not game_camera:
+		return
+
+	# Get the actual viewport size in world coordinates
+	var game_viewport = game_camera.get_viewport()
+	if not game_viewport:
+		return
+
+	var viewport_size = game_viewport.get_visible_rect().size
+	var camera_zoom = game_camera.zoom
+
+	# Calculate the visible area size in world space
+	var visible_width = viewport_size.x / camera_zoom.x
+	var visible_height = viewport_size.y / camera_zoom.y
+
+	# Get camera position
+	var camera_position = game_camera.global_position
+
+	# Create rect centered on camera position
+	var rect = Rect2(
+		camera_position.x - visible_width / 2.0,
+		camera_position.y - visible_height / 2.0,
+		visible_width,
+		visible_height
+	)
+
+	camera_viewport_indicator.set_viewport_rect(rect)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:

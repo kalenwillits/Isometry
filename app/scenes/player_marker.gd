@@ -1,8 +1,8 @@
 extends Node2D
 
-const ELLIPSE_WIDTH: float = 16.0
-const ELLIPSE_HEIGHT: float = 12.0
-const SHADOW_OFFSET: Vector2 = Vector2(2.0, 2.0)
+const ELLIPSE_WIDTH: float = 8.0
+const ELLIPSE_HEIGHT: float = 6.0
+const SHADOW_OFFSET: Vector2 = Vector2(1.0, 1.0)
 const SHADOW_COLOR: Color = Color(0.0, 0.0, 0.0, 0.5)  # Semi-transparent black
 
 var marker_color: Color = Color.WHITE
