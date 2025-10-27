@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const ActorEllipseMarker = preload("res://scenes/actor_ellipse_marker.gd")
+
 @onready var viewport: SubViewport = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport
 @onready var viewport_camera: Camera2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/Camera
 @onready var player_marker: Node2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/PlayerMarker
@@ -11,6 +13,7 @@ const UPDATE_FPS: int = 10
 
 var update_timer: float = 0.0
 var update_interval: float = 1.0 / UPDATE_FPS
+var actor_markers: Dictionary = {}  # Dictionary[String, Node2D] - actor name to marker node
 
 func _ready() -> void:
 	visible = false
@@ -56,6 +59,9 @@ func open_view() -> void:
 	# Clear previous map content
 	clear_viewport()
 
+	# Set player marker size from base
+	player_marker.set_size(primary_actor.base)
+
 	# Set player marker color from group
 	var marker_color: Color = primary_actor.group_outline_color
 	if marker_color == Color.BLACK or marker_color.a == 0.0:
@@ -74,6 +80,9 @@ func open_view() -> void:
 	# Position player marker
 	position_player_marker(primary_actor)
 
+	# Render actor markers
+	render_actor_markers(primary_actor)
+
 	Logger.info("Map view opened successfully", self)
 	visible = true
 
@@ -86,6 +95,9 @@ func clear_viewport() -> void:
 	for child in viewport.get_children():
 		if child != viewport_camera and child != player_marker and child != camera_viewport_indicator:
 			child.queue_free()
+
+	# Clear actor markers dictionary
+	actor_markers.clear()
 
 func clone_parallax_backgrounds(map_node: Map, center_position: Vector2) -> void:
 	# Get all ParallaxBackground children from the map
@@ -149,6 +161,59 @@ func position_player_marker(primary_actor: Actor) -> void:
 	# Position the player marker at the primary actor's location
 	player_marker.global_position = primary_actor.global_position
 	player_marker.queue_redraw()
+
+func should_show_actor(actor: Actor, primary_actor: Actor) -> bool:
+	# Don't show primary actor (has its own marker)
+	if actor == primary_actor:
+		return false
+
+	# Only show actors on the same map
+	if actor.map != primary_actor.map:
+		return false
+
+	# Always show actors in same group
+	if not actor.target_group.is_empty() and actor.target_group == primary_actor.target_group:
+		return true
+
+	# Show actors in primary actor's view
+	if primary_actor.in_view.has(actor.name):
+		return true
+
+	return false
+
+func render_actor_markers(primary_actor: Actor) -> void:
+	# Get all actors from the scene
+	var all_actors = get_tree().get_nodes_in_group(Group.ACTOR)
+
+	for actor in all_actors:
+		var actor_node = actor as Actor
+		if not actor_node:
+			continue
+
+		if should_show_actor(actor_node, primary_actor):
+			# Create marker for this actor
+			var marker = Node2D.new()
+			marker.set_script(ActorEllipseMarker)
+			marker.name = "ActorMarker_" + actor_node.name
+			marker.z_index = 99  # Below player marker (100)
+
+			# Set size from actor base
+			marker.set_size(actor_node.base)
+
+			# Set color from group
+			var marker_color: Color = actor_node.group_outline_color
+			if marker_color == Color.BLACK or marker_color.a == 0.0:
+				marker_color = Color.WHITE  # Default to white if no group color
+			marker.set_color(marker_color)
+
+			# Set position
+			marker.global_position = actor_node.global_position
+
+			# Add to viewport
+			viewport.add_child(marker)
+
+			# Track in dictionary
+			actor_markers[actor_node.name] = marker
 
 func calculate_and_set_zoom(primary_actor: Actor) -> Vector2:
 	# Collect all discovered tile coordinates
@@ -252,7 +317,65 @@ func _process(delta: float) -> void:
 		var primary_actor: Actor = Finder.get_primary_actor()
 		if primary_actor:
 			position_player_marker(primary_actor)
+			update_actor_markers(primary_actor)
 			update_camera_viewport_indicator()
+
+func update_actor_markers(primary_actor: Actor) -> void:
+	# Get all actors
+	var all_actors = get_tree().get_nodes_in_group(Group.ACTOR)
+
+	# Track which actors should be visible
+	var actors_to_show: Dictionary = {}
+
+	for actor in all_actors:
+		var actor_node = actor as Actor
+		if not actor_node:
+			continue
+
+		if should_show_actor(actor_node, primary_actor):
+			actors_to_show[actor_node.name] = actor_node
+
+	# Remove markers for actors that should no longer be visible
+	for actor_name in actor_markers.keys():
+		if not actors_to_show.has(actor_name):
+			var marker = actor_markers[actor_name]
+			if marker and is_instance_valid(marker):
+				marker.queue_free()
+			actor_markers.erase(actor_name)
+
+	# Update existing markers or create new ones
+	for actor_name in actors_to_show.keys():
+		var actor_node = actors_to_show[actor_name]
+
+		if actor_markers.has(actor_name):
+			# Update existing marker position
+			var marker = actor_markers[actor_name]
+			if marker and is_instance_valid(marker):
+				marker.global_position = actor_node.global_position
+		else:
+			# Create new marker
+			var marker = Node2D.new()
+			marker.set_script(ActorEllipseMarker)
+			marker.name = "ActorMarker_" + actor_node.name
+			marker.z_index = 99  # Below player marker (100)
+
+			# Set size from actor base
+			marker.set_size(actor_node.base)
+
+			# Set color from group
+			var marker_color: Color = actor_node.group_outline_color
+			if marker_color == Color.BLACK or marker_color.a == 0.0:
+				marker_color = Color.WHITE  # Default to white if no group color
+			marker.set_color(marker_color)
+
+			# Set position
+			marker.global_position = actor_node.global_position
+
+			# Add to viewport
+			viewport.add_child(marker)
+
+			# Track in dictionary
+			actor_markers[actor_node.name] = marker
 
 func update_camera_viewport_indicator() -> void:
 	# Check if indicator exists and is valid

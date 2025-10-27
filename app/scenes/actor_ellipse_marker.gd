@@ -1,12 +1,10 @@
 extends Node2D
 
 const BASE_SIZE_MULTIPLIER: float = 0.5  # Scale factor for base size to ellipse size
-const SHADOW_OFFSET: Vector2 = Vector2(1.0, 1.0)
-const SHADOW_COLOR: Color = Color(0.0, 0.0, 0.0, 0.5)  # Semi-transparent black
 
 var marker_color: Color = Color.WHITE
-var ellipse_width: float = 8.0
-var ellipse_height: float = 6.0
+var ellipse_width: float = 6.0
+var ellipse_height: float = 4.0
 
 func set_color(color: Color) -> void:
 	marker_color = color
@@ -20,20 +18,17 @@ func set_size(base_size: int) -> void:
 		ellipse_height = base_size * BASE_SIZE_MULTIPLIER * 0.75  # Slightly taller ratio
 	else:
 		# Default size
-		ellipse_width = 8.0
-		ellipse_height = 6.0
+		ellipse_width = 6.0
+		ellipse_height = 4.0
 	queue_redraw()
 
 func _draw() -> void:
-	# Draw shadow (ellipse offset)
-	draw_ellipse(SHADOW_OFFSET, ellipse_width, ellipse_height, SHADOW_COLOR)
-
-	# Draw main ellipse in group color
+	# Draw ellipse in group color
 	draw_ellipse(Vector2.ZERO, ellipse_width, ellipse_height, marker_color)
 
 func draw_ellipse(center: Vector2, width: float, height: float, color: Color) -> void:
 	var points: PackedVector2Array = []
-	var num_points: int = 32  # Number of points to approximate the ellipse
+	var num_points: int = 24  # Fewer points than player marker for performance
 
 	for i in range(num_points):
 		var angle: float = (i / float(num_points)) * TAU
