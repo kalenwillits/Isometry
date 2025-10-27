@@ -99,6 +99,17 @@ func open_system_menu() -> void:
 func open_resources_menu() -> void:
 	$ResourcesMenuView.open_menu()
 
+func open_map_view() -> void:
+	Logger.info("Interface: Opening map view", self)
+	$MapView.open_view()
+
+func toggle_map_view() -> void:
+	Logger.info("Interface: Toggling map view (current visible: %s)" % $MapView.visible, self)
+	if $MapView.visible:
+		$MapView.close_view()
+	else:
+		$MapView.open_view()
+
 func open_close_confirmation() -> void:
 	$ConfirmationModal.open_modal(
 		"Are you sure you want to quit?",
@@ -107,6 +118,14 @@ func open_close_confirmation() -> void:
 	)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Check for map view toggle
+	if event.is_action_pressed("toggle_map_view"):
+		# Don't open map view if other menus are visible
+		if not ($GlobalMenuView.visible or $SystemMenuView.visible or $ResourcesMenuView.visible or $ContextMenu.visible or $PlateView.visible or $ConfirmationModal.visible):
+			toggle_map_view()
+			get_viewport().set_input_as_handled()
+		return
+
 	# Check if escape key is pressed
 	if event.is_action_pressed("menu_cancel"):
 		# Check if any menu is currently visible
@@ -118,6 +137,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		elif $ResourcesMenuView.visible:
 			# ResourcesMenuView handles its own escape
+			return
+		elif $MapView.visible:
+			# MapView handles its own escape
 			return
 		elif $ContextMenu.visible:
 			# ContextMenu handles its own escape

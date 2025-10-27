@@ -30,7 +30,7 @@ func _create_menu_items() -> void:
 	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(system_button)
 
 func _on_map_button_pressed() -> void:
-	# Placeholder for map functionality
+	get_parent().open_map_view()
 	close_menu()
 
 func _on_resources_button_pressed() -> void:
