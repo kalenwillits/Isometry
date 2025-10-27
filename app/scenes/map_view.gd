@@ -55,6 +55,12 @@ func open_view() -> void:
 	# Clear previous map content
 	clear_viewport()
 
+	# Set player marker color from group
+	var marker_color: Color = primary_actor.group_outline_color
+	if marker_color == Color.BLACK or marker_color.a == 0.0:
+		marker_color = Color.WHITE  # Default to white if no group color
+	player_marker.set_color(marker_color)
+
 	# Clone map layers with only discovered tiles
 	clone_map_layers(map_node, primary_actor)
 

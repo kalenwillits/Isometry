@@ -1,18 +1,31 @@
 extends Node2D
 
-const MARKER_RADIUS: float = 12.0
-const MARKER_COLOR: Color = Color(1.0, 0.3, 0.3, 1.0)  # Bright red
-const OUTLINE_COLOR: Color = Color(1.0, 1.0, 1.0, 1.0)  # White outline
-const OUTLINE_WIDTH: float = 2.0
+const ELLIPSE_WIDTH: float = 16.0
+const ELLIPSE_HEIGHT: float = 12.0
+const SHADOW_OFFSET: Vector2 = Vector2(2.0, 2.0)
+const SHADOW_COLOR: Color = Color(0.0, 0.0, 0.0, 0.5)  # Semi-transparent black
+
+var marker_color: Color = Color.WHITE
+
+func set_color(color: Color) -> void:
+	marker_color = color
+	queue_redraw()
 
 func _draw() -> void:
-	# Draw white outline
-	draw_circle(Vector2.ZERO, MARKER_RADIUS + OUTLINE_WIDTH, OUTLINE_COLOR)
+	# Draw shadow (ellipse offset)
+	draw_ellipse(SHADOW_OFFSET, ELLIPSE_WIDTH, ELLIPSE_HEIGHT, SHADOW_COLOR)
 
-	# Draw red marker
-	draw_circle(Vector2.ZERO, MARKER_RADIUS, MARKER_COLOR)
+	# Draw main ellipse in group color
+	draw_ellipse(Vector2.ZERO, ELLIPSE_WIDTH, ELLIPSE_HEIGHT, marker_color)
 
-	# Draw crosshair
-	var cross_size: float = MARKER_RADIUS * 0.6
-	draw_line(Vector2(-cross_size, 0), Vector2(cross_size, 0), OUTLINE_COLOR, 2.0)
-	draw_line(Vector2(0, -cross_size), Vector2(0, cross_size), OUTLINE_COLOR, 2.0)
+func draw_ellipse(center: Vector2, width: float, height: float, color: Color) -> void:
+	var points: PackedVector2Array = []
+	var num_points: int = 32  # Number of points to approximate the ellipse
+
+	for i in range(num_points):
+		var angle: float = (i / float(num_points)) * TAU
+		var x: float = center.x + width * cos(angle)
+		var y: float = center.y + height * sin(angle)
+		points.append(Vector2(x, y))
+
+	draw_colored_polygon(points, color)
