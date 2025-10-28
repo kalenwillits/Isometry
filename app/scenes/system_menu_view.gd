@@ -22,12 +22,12 @@ func _create_menu_items() -> void:
 	keybinds_button.pressed.connect(_on_keybinds_button_pressed)
 	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(keybinds_button)
 
-	# Create "Settings" button
-	var settings_button = Button.new()
-	settings_button.custom_minimum_size = Vector2(256, 24)
-	settings_button.text = "Settings"
-	settings_button.pressed.connect(_on_settings_button_pressed)
-	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(settings_button)
+	# Create "Options" button
+	var options_button = Button.new()
+	options_button.custom_minimum_size = Vector2(256, 24)
+	options_button.text = "Options"
+	options_button.pressed.connect(_on_options_button_pressed)
+	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(options_button)
 
 	# Create "Exit" button
 	var exit_button = Button.new()
@@ -44,8 +44,8 @@ func _on_keybinds_button_pressed() -> void:
 	# Placeholder for keybinds functionality
 	close_menu()
 
-func _on_settings_button_pressed() -> void:
-	# Placeholder for settings functionality
+func _on_options_button_pressed() -> void:
+	get_parent().open_options_view()
 	close_menu()
 
 func _on_exit_button_pressed() -> void:

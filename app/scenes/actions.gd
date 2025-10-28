@@ -306,8 +306,8 @@ func temp_speed_self(self_name: String, _target_name: String, params: Dictionary
 			self_actor.set_speed(original_speed)
 	, CONNECT_ONE_SHOT)
 
-func open_settings(_self_name: String, _target_name: String, _params: Dictionary) -> void:
-	Logger.info("Settings menu - Placeholder", self)
+func open_options(_self_name: String, _target_name: String, _params: Dictionary) -> void:
+	Logger.info("Options menu - Placeholder", self)
 
 func close_game(_self_name: String, _target_name: String, _params: Dictionary) -> void:
 	Logger.info("Close game - Placeholder", self)

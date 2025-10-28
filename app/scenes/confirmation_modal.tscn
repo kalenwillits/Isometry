@@ -66,3 +66,8 @@ custom_minimum_size = Vector2(80, 32)
 layout_mode = 2
 theme = ExtResource("2_theme")
 text = "No"
+
+[node name="CountdownTimer" type="Timer" parent="."]
+wait_time = 1.0
+one_shot = false
+autostart = false
