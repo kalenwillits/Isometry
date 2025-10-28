@@ -42,7 +42,10 @@ func _ready() -> void:
 		# Duplicate the material so each waypoint has its own instance
 		var shader_material = actor_material.duplicate()
 		shader_material.set_shader_parameter("color", Color.WHITE)
-		shader_material.set_shader_parameter("width", 1.0)
+		shader_material.set_shader_parameter("width", 2.5)
+		shader_material.set_shader_parameter("glow_strength", 0.6)
+		shader_material.set_shader_parameter("glow_falloff", 2.2)
+		shader_material.set_shader_parameter("glow_samples", 3)
 		icon_rect.material = shader_material
 
 	add_child(icon_rect)
