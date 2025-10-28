@@ -7,9 +7,16 @@ const CAMERA_ZOOM_MAX: int = 11
 
 @export var zoom_level: int = CAMERA_ZOOM_DEFAULT
 
-const CAMERA_MARGIN: int = 33.33
+# Base resolution for margin calculation
+const BASE_RESOLUTION: Vector2 = Vector2(800, 600)
+const CAMERA_MARGIN_RATIO: float = 33.33 / 600.0  # Proportion of screen height
 const CAMERA_SPEED: float = 111.1
 const CAMERA_TOLERANCE: float = 100.0
+
+# Dynamic margin based on current resolution
+func get_camera_margin() -> float:
+	var viewport_size = get_viewport().get_visible_rect().size
+	return viewport_size.y * CAMERA_MARGIN_RATIO
 
 var _target: WeakRef
 var _has_target: bool = false
@@ -46,9 +53,10 @@ func snap_to(vec: Vector2) -> void:
 func use_margin_panning(delta: float) -> void:
 	var cursor = get_viewport().get_mouse_position()
 	var viewsize = get_viewport().get_visible_rect().size
-	if (cursor.x < CAMERA_MARGIN) or (cursor.x > (viewsize.x - CAMERA_MARGIN)):
+	var margin = get_camera_margin()
+	if (cursor.x < margin) or (cursor.x > (viewsize.x - margin)):
 		smooth_pan_to(get_global_mouse_position(), delta)
-	elif (cursor.y < CAMERA_MARGIN) or (cursor.y > (viewsize.y - CAMERA_MARGIN)):
+	elif (cursor.y < margin) or (cursor.y > (viewsize.y - margin)):
 		smooth_pan_to(get_global_mouse_position(), delta)
 
 func _physics_process(delta: float) -> void:
