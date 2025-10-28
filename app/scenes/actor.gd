@@ -1693,9 +1693,6 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 	if is_primary():
 		other.fader.fade()
 		other.visible_to_primary(true)
-		# Show outline with group color (unless targeting changes it)
-		if other.get_name() != target:
-			other.set_outline_opacity(0.333)  # OUTLINE_HOVER opacity
 
 		# Track group visibility
 		if other.target_group != "":

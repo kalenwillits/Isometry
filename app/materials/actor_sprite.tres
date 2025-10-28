@@ -5,7 +5,7 @@
 [resource]
 resource_local_to_scene = true
 shader = ExtResource("1_vbx4q")
-shader_parameter/color = Color(1, 1, 1, 1)
+shader_parameter/color = Color(1, 1, 1, 0)
 shader_parameter/width = 2.0
 shader_parameter/pattern = 1
 shader_parameter/inside = false
