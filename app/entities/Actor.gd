@@ -3,7 +3,7 @@ extends Entity
 var name_: String
 var sprite: KeyRef # Sprite
 var polygon: KeyRef # Polygon # TODO remove
-var base: int # Size of base
+var base: int # Size of base/exit
 var hitbox: KeyRef # Polygon
 var perception: int
 var salience: int

@@ -71,6 +71,7 @@ var in_view: Dictionary # A Dictionary[StringName, Integer] of actors that are c
 var visible_groups: Dictionary = {} # A Dictionary[String, Integer] tracking count of visible actors per group
 var track_index: int = 0 # Identifies what index in a npc's track array to follow
 var discovery: Dictionary = {}
+var discovered_waypoints: Array[String] = [] # Array of waypoint keys that have been discovered by this actor
 # Focus slot storage - 4 corner saved targets
 var focus_top_left: String = ""
 var focus_top_right: String = ""
@@ -170,7 +171,11 @@ class ActorBuilder extends Object:
 	func discovery(value: Dictionary) -> ActorBuilder:
 		this.discovery = value
 		return self
-		
+
+	func discovered_waypoints(value: Array) -> ActorBuilder:
+		this.discovered_waypoints = value if value else []
+		return self
+
 	func speed(value: float) -> ActorBuilder:
 		this.speed = value
 		return self
@@ -254,6 +259,7 @@ func pack() -> Dictionary:
 	}
 	if !is_npc():
 		results["discovery"] = pack_discovery()
+		results["discovered_waypoints"] = discovered_waypoints
 	return results
 	
 func get_outline_color() -> Color:

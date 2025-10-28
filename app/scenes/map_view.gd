@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const ActorEllipseMarker = preload("res://scenes/actor_ellipse_marker.gd")
+const WaypointMarker = preload("res://scenes/waypoint_marker.gd")
 
 @onready var viewport: SubViewport = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport
 @onready var viewport_camera: Camera2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/Camera
@@ -14,6 +15,9 @@ const UPDATE_FPS: int = 10
 var update_timer: float = 0.0
 var update_interval: float = 1.0 / UPDATE_FPS
 var actor_markers: Dictionary = {}  # Dictionary[String, Node2D] - actor name to marker node
+var waypoint_markers: Dictionary = {}  # Dictionary[String, Node2D] - waypoint key to marker node
+var discovered_waypoint_keys: Array[String] = []  # Ordered list of discovered waypoints
+var selected_waypoint_index: int = -1  # Currently selected waypoint (-1 = none)
 
 func _ready() -> void:
 	visible = false
@@ -83,6 +87,9 @@ func open_view() -> void:
 	# Render actor markers
 	render_actor_markers(primary_actor)
 
+	# Render waypoint markers
+	render_waypoint_markers(primary_actor)
+
 	Logger.info("Map view opened successfully", self)
 	visible = true
 
@@ -98,6 +105,56 @@ func clear_viewport() -> void:
 
 	# Clear actor markers dictionary
 	actor_markers.clear()
+
+	# Clear waypoint markers dictionary
+	waypoint_markers.clear()
+
+	# Reset selection
+	discovered_waypoint_keys.clear()
+	selected_waypoint_index = -1
+
+func update_waypoint_selection() -> void:
+	# Reset all waypoint markers to not selected
+	for marker in waypoint_markers.values():
+		marker.set_selected(false)
+
+	# Set selected waypoint
+	if selected_waypoint_index >= 0 and selected_waypoint_index < discovered_waypoint_keys.size():
+		var selected_key = discovered_waypoint_keys[selected_waypoint_index]
+		if waypoint_markers.has(selected_key):
+			waypoint_markers[selected_key].set_selected(true)
+
+func cycle_waypoint_selection(direction: int) -> void:
+	if discovered_waypoint_keys.size() == 0:
+		return
+
+	selected_waypoint_index = (selected_waypoint_index + direction) % discovered_waypoint_keys.size()
+	if selected_waypoint_index < 0:
+		selected_waypoint_index = discovered_waypoint_keys.size() - 1
+
+	update_waypoint_selection()
+	Logger.info("Selected waypoint: %s (%d/%d)" % [discovered_waypoint_keys[selected_waypoint_index], selected_waypoint_index + 1, discovered_waypoint_keys.size()], self)
+
+func activate_selected_waypoint() -> void:
+	if selected_waypoint_index >= 0 and selected_waypoint_index < discovered_waypoint_keys.size():
+		var selected_key = discovered_waypoint_keys[selected_waypoint_index]
+		if waypoint_markers.has(selected_key):
+			waypoint_markers[selected_key].activate_waypoint()
+
+func _input(event: InputEvent) -> void:
+	if not visible:
+		return
+
+	# Arrow key navigation
+	if event.is_action_pressed("ui_right") or event.is_action_pressed("ui_down"):
+		cycle_waypoint_selection(1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_up"):
+		cycle_waypoint_selection(-1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_select"):
+		activate_selected_waypoint()
+		get_viewport().set_input_as_handled()
 
 func clone_parallax_backgrounds(map_node: Map, center_position: Vector2) -> void:
 	# Get all ParallaxBackground children from the map
@@ -214,6 +271,126 @@ func render_actor_markers(primary_actor: Actor) -> void:
 
 			# Track in dictionary
 			actor_markers[actor_node.name] = marker
+
+func render_waypoint_markers(primary_actor: Actor) -> void:
+	# Get all waypoints
+	var all_waypoints = Repo.query([Group.WAYPOINT_ENTITY])
+	discovered_waypoint_keys.clear()
+
+	Logger.info("Rendering waypoints: found %d total waypoints" % all_waypoints.size(), self)
+
+	for waypoint_ent in all_waypoints:
+		# Only show waypoints on the same map
+		if waypoint_ent.map and waypoint_ent.map.key() != primary_actor.map:
+			Logger.info("Waypoint %s skipped: wrong map (waypoint=%s, actor=%s)" % [waypoint_ent.key(), waypoint_ent.map.key(), primary_actor.map], self)
+			continue
+
+		Logger.info("Rendering waypoint %s at location %s" % [waypoint_ent.key(), waypoint_ent.location], self)
+
+		# Check if waypoint location is discovered
+		if not is_waypoint_discovered(waypoint_ent, primary_actor):
+			Logger.info("Waypoint %s NOT discovered, skipping render", self)
+			continue
+
+		# Add to discovered list
+		discovered_waypoint_keys.append(waypoint_ent.key())
+
+		# Create marker control
+		var marker = Control.new()
+		marker.set_script(WaypointMarker)
+		marker.name = "WaypointMarker_" + waypoint_ent.key()
+		marker.z_index = 98  # Below actor markers (99) and player marker (100)
+
+		# Set waypoint key first (to get the name)
+		marker.set_waypoint_key(waypoint_ent.key())
+
+		# Set position from Vertex
+		if waypoint_ent.location:
+			var vertex_ent = waypoint_ent.location.lookup()
+			if vertex_ent:
+				# Vertices are already in world coordinates
+				var waypoint_coords = vertex_ent.to_vec2i()
+				# Center the control on the waypoint position
+				marker.position = Vector2(waypoint_coords.x - 16, waypoint_coords.y - 16)
+
+		# Add to viewport first so _ready() is called and children are created
+		viewport.add_child(marker)
+
+		# Now set the icon after _ready() has created the TextureRect
+		var icon_texture = load_waypoint_icon(waypoint_ent.icon)
+		if icon_texture:
+			marker.set_icon(icon_texture)
+
+		# Set initial scale to counter camera zoom (to maintain constant screen size)
+		# Scale down to 75% size
+		marker.scale = (Vector2.ONE / viewport_camera.zoom) * 0.75
+
+		# Track in dictionary
+		waypoint_markers[waypoint_ent.key()] = marker
+
+	# Initialize selection to first waypoint if any exist
+	if discovered_waypoint_keys.size() > 0:
+		selected_waypoint_index = 0
+		update_waypoint_selection()
+	else:
+		selected_waypoint_index = -1
+
+func is_waypoint_discovered(waypoint_ent: Entity, primary_actor: Actor) -> bool:
+	# First check if waypoint already discovered (persisted)
+	var waypoint_key = waypoint_ent.get_name()
+	if primary_actor.discovered_waypoints.has(waypoint_key):
+		Logger.info("Waypoint %s already discovered (persisted)" % waypoint_key, self)
+		return true
+
+	# Get waypoint's vertex location
+	if not waypoint_ent.location:
+		Logger.warn("Waypoint %s has no location" % waypoint_key, self)
+		return false
+
+	var vertex_ent = waypoint_ent.location.lookup()
+	if not vertex_ent:
+		Logger.warn("Waypoint %s vertex lookup failed" % waypoint_key, self)
+		return false
+
+	# Get waypoint world position (vertices are already in world coordinates)
+	var waypoint_coords = vertex_ent.to_vec2i()
+	var waypoint_world_pos = Vector2(waypoint_coords.x, waypoint_coords.y)
+
+	# Get primary actor world position
+	var actor_world_pos = primary_actor.position
+
+	# Calculate distance
+	var distance = actor_world_pos.distance_to(waypoint_world_pos)
+
+	# Check if within perception range
+	# ViewBox uses CircleShape2D (default radius 10) scaled by (1 * perception, 0.5 * perception)
+	# So actual radius is: 10 * perception horizontally, 10 * 0.5 * perception vertically
+	# We'll use the average for a circular approximation
+	var perception_range = 10.0 * primary_actor.perception * 0.75  # Average of 1.0 and 0.5 scales
+
+	Logger.info("Waypoint %s: pos=%s, actor_pos=%s, distance=%.1f, perception_range=%.1f, discovered=%s" % [
+		waypoint_key, waypoint_world_pos, actor_world_pos, distance, perception_range, distance <= perception_range
+	], self)
+
+	if distance <= perception_range:
+		# Mark as discovered for persistence
+		if not primary_actor.discovered_waypoints.has(waypoint_key):
+			primary_actor.discovered_waypoints.append(waypoint_key)
+			Logger.info("Waypoint %s newly discovered!" % waypoint_key, self)
+		return true
+
+	return false
+
+func load_waypoint_icon(icon_path: String) -> ImageTexture:
+	if icon_path.is_empty():
+		return null
+
+	return AssetLoader.builder()\
+		.key(icon_path)\
+		.type(AssetLoader.Type.IMAGE)\
+		.archive(Cache.campaign)\
+		.build()\
+		.pull()
 
 func calculate_and_set_zoom(primary_actor: Actor) -> Vector2:
 	# Collect all discovered tile coordinates

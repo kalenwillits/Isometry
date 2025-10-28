@@ -5,6 +5,7 @@
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_35bq7"]
 
 [node name="PlateView" type="CanvasLayer"]
+layer = 10
 script = ExtResource("1_plate")
 
 [node name="Overlay" type="Control" parent="."]

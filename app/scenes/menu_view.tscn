@@ -5,6 +5,7 @@
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_hti5v"]
 
 [node name="MenuView" type="CanvasLayer"]
+layer = 10
 script = ExtResource("1_context")
 
 [node name="Overlay" type="Control" parent="."]

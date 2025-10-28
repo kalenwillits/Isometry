@@ -5,6 +5,7 @@
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_panel"]
 
 [node name="ConfirmationModal" type="CanvasLayer"]
+layer = 15
 visible = false
 script = ExtResource("1_script")
 
