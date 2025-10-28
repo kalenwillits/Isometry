@@ -7,6 +7,7 @@ const WaypointMarker = preload("res://scenes/waypoint_marker.gd")
 @onready var viewport_camera: Camera2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/Camera
 @onready var player_marker: Node2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/PlayerMarker
 @onready var camera_viewport_indicator: Node2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/CameraViewportIndicator
+@onready var title_label: Label = $Overlay/CenterContainer/PanelContainer/VBox/Title
 
 const TILE_SIZE: Vector2 = Vector2(32, 16)  # Isometric tile size from Map.gd
 const PLAYER_MARKER_RADIUS: float = 8.0
@@ -22,6 +23,9 @@ var selected_waypoint_index: int = -1  # Currently selected waypoint (-1 = none)
 func _ready() -> void:
 	visible = false
 	add_to_group(Group.MAP_VIEW)
+
+	# Set viewport to use NEAREST texture filtering for pixel-perfect rendering
+	viewport.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
 
 func open_view() -> void:
 	Logger.info("Opening map view", self)
@@ -59,6 +63,13 @@ func open_view() -> void:
 		return
 
 	Logger.debug("Found map node: %s" % map_node.name, self)
+
+	# Set title from map entity name
+	var map_entity = Repo.select(map_key)
+	if map_entity and map_entity.get("name_"):
+		title_label.text = map_entity.name_
+	else:
+		title_label.text = map_key  # Fallback to key if no name
 
 	# Clear previous map content
 	clear_viewport()
@@ -169,6 +180,16 @@ func clone_parallax_backgrounds(map_node: Map, center_position: Vector2) -> void
 		cloned_parallax_bg.scroll_offset = Vector2.ZERO
 		cloned_parallax_bg.scroll_base_offset = Vector2.ZERO
 
+		# Set texture filter to NEAREST on all ParallaxLayer children and their sprite children
+		for parallax_layer in cloned_parallax_bg.get_children():
+			if parallax_layer is ParallaxLayer:
+				# Set on the ParallaxLayer itself
+				parallax_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				# Also set on all sprite/texture children within the layer
+				for sprite in parallax_layer.get_children():
+					if sprite is CanvasItem:
+						sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
 		viewport.add_child(cloned_parallax_bg)
 
 		# Move to back
@@ -188,6 +209,7 @@ func clone_map_layers(map_node: Map, primary_actor: Actor) -> void:
 		cloned_layer.y_sort_enabled = original_layer.y_sort_enabled
 		cloned_layer.z_index = original_layer.z_index
 		cloned_layer.z_as_relative = original_layer.z_as_relative
+		cloned_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST  # Pixel-perfect rendering
 
 		# Copy only discovered tiles
 		if original_layer is FadingTileMapLayer:
