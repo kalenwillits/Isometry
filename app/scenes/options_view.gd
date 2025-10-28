@@ -3,20 +3,28 @@ extends CanvasLayer
 const CONFIG_FILE_PATH: String = "user://options.cfg"
 const CONFIG_SECTION: String = "display"
 
-# Available resolution presets
+# Available resolution presets - Top 12 common gaming resolutions
 var resolutions: Array[Vector2i] = [
-	Vector2i(1280, 720),
-	Vector2i(1920, 1080),
-	Vector2i(2560, 1440),
-	Vector2i(3840, 2160)
+	Vector2i(800, 600),       # Legacy 4:3
+	Vector2i(1280, 720),      # 720p HD (16:9)
+	Vector2i(1280, 800),      # Steam Deck (16:10)
+	Vector2i(1366, 768),      # Common laptop (16:9)
+	Vector2i(1600, 900),      # HD+ (16:9)
+	Vector2i(1920, 1080),     # 1080p Full HD (16:9) - Most common
+	Vector2i(1920, 1200),     # WUXGA (16:10)
+	Vector2i(2560, 1080),     # Ultrawide 1080p (21:9)
+	Vector2i(2560, 1440),     # 1440p Quad HD (16:9)
+	Vector2i(2560, 1600),     # 1600p (16:10)
+	Vector2i(3440, 1440),     # Ultrawide 1440p (21:9)
+	Vector2i(3840, 2160)      # 4K Ultra HD (16:9)
 ]
 
-var current_resolution_index: int = 1  # Default to 1920x1080
+var current_resolution_index: int = 5  # Default to 1920x1080
 var is_fullscreen: bool = false
 var config: ConfigFile = ConfigFile.new()
 
 # Previous settings for revert functionality
-var previous_resolution_index: int = 1
+var previous_resolution_index: int = 5
 var previous_fullscreen: bool = false
 
 func _ready() -> void:

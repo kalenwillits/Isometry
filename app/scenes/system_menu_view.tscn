@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://bw6j5yh8k2m3n"]
 
-[ext_resource type="Script" path="res://scenes/system_menu_view.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://djrvbo84ug1rf" path="res://scenes/system_menu_view.gd" id="1_script"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_panel"]
 

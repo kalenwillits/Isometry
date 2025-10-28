@@ -8,13 +8,6 @@ func _ready() -> void:
 	_create_menu_items()
 
 func _create_menu_items() -> void:
-	# Create "Display" button
-	var display_button = Button.new()
-	display_button.custom_minimum_size = Vector2(256, 24)
-	display_button.text = "Display"
-	display_button.pressed.connect(_on_display_button_pressed)
-	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(display_button)
-
 	# Create "Keybinds" button
 	var keybinds_button = Button.new()
 	keybinds_button.custom_minimum_size = Vector2(256, 24)
