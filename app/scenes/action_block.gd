@@ -4,6 +4,11 @@ extends Widget
 
 func _ready() -> void:
 	add_to_group(Group.UI_ACTION_BLOCK_N % action_id)
+
+	# Set the action name for the InputIcon
+	var input_icon = $Button/InputIcon
+	if input_icon:
+		input_icon.action_name = get_action_code()
 	
 func render(key: String) -> void:
 	var entity: Entity = Repo.select(key)

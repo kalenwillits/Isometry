@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://c8k5nan2p3q4r"]
+[gd_scene load_steps=5 format=3 uid="uid://c8k5nan2p3q4r"]
 
 [ext_resource type="Script" uid="uid://st1s7s76jw73" path="res://scenes/options_view.gd" id="1_script"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_panel"]
+[ext_resource type="PackedScene" uid="uid://c3g5h8kak1m2n" path="res://scenes/menu_hints.tscn" id="4_menu_hints"]
 
 [node name="OptionsView" type="CanvasLayer"]
 layer = 10
@@ -59,3 +60,7 @@ layout_mode = 2
 [node name="Spacer2" type="MarginContainer" parent="Overlay/CenterContainer/PanelContainer/VBox"]
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
+
+[node name="MenuHints" parent="Overlay/CenterContainer/PanelContainer/VBox" instance=ExtResource("4_menu_hints")]
+layout_mode = 2
+show_accept = false

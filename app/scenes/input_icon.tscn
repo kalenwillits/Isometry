@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dwc8k3n7y5m3a"]
+
+[ext_resource type="Script" path="res://scenes/input_icon.gd" id="1_script"]
+
+[node name="InputIcon" type="HBoxContainer"]
+script = ExtResource("1_script")

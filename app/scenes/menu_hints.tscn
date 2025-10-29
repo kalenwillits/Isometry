@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c3g5h8kak1m2n"]
+
+[ext_resource type="Script" path="res://scenes/menu_hints.gd" id="1_script"]
+
+[node name="MenuHints" type="HBoxContainer"]
+script = ExtResource("1_script")

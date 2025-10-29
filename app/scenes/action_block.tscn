@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://birocdyfqq03p"]
+[gd_scene load_steps=3 format=3 uid="uid://birocdyfqq03p"]
 
 [ext_resource type="Script" uid="uid://cbofbc2niljo8" path="res://scenes/action_block.gd" id="1_j2tux"]
+[ext_resource type="PackedScene" uid="uid://dwc8k3n7y5m3a" path="res://scenes/input_icon.tscn" id="2_input_icon"]
 
 [node name="ActionBlock" type="Control"]
 custom_minimum_size = Vector2(28, 28)
@@ -41,3 +42,17 @@ alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 toggle_mode = true
+
+[node name="InputIcon" parent="Button" instance=ExtResource("2_input_icon")]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 2.0
+offset_bottom = 2.0
+grow_horizontal = 1
+grow_vertical = 1

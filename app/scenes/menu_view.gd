@@ -63,7 +63,7 @@ func render_page() -> void:
 
 	# Update pagination label
 	var total_pages = max(1, ceil(float(actions.size()) / float(items_per_page)))
-	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationLabel.set_text("Page %d/%d" % [current_page + 1, total_pages])
+	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/PaginationLabel.set_text("Page %d/%d" % [current_page + 1, total_pages])
 
 	update_selection_highlight()
 
