@@ -41,28 +41,16 @@ func _build_hints() -> void:
 		_add_hint("menu_next_page", "Next", func(): next_clicked.emit())
 
 func _add_hint(action_name: String, label_text: String, on_click: Callable) -> void:
-	# Create a container for the hint
-	var hint_container = HBoxContainer.new()
-	hint_container.add_theme_constant_override("separation", 8)
-
-	# Add the InputIcon
+	# Add the InputIcon with integrated label
 	var input_icon = InputIconScene.instantiate()
 	input_icon.action_name = action_name
-	input_icon.icon_size = Vector2i(16, 16)
-	input_icon.text_size = 16
+	input_icon.label_text = "  " + label_text  # Add spacing before label
+	input_icon.icon_size = Vector2i(12, 12)
+	input_icon.text_size = 12
 	# Connect the icon's click signal to emit our signal
 	input_icon.icon_clicked.connect(on_click)
-	hint_container.add_child(input_icon)
 
-	# Add the label
-	var label = Label.new()
-	label.text = label_text
-	label.add_theme_font_size_override("font_size", 12)
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Let button handle mouse
-	hint_container.add_child(label)
-
-	add_child(hint_container)
+	add_child(input_icon)
 
 func _add_spacer() -> void:
 	var spacer = Control.new()

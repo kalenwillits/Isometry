@@ -29,10 +29,6 @@ func _create_menu_items() -> void:
 	exit_button.pressed.connect(_on_exit_button_pressed)
 	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(exit_button)
 
-func _on_display_button_pressed() -> void:
-	# Placeholder for display functionality
-	close_menu()
-
 func _on_keybinds_button_pressed() -> void:
 	# Placeholder for keybinds functionality
 	close_menu()

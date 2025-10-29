@@ -13,6 +13,7 @@ signal icon_clicked()
 
 @export var icon_size: Vector2i = Vector2i(8, 8)
 @export var text_size: int = 8
+@export var label_text: String = ""  # Optional label to display after icon
 
 var current_icon_mode: InputIconMapper.IconMode = InputIconMapper.IconMode.KEYBOARD
 var content_container: HBoxContainer = null
@@ -23,8 +24,10 @@ func _ready() -> void:
 	focus_mode = Control.FOCUS_NONE  # Don't steal keyboard focus
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
-	# Create internal container for content
+	# Create internal container for content with centering
 	content_container = HBoxContainer.new()
+	content_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	content_container.add_theme_constant_override("separation", 4)
 	add_child(content_container)
 
 	# Connect button press
@@ -71,11 +74,13 @@ func _refresh_display() -> void:
 	# Get action events from InputMap
 	if not InputMap.has_action(action_name):
 		_add_text_label("?")
+		_add_optional_label()
 		return
 
 	var events = InputMap.action_get_events(action_name)
 	if events.size() == 0:
 		_add_text_label("Unbound")
+		_add_optional_label()
 		return
 
 	# Filter events based on icon mode preference
@@ -108,6 +113,9 @@ func _refresh_display() -> void:
 				_add_text_label(display_data.value)
 			"none":
 				pass  # Don't display anything
+
+	# Add optional label text after the icon
+	_add_optional_label()
 
 # Add an icon to the display
 func _add_icon(icon_path: String) -> void:
@@ -157,6 +165,16 @@ func _add_text_label(text: String) -> void:
 	panel.add_child(label)
 
 	content_container.add_child(panel)
+
+# Add optional label text after the icon/key
+func _add_optional_label() -> void:
+	if label_text != "":
+		var label = Label.new()
+		label.text = label_text
+		label.add_theme_font_size_override("font_size", text_size)
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Let button handle mouse
+		content_container.add_child(label)
 
 # Public method to force refresh (can be called when icon mode changes)
 func refresh() -> void:

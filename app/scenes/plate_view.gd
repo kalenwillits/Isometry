@@ -172,7 +172,7 @@ func render_page() -> void:
 	rich_text_label.append_text(page_text)
 
 	# Update pagination label
-	pagination_label.set_text("Page %d/%d" % [current_page + 1, total_pages])
+	pagination_label.set_text("%d/%d" % [current_page + 1, total_pages])
 
 func next_page() -> void:
 	if current_page < total_pages - 1:

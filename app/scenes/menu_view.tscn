@@ -1,10 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://c5l8u3nqg7y6f"]
+[gd_scene load_steps=4 format=3 uid="uid://c5l8u3nqg7y6f"]
 
 [ext_resource type="Script" uid="uid://dcfyyo7lceowc" path="res://scenes/menu_view.gd" id="1_context"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_hti5v"]
-[ext_resource type="PackedScene" uid="uid://c3g5h8kak1m2n" path="res://scenes/menu_hints.tscn" id="4_menu_hints"]
-[ext_resource type="PackedScene" uid="uid://dwc8k3n7y5m3a" path="res://scenes/input_icon.tscn" id="5_input_icon"]
 
 [node name="MenuView" type="CanvasLayer"]
 layer = 10
@@ -58,18 +56,11 @@ layout_mode = 2
 theme_override_constants/separation = 8
 alignment = 1
 
-[node name="PrevIcon" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow" instance=ExtResource("5_input_icon")]
-layout_mode = 2
-action_name = "menu_previous_page"
-icon_size = Vector2i(16, 16)
-text_size = 16
-
-[node name="PrevLabel" type="Label" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow"]
+[node name="PrevButton" type="Button" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow"]
+custom_minimum_size = Vector2(60, 24)
 layout_mode = 2
 theme = ExtResource("2_theme")
-theme_override_font_sizes/font_size = 12
 text = "Prev"
-vertical_alignment = 1
 
 [node name="Spacer1" type="Control" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow"]
 custom_minimum_size = Vector2(16, 0)
@@ -86,18 +77,8 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(16, 0)
 layout_mode = 2
 
-[node name="NextIcon" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow" instance=ExtResource("5_input_icon")]
-layout_mode = 2
-action_name = "menu_next_page"
-icon_size = Vector2i(16, 16)
-text_size = 16
-
-[node name="NextLabel" type="Label" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow"]
+[node name="NextButton" type="Button" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow"]
+custom_minimum_size = Vector2(60, 24)
 layout_mode = 2
 theme = ExtResource("2_theme")
-theme_override_font_sizes/font_size = 12
 text = "Next"
-vertical_alignment = 1
-
-[node name="MenuHints" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar" instance=ExtResource("4_menu_hints")]
-layout_mode = 2

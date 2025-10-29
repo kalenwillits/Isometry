@@ -13,11 +13,9 @@ func _ready() -> void:
 	visible = false
 	add_to_group(Group.CONTEXT_MENU)
 
-	# Connect icon click signals
-	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/PrevIcon.icon_clicked.connect(previous_page)
-	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/NextIcon.icon_clicked.connect(next_page)
-	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/MenuHints.accept_clicked.connect(activate_selected)
-	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/MenuHints.cancel_clicked.connect(close_menu)
+	# Connect pagination button signals
+	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/PrevButton.pressed.connect(previous_page)
+	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/NextButton.pressed.connect(next_page)
 
 func open_menu(title: String, menu_ent: Entity, caller: String, target: String) -> void:
 	if menu_ent == null or menu_ent.actions == null:
@@ -69,7 +67,17 @@ func render_page() -> void:
 
 	# Update pagination label
 	var total_pages = max(1, ceil(float(actions.size()) / float(items_per_page)))
-	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/PaginationLabel.set_text("Page %d/%d" % [current_page + 1, total_pages])
+	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/PaginationLabel.set_text("%d/%d" % [current_page + 1, total_pages])
+
+	# Hide pagination when only 1 page
+	if total_pages == 1:
+		$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/PrevButton.visible = false
+		$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/PaginationLabel.visible = false
+		$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/NextButton.visible = false
+	else:
+		$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/PrevButton.visible = true
+		$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/PaginationLabel.visible = true
+		$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/NextButton.visible = true
 
 	update_selection_highlight()
 

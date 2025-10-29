@@ -76,7 +76,13 @@ func render_page() -> void:
 
 	# Update pagination label
 	var total_pages = max(1, ceil(float(resource_keys.size()) / float(items_per_page)))
-	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationLabel.set_text("Page %d/%d" % [current_page + 1, total_pages])
+	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationLabel.set_text("%d/%d" % [current_page + 1, total_pages])
+
+	# Hide pagination when only 1 page
+	if total_pages == 1:
+		$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationLabel.visible = false
+	else:
+		$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationLabel.visible = true
 
 	update_selection_highlight()
 

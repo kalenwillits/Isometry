@@ -80,10 +80,30 @@ static func _key_event_to_display(event: InputEventKey, icon_mode: IconMode) -> 
 	if icon_mode == IconMode.KEYBOARD:
 		# Return text representation for keyboard mode
 		var key_string = OS.get_keycode_string(event.physical_keycode)
+		key_string = _shorten_key_name(key_string)
 		return {"type": "text", "value": key_string}
 	else:
 		# For gamepad modes, keyboard inputs don't have icons
-		return {"type": "text", "value": OS.get_keycode_string(event.physical_keycode)}
+		var key_string = OS.get_keycode_string(event.physical_keycode)
+		key_string = _shorten_key_name(key_string)
+		return {"type": "text", "value": key_string}
+
+# Shorten common key names to fit better in UI
+static func _shorten_key_name(key_string: String) -> String:
+	match key_string:
+		"Escape": return "Esc"
+		"Enter": return "Enter"
+		"Space": return "Space"
+		"Shift": return "Shift"
+		"Ctrl": return "Ctrl"
+		"Alt": return "Alt"
+		"Tab": return "Tab"
+		"Backspace": return "Back"
+		"Delete": return "Del"
+		"Insert": return "Ins"
+		"Page Up": return "PgUp"
+		"Page Down": return "PgDn"
+		_: return key_string
 
 # Convert mouse event to display
 static func _mouse_event_to_display(event: InputEventMouseButton, icon_mode: IconMode) -> Dictionary:

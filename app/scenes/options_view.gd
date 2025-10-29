@@ -35,6 +35,12 @@ var current_icon_mode_index: int = 0  # Default to Keyboard
 var is_fullscreen: bool = false
 var config: ConfigFile = ConfigFile.new()
 
+# State tracking for confirmation flow
+var previous_resolution_index: int = 5
+var previous_fullscreen: bool = false
+var has_unsaved_changes: bool = false
+var save_button: Button = null
+
 func _ready() -> void:
 	visible = false
 	add_to_group(Group.OPTIONS_MENU)
@@ -84,7 +90,10 @@ func _apply_saved_settings() -> void:
 		DisplayServer.window_set_size(resolutions[current_resolution_index])
 
 func _create_option_items() -> void:
-	var options_list = $Overlay/CenterContainer/PanelContainer/VBox/OptionsList
+	var options_list = $Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/OptionsList
+
+	# Connect cancel button
+	$Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/CancelContainer/CancelButton.pressed.connect(_on_cancel_pressed)
 
 	# Create Fullscreen toggle
 	_create_fullscreen_option(options_list)
@@ -94,6 +103,9 @@ func _create_option_items() -> void:
 
 	# Create Icon Mode scroll-through
 	_create_icon_mode_option(options_list)
+
+	# Create Save button (initially hidden)
+	_create_save_button(options_list)
 
 func _create_fullscreen_option(parent: VBoxContainer) -> void:
 	var hbox = HBoxContainer.new()
@@ -161,20 +173,23 @@ func _create_resolution_option(parent: VBoxContainer) -> void:
 func _on_fullscreen_toggled(button: Button) -> void:
 	is_fullscreen = !is_fullscreen
 	button.text = "ON" if is_fullscreen else "OFF"
-	_apply_display_settings_immediately()
+	has_unsaved_changes = true
+	_update_save_button_visibility()
 
 func _on_resolution_previous() -> void:
 	current_resolution_index = (current_resolution_index - 1 + resolutions.size()) % resolutions.size()
 	_update_resolution_display()
-	_apply_display_settings_immediately()
+	has_unsaved_changes = true
+	_update_save_button_visibility()
 
 func _on_resolution_next() -> void:
 	current_resolution_index = (current_resolution_index + 1) % resolutions.size()
 	_update_resolution_display()
-	_apply_display_settings_immediately()
+	has_unsaved_changes = true
+	_update_save_button_visibility()
 
 func _update_resolution_display() -> void:
-	var options_list = $Overlay/CenterContainer/PanelContainer/VBox/OptionsList
+	var options_list = $Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/OptionsList
 	var resolution_row = options_list.get_children()[1]  # Second row is resolution
 	var res_label = resolution_row.get_node("ResolutionLabel")
 	var current_res = resolutions[current_resolution_index]
@@ -252,12 +267,17 @@ func _apply_icon_mode_immediately() -> void:
 	InputIconMapper.reload_from_config()
 
 func _update_icon_mode_display() -> void:
-	var options_list = $Overlay/CenterContainer/PanelContainer/VBox/OptionsList
+	var options_list = $Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/OptionsList
 	var icon_mode_row = options_list.get_children()[2]  # Third row is icon mode
 	var mode_label = icon_mode_row.get_node("IconModeLabel")
 	mode_label.text = icon_modes[current_icon_mode_index]
 
 func open_view() -> void:
+	# Capture current settings as "previous" when opening
+	previous_resolution_index = current_resolution_index
+	previous_fullscreen = is_fullscreen
+	has_unsaved_changes = false
+	_update_save_button_visibility()
 	visible = true
 
 func close_view() -> void:
@@ -268,5 +288,107 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event.is_action_pressed("menu_cancel"):
-		close_view()
+		_on_cancel_pressed()
 		get_viewport().set_input_as_handled()
+
+func _create_save_button(parent: VBoxContainer) -> void:
+	var hbox = HBoxContainer.new()
+	hbox.custom_minimum_size = Vector2(360, 32)
+	hbox.add_theme_constant_override("separation", 8)
+
+	# Spacer
+	var spacer = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(spacer)
+
+	# Save button
+	save_button = Button.new()
+	save_button.custom_minimum_size = Vector2(120, 32)
+	save_button.text = "Save"
+	save_button.add_theme_font_size_override("font_size", 18)
+	save_button.pressed.connect(_on_save_pressed)
+	save_button.visible = false  # Initially hidden
+	hbox.add_child(save_button)
+
+	parent.add_child(hbox)
+
+func _update_save_button_visibility() -> void:
+	if save_button:
+		save_button.visible = has_unsaved_changes
+
+func _on_save_pressed() -> void:
+	# Capture current settings as "previous" for potential revert
+	previous_resolution_index = current_resolution_index
+	previous_fullscreen = is_fullscreen
+
+	# Apply the settings immediately
+	_apply_display_settings_immediately()
+
+	# Hide options menu while showing confirmation
+	visible = false
+
+	# Open confirmation modal with 9-second countdown
+	get_parent().get_node("ConfirmationModal").open_modal(
+		"Keep these display settings?",
+		_on_confirm_settings,      # Yes callback
+		_on_revert_settings,        # No callback
+		9                           # 9 second countdown
+	)
+
+func _on_confirm_settings() -> void:
+	# User confirmed - save the settings to config
+	_save_config()
+	has_unsaved_changes = false
+	_update_save_button_visibility()
+	# Show options menu again
+	visible = true
+
+func _on_revert_settings() -> void:
+	# User rejected or countdown expired - revert to previous settings
+	is_fullscreen = previous_fullscreen
+	current_resolution_index = previous_resolution_index
+
+	# Apply the reverted settings
+	if is_fullscreen:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+		DisplayServer.window_set_size(resolutions[current_resolution_index])
+
+	# Update UI to reflect reverted settings
+	_update_fullscreen_button_text()
+	_update_resolution_display()
+
+	has_unsaved_changes = false
+	_update_save_button_visibility()
+	# Show options menu again
+	visible = true
+
+func _update_fullscreen_button_text() -> void:
+	var options_list = $Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/OptionsList
+	var fullscreen_row = options_list.get_children()[0]  # First row is fullscreen
+	var toggle_button = fullscreen_row.get_children()[1]  # Button is second child
+	if toggle_button is Button:
+		toggle_button.text = "ON" if is_fullscreen else "OFF"
+
+func _on_cancel_pressed() -> void:
+	# If there are unsaved changes, revert them
+	if has_unsaved_changes:
+		is_fullscreen = previous_fullscreen
+		current_resolution_index = previous_resolution_index
+
+		# Apply the reverted settings
+		if is_fullscreen:
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+		else:
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+			DisplayServer.window_set_size(resolutions[current_resolution_index])
+
+		# Update UI
+		_update_fullscreen_button_text()
+		_update_resolution_display()
+
+		has_unsaved_changes = false
+		_update_save_button_visibility()
+
+	close_view()
