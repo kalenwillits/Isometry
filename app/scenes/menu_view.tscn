@@ -55,11 +55,14 @@ theme_override_constants/separation = 4
 
 [node name="PaginationRow" type="HBoxContainer" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar"]
 layout_mode = 2
+theme_override_constants/separation = 8
 alignment = 1
 
 [node name="PrevIcon" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow" instance=ExtResource("5_input_icon")]
 layout_mode = 2
 action_name = "menu_previous_page"
+icon_size = Vector2i(16, 16)
+text_size = 16
 
 [node name="PrevLabel" type="Label" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow"]
 layout_mode = 2
@@ -86,6 +89,8 @@ layout_mode = 2
 [node name="NextIcon" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow" instance=ExtResource("5_input_icon")]
 layout_mode = 2
 action_name = "menu_next_page"
+icon_size = Vector2i(16, 16)
+text_size = 16
 
 [node name="NextLabel" type="Label" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow"]
 layout_mode = 2

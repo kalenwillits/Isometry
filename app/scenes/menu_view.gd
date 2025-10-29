@@ -13,6 +13,12 @@ func _ready() -> void:
 	visible = false
 	add_to_group(Group.CONTEXT_MENU)
 
+	# Connect icon click signals
+	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/PrevIcon.icon_clicked.connect(previous_page)
+	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/NextIcon.icon_clicked.connect(next_page)
+	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/MenuHints.accept_clicked.connect(activate_selected)
+	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/MenuHints.cancel_clicked.connect(close_menu)
+
 func open_menu(title: String, menu_ent: Entity, caller: String, target: String) -> void:
 	if menu_ent == null or menu_ent.actions == null:
 		Logger.warn("Cannot open menu: invalid menu entity", self)

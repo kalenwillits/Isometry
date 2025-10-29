@@ -9,6 +9,14 @@ func _ready() -> void:
 	var input_icon = $Button/InputIcon
 	if input_icon:
 		input_icon.action_name = get_action_code()
+		# Connect icon click to trigger the action button
+		input_icon.icon_clicked.connect(_on_icon_clicked)
+
+func _on_icon_clicked() -> void:
+	# Trigger the action button when the icon is clicked
+	var button = $Button/VBox/HBox/Button
+	if button:
+		button.emit_signal("pressed")
 	
 func render(key: String) -> void:
 	var entity: Entity = Repo.select(key)

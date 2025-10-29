@@ -1,6 +1,9 @@
-extends HBoxContainer
+extends Button
 # InputIcon - Displays input binding icons or text for a given action
 # Automatically adapts based on the user's selected icon mode
+# Now clickable with mouse support
+
+signal icon_clicked()
 
 @export var action_name: String = "":
 	set(value):
@@ -12,11 +15,27 @@ extends HBoxContainer
 @export var text_size: int = 8
 
 var current_icon_mode: InputIconMapper.IconMode = InputIconMapper.IconMode.KEYBOARD
+var content_container: HBoxContainer = null
 
 func _ready() -> void:
+	# Set up button properties
+	flat = true  # Transparent background
+	focus_mode = Control.FOCUS_NONE  # Don't steal keyboard focus
+	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
+	# Create internal container for content
+	content_container = HBoxContainer.new()
+	add_child(content_container)
+
+	# Connect button press
+	pressed.connect(_on_button_pressed)
+
 	# Connect to icon mode change signal
 	InputIconMapper.icon_mode_changed.connect(_on_icon_mode_changed)
 	_refresh_display()
+
+func _on_button_pressed() -> void:
+	icon_clicked.emit()
 
 func _exit_tree() -> void:
 	# Disconnect signal when removed
@@ -28,8 +47,11 @@ func _on_icon_mode_changed(_new_mode: InputIconMapper.IconMode) -> void:
 
 # Refresh the display based on current action and icon mode
 func _refresh_display() -> void:
-	# Clear existing children
-	for child in get_children():
+	# Clear existing children from content container
+	if content_container == null:
+		return
+
+	for child in content_container.get_children():
 		child.queue_free()
 
 	# If no action name, nothing to display
@@ -93,6 +115,7 @@ func _add_icon(icon_path: String) -> void:
 	texture_rect.custom_minimum_size = icon_size
 	texture_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Let button handle mouse
 
 	# Load the texture
 	var texture = load(icon_path)
@@ -105,7 +128,7 @@ func _add_icon(icon_path: String) -> void:
 		_add_text_label("?")
 		return
 
-	add_child(texture_rect)
+	content_container.add_child(texture_rect)
 
 # Add a text label to the display
 func _add_text_label(text: String) -> void:
@@ -113,6 +136,7 @@ func _add_text_label(text: String) -> void:
 	label.text = text
 	label.add_theme_font_size_override("font_size", text_size)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Let button handle mouse
 
 	# Add a subtle background to text labels
 	var style_box = StyleBoxFlat.new()
@@ -128,10 +152,11 @@ func _add_text_label(text: String) -> void:
 
 	# Create a panel container to hold the label with background
 	var panel = PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Let button handle mouse
 	panel.add_theme_stylebox_override("panel", style_box)
 	panel.add_child(label)
 
-	add_child(panel)
+	content_container.add_child(panel)
 
 # Public method to force refresh (can be called when icon mode changes)
 func refresh() -> void:
