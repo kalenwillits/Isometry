@@ -77,16 +77,25 @@ static func event_to_display(event: InputEvent, icon_mode: IconMode) -> Dictiona
 
 # Convert keyboard event to display
 static func _key_event_to_display(event: InputEventKey, icon_mode: IconMode) -> Dictionary:
+	# Build modifier prefix (shortened to 2-3 characters)
+	var modifier_string = ""
+	if event.ctrl_pressed:
+		modifier_string += "Ctl+"
+	if event.shift_pressed:
+		modifier_string += "Sft+"
+	if event.alt_pressed:
+		modifier_string += "Alt+"
+
 	if icon_mode == IconMode.KEYBOARD:
-		# Return text representation for keyboard mode
+		# Return text representation for keyboard mode with modifiers
 		var key_string = OS.get_keycode_string(event.physical_keycode)
 		key_string = _shorten_key_name(key_string)
-		return {"type": "text", "value": key_string}
+		return {"type": "text", "value": modifier_string + key_string}
 	else:
 		# For gamepad modes, keyboard inputs don't have icons
 		var key_string = OS.get_keycode_string(event.physical_keycode)
 		key_string = _shorten_key_name(key_string)
-		return {"type": "text", "value": key_string}
+		return {"type": "text", "value": modifier_string + key_string}
 
 # Shorten common key names to fit better in UI
 static func _shorten_key_name(key_string: String) -> String:

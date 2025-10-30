@@ -11,6 +11,7 @@ signal reset_requested(action_name: String, binding_type: String)
 var is_listening: bool = false
 var pressed_keys: Array = []
 var pressed_joy_buttons: Array = []
+var joy_combo_to_bind: Array = []  # Tracks the full combo even after buttons are released
 
 @onready var action_label: Label = $ActionLabel
 @onready var binding_button: Button = $BindingButton
@@ -71,6 +72,7 @@ func _start_listening() -> void:
 	is_listening = true
 	pressed_keys.clear()
 	pressed_joy_buttons.clear()
+	joy_combo_to_bind.clear()
 
 	binding_button.text = "Press key..."
 	if binding_type == "gamepad":
@@ -106,9 +108,13 @@ func _input(event: InputEvent) -> void:
 
 func _handle_key_binding(event: InputEventKey) -> void:
 	"""Handles keyboard key binding"""
+	# Skip modifier keys themselves - only capture regular keys with modifiers
+	if event.keycode in [KEY_CTRL, KEY_SHIFT, KEY_ALT, KEY_META]:
+		return  # Don't bind modifier keys, wait for actual key
+
 	var binding_str: String = ""
 
-	# Build modifier string
+	# Build modifier string for binding
 	if event.ctrl_pressed:
 		binding_str += "ctrl+"
 	if event.shift_pressed:
@@ -116,10 +122,10 @@ func _handle_key_binding(event: InputEventKey) -> void:
 	if event.alt_pressed:
 		binding_str += "alt+"
 
-	# Find key name
+	# Find key name using keycode (not physical_keycode)
 	var key_name: String = ""
 	for name in Keybinds.KEY_MAP.keys():
-		if Keybinds.KEY_MAP[name] == event.physical_keycode:
+		if Keybinds.KEY_MAP[name] == event.keycode:
 			key_name = name
 			break
 
@@ -158,13 +164,26 @@ func _handle_joy_binding(event: InputEventJoypadButton) -> void:
 
 		if button_name != "" and button_name not in pressed_joy_buttons:
 			pressed_joy_buttons.append(button_name)
+			# Also add to combo list if not already there
+			if button_name not in joy_combo_to_bind:
+				joy_combo_to_bind.append(button_name)
 
 			# Update display to show current combo
-			binding_button.text = "+".join(pressed_joy_buttons)
+			binding_button.text = "+".join(joy_combo_to_bind)
 	else:
-		# Button released - apply the binding if we have buttons
-		if pressed_joy_buttons.size() > 0:
-			var binding_str = "+".join(pressed_joy_buttons)
+		# Button released - remove from currently pressed list
+		var button_name: String = ""
+		for name in Keybinds.JOY_MAP.keys():
+			if Keybinds.JOY_MAP[name] == event.button_index:
+				button_name = name
+				break
+
+		if button_name in pressed_joy_buttons:
+			pressed_joy_buttons.erase(button_name)
+
+		# Only apply binding when ALL buttons have been released
+		if pressed_joy_buttons.size() == 0 and joy_combo_to_bind.size() > 0:
+			var binding_str = "+".join(joy_combo_to_bind)
 			_apply_binding(binding_str)
 
 func _apply_binding(binding_str: String) -> void:
