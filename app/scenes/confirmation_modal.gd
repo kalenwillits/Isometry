@@ -88,11 +88,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 
-	if event.is_action_pressed("menu_cancel"):
-		# Escape acts as "No"
-		_on_no_pressed()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("menu_accept"):
+	# Cancel action is handled by UIStateMachine via interface.gd (acts as "No")
+	# We only handle navigation and confirmation here
+	if event.is_action_pressed("menu_accept"):
 		# Enter activates selected button
 		activate_selected()
 		get_viewport().set_input_as_handled()

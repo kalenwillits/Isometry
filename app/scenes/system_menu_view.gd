@@ -1,9 +1,11 @@
 extends CanvasLayer
 
 var selected_index: int = 0
+var ui_state_machine: Node
 
 func _ready() -> void:
 	visible = false
+	ui_state_machine = get_node("/root/UIStateMachine")
 	add_to_group(Group.SYSTEM_MENU)
 	_create_menu_items()
 
@@ -47,20 +49,17 @@ func _create_menu_items() -> void:
 	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(exit_button)
 
 func _on_keybinds_button_pressed() -> void:
-	get_parent().open_keybinds_view()
-	close_menu()
+	ui_state_machine.transition_to(ui_state_machine.State.MENU_KEYBINDS)
 
 func _on_gamepad_button_pressed() -> void:
-	get_parent().open_gamepad_view()
-	close_menu()
+	ui_state_machine.transition_to(ui_state_machine.State.MENU_GAMEPAD)
 
 func _on_options_button_pressed() -> void:
-	get_parent().open_options_view()
-	close_menu()
+	ui_state_machine.transition_to(ui_state_machine.State.MENU_OPTIONS)
 
 func _on_exit_button_pressed() -> void:
+	ui_state_machine.transition_to(ui_state_machine.State.CONFIRMATION_MODAL)
 	get_parent().open_close_confirmation()
-	close_menu()
 
 func open_menu() -> void:
 	selected_index = 0
@@ -102,10 +101,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 
-	if event.is_action_pressed("menu_cancel"):
-		close_menu()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("menu_accept"):
+	# Cancel action is handled by UIStateMachine via interface.gd
+	# We only handle menu navigation here
+	if event.is_action_pressed("menu_accept"):
 		activate_selected()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):

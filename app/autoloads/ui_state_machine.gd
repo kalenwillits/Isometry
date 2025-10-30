@@ -1,0 +1,140 @@
+extends Node
+
+## UI State Machine
+## Manages all UI states and prevents input conflicts
+## Responds to actions (cancel, open_menu, toggle_map_view) not keys
+
+enum State {
+	GAMEPLAY,
+	CHAT_ACTIVE,
+	MENU_GLOBAL,
+	MENU_SYSTEM,
+	MENU_RESOURCES,
+	MENU_OPTIONS,
+	MENU_KEYBINDS,
+	MENU_GAMEPAD,
+	MENU_MAP,
+	CONTEXT_MENU,
+	PLATE_VIEW,
+	CONFIRMATION_MODAL
+}
+
+var current_state: State = State.GAMEPLAY
+var previous_state: State = State.GAMEPLAY
+var map_opened_from_gameplay: bool = false  # Track how MENU_MAP was opened
+
+signal state_changed(old_state: State, new_state: State)
+
+func _ready():
+	print("[UIStateMachine] Initialized in state: ", State.keys()[current_state])
+
+## Main transition method
+func transition_to(new_state: State) -> void:
+	if current_state == new_state:
+		return  # Already in this state
+
+	var old_state = current_state
+	previous_state = current_state
+	current_state = new_state
+
+	print("[UIStateMachine] Transition: %s → %s" % [State.keys()[old_state], State.keys()[new_state]])
+	state_changed.emit(old_state, new_state)
+
+## Query: Should player input be blocked?
+func should_block_player_input() -> bool:
+	return current_state != State.GAMEPLAY
+
+## Handle cancel action (context-aware)
+func handle_cancel() -> void:
+	match current_state:
+		State.GAMEPLAY:
+			# In gameplay, cancel clears target (handled in actor.gd)
+			pass
+
+		State.CHAT_ACTIVE:
+			# Cancel chat input, return to gameplay
+			transition_to(State.GAMEPLAY)
+
+		State.MENU_GLOBAL:
+			# Close global menu
+			transition_to(State.GAMEPLAY)
+
+		State.MENU_SYSTEM:
+			# Back to global menu
+			transition_to(State.MENU_GLOBAL)
+
+		State.MENU_RESOURCES:
+			# Back to global menu
+			transition_to(State.MENU_GLOBAL)
+
+		State.MENU_OPTIONS:
+			# Back to system menu
+			transition_to(State.MENU_SYSTEM)
+
+		State.MENU_KEYBINDS:
+			# Back to system menu
+			transition_to(State.MENU_SYSTEM)
+
+		State.MENU_GAMEPAD:
+			# Back to system menu
+			transition_to(State.MENU_SYSTEM)
+
+		State.MENU_MAP:
+			# Return based on how it was opened
+			if map_opened_from_gameplay:
+				transition_to(State.GAMEPLAY)
+			else:
+				transition_to(State.MENU_GLOBAL)
+
+		State.CONTEXT_MENU:
+			# Close context menu
+			transition_to(State.GAMEPLAY)
+
+		State.PLATE_VIEW:
+			# Close plate view
+			transition_to(State.GAMEPLAY)
+
+		State.CONFIRMATION_MODAL:
+			# Return to previous state
+			transition_to(previous_state)
+
+## Handle open_menu action (toggle global menu)
+func handle_open_menu() -> void:
+	match current_state:
+		State.GAMEPLAY:
+			# Open global menu
+			transition_to(State.MENU_GLOBAL)
+
+		State.MENU_GLOBAL:
+			# Toggle close
+			transition_to(State.GAMEPLAY)
+
+		_:
+			# Blocked in all other states
+			print("[UIStateMachine] open_menu action blocked in state: ", State.keys()[current_state])
+
+## Handle toggle_map_view action (only works from GAMEPLAY)
+func handle_toggle_map() -> void:
+	match current_state:
+		State.GAMEPLAY:
+			# Open map via toggle
+			map_opened_from_gameplay = true
+			transition_to(State.MENU_MAP)
+
+		State.MENU_MAP:
+			# Close map if it was opened via toggle
+			if map_opened_from_gameplay:
+				transition_to(State.GAMEPLAY)
+
+		_:
+			# Blocked in all other states
+			print("[UIStateMachine] toggle_map_view action blocked in state: ", State.keys()[current_state])
+
+## Transition to map from menu (not toggle)
+func open_map_from_menu() -> void:
+	map_opened_from_gameplay = false
+	transition_to(State.MENU_MAP)
+
+## Get state name for debugging
+func get_state_name() -> String:
+	return State.keys()[current_state]

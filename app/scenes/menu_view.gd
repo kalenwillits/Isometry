@@ -155,10 +155,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 
-	if event.is_action_pressed("menu_cancel"):
-		close_menu()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("menu_accept"):
+	# Cancel action is handled by UIStateMachine via interface.gd
+	# We only handle menu navigation here
+	if event.is_action_pressed("menu_accept"):
 		activate_selected()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):

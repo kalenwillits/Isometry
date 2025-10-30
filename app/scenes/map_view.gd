@@ -625,9 +625,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 
-	if event.is_action_pressed("menu_cancel") or event.is_action_pressed("toggle_map_view"):
-		close_view()
-		get_viewport().set_input_as_handled()
+	# Cancel and toggle_map_view actions are handled by UIStateMachine via interface.gd
 
 func _draw_player_marker() -> void:
 	# This is called by PlayerMarker node

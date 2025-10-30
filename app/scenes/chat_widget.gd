@@ -2,15 +2,19 @@ extends Widget
 
 const TICK_RATE: float = 0.66 # Seconds
 
-var chat_queue: Array[Chat] = [] 
+var chat_queue: Array[Chat] = []
 var needs_render: bool = true
+var ui_state_machine: Node
 
 func _ready() -> void:
+	ui_state_machine = get_node("/root/UIStateMachine")
 	$Timer.wait_time = TICK_RATE
 	$Timer.timeout.connect(_process_chat)
 	$Timer.autostart = true
 	$Timer.start()
 	$VBox/LineEdit.text_submitted.connect(_on_text_submitted)
+	$VBox/LineEdit.focus_entered.connect(_on_chat_focus_entered)
+	$VBox/LineEdit.focus_exited.connect(_on_chat_focus_exited)
 	add_to_group(Group.UI_CHAT_WIDGET)
 
 func submit_message(new_text: String, author: String) -> void:
@@ -35,8 +39,14 @@ func _on_text_submitted(new_text: String) -> void:
 	var primary_actor: Actor = Finder.get_primary_actor()
 	Controller.submit_chat_request_to_server.rpc_id(1, new_text, primary_actor.display_name)
 	#submit_message(new_text, primary_actor.display_name)
-	
-	
+	# State transition happens in focus_exited
+
+func _on_chat_focus_entered() -> void:
+	ui_state_machine.transition_to(ui_state_machine.State.CHAT_ACTIVE)
+
+func _on_chat_focus_exited() -> void:
+	ui_state_machine.transition_to(ui_state_machine.State.GAMEPLAY)
+
 func _process_chat() -> void:
 	var now: int = Time.get_unix_time_from_system()
 	var num_expired_chats: int = chat_queue.filter(func(chat: Chat): return chat.get_expiry() < now).size()

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dpqk7vh8mdbmo"]
 
-[ext_resource type="Script" path="res://scenes/keybind_row.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://efbo78q2rly7" path="res://scenes/keybind_row.gd" id="1_script"]
 
 [node name="KeybindRow" type="HBoxContainer"]
 custom_minimum_size = Vector2(0, 32)

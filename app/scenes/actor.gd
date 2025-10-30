@@ -608,6 +608,10 @@ func use_strategy() -> void:
 			.build())
 
 func use_actions() -> void:
+	# Block input if UI state machine says player input should be blocked
+	if get_node("/root/UIStateMachine").should_block_player_input():
+		return
+
 	var actor_ent: Entity = Repo.select(actor)
 	if !actor_ent or !actor_ent.skills: return
 	
@@ -680,6 +684,16 @@ func emit_skill_signal(skill_event: String, target_actor: Actor) -> void:
 			action_9_end.emit(target_actor)
 
 func use_target() -> void:
+	# Block input if UI state machine says player input should be blocked
+	if get_node("/root/UIStateMachine").should_block_player_input():
+		return
+
+	# Handle cancel action for clearing target (only in GAMEPLAY state)
+	if Input.is_action_just_pressed("cancel"):
+		set_target("")
+		target_queue.clear()
+		return
+
 	if Input.is_action_just_pressed("increment_target"):
 		var next = find_next_target()
 		if next != target:  # Only set if different to avoid plate deletion bug
@@ -923,6 +937,10 @@ func line_of_sight_to_point(point: Vector2) -> bool:
 	return result.is_empty()
 
 func click_to_move() -> void:
+	# Block input if UI state machine says player input should be blocked
+	if get_node("/root/UIStateMachine").should_block_player_input():
+		return
+
 	if Input.is_action_pressed("interact"):
 		is_direct_movement_active = false  # Switch to pathfinding mode
 		current_input_strength = 0.0  # Reset input strength
@@ -1538,6 +1556,10 @@ func get_speed(delta: float) -> float:
 	return BASE_ACTOR_SPEED * delta * speed * SPEED_NORMAL
 	
 func use_move_directly(_delta) -> void:
+	# Block input if UI state machine says player input should be blocked
+	if get_node("/root/UIStateMachine").should_block_player_input():
+		return
+
 	# Get input vector - this handles both keyboard and controller
 	var motion = Input.get_vector("left", "right", "up", "down")
 	

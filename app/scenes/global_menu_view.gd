@@ -1,9 +1,11 @@
 extends CanvasLayer
 
 var selected_index: int = 0
+var ui_state_machine: Node
 
 func _ready() -> void:
 	visible = false
+	ui_state_machine = get_node("/root/UIStateMachine")
 	add_to_group(Group.GLOBAL_MENU)
 	_create_menu_items()
 
@@ -40,16 +42,13 @@ func _create_menu_items() -> void:
 	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(system_button)
 
 func _on_map_button_pressed() -> void:
-	get_parent().open_map_view()
-	close_menu()
+	ui_state_machine.open_map_from_menu()
 
 func _on_resources_button_pressed() -> void:
-	get_parent().open_resources_menu()
-	close_menu()
+	ui_state_machine.transition_to(ui_state_machine.State.MENU_RESOURCES)
 
 func _on_system_button_pressed() -> void:
-	get_parent().open_system_menu()
-	close_menu()
+	ui_state_machine.transition_to(ui_state_machine.State.MENU_SYSTEM)
 
 func open_menu() -> void:
 	selected_index = 0
@@ -91,10 +90,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 
-	if event.is_action_pressed("menu_cancel"):
-		close_menu()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("menu_accept"):
+	# Cancel and open_menu actions are handled by UIStateMachine via interface.gd
+	# We only handle menu navigation here
+	if event.is_action_pressed("menu_accept"):
 		activate_selected()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):

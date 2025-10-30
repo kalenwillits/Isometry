@@ -341,7 +341,7 @@ func _has_custom_color_override(control: Control) -> bool:
 	return false
 
 func _create_panel_stylebox() -> StyleBoxFlat:
-	"""Creates a StyleBoxFlat for panels with current theme colors"""
+	"""Creates a StyleBoxFlat for panels with current 		theme colors"""
 	var stylebox = StyleBoxFlat.new()
 	stylebox.bg_color = current_palette["bg_secondary"]
 	stylebox.border_color = current_palette["border"]

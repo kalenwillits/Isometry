@@ -1,5 +1,7 @@
 extends Node
 
+var ui_state_machine: Node
+
 func _ready() -> void:
 	add_to_group(Group.INTERFACE)
 
@@ -7,6 +9,10 @@ func _ready() -> void:
 	var theme_mgr = get_node_or_null("/root/ThemeManager")
 	if theme_mgr:
 		theme_mgr._apply_theme_recursive(self)
+
+	# Connect to state machine signals
+	ui_state_machine = get_node("/root/UIStateMachine")
+	ui_state_machine.state_changed.connect(_on_ui_state_changed)
 
 func _process(_delta: float) -> void:
 	update_primary_actor_info()
@@ -70,6 +76,7 @@ func open_selection_menu_for_actor(target_actor_name: String) -> void:
 		if menu_ent:
 			var primary_actor = Finder.get_primary_actor()
 			if primary_actor:
+				ui_state_machine.transition_to(ui_state_machine.State.CONTEXT_MENU)
 				$ContextMenu.open_menu(target_actor.display_name, menu_ent, primary_actor.name, target_actor_name)
 			else:
 				Logger.warn("Primary actor not found", self)
@@ -85,6 +92,7 @@ func open_selection_menu_for_entity(entity_key: String, actor_name: String) -> v
 
 	var menu_ent: Entity = entity.menu.lookup()
 	if menu_ent:
+		ui_state_machine.transition_to(ui_state_machine.State.CONTEXT_MENU)
 		$ContextMenu.open_menu(entity.name_ if entity.get("name_") else entity_key, menu_ent, actor_name, actor_name)
 
 func open_plate_for_actor(plate_key: String, caller: String, target: String) -> void:
@@ -93,6 +101,7 @@ func open_plate_for_actor(plate_key: String, caller: String, target: String) -> 
 		Logger.warn("Plate entity not found: %s" % plate_key, self)
 		return
 
+	ui_state_machine.transition_to(ui_state_machine.State.PLATE_VIEW)
 	$PlateView.open_plate(plate_ent, caller, target)
 
 func open_global_menu() -> void:
@@ -141,48 +150,75 @@ func open_close_confirmation() -> void:
 	)
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Check for map view toggle
+	# Handle toggle_map_view action
 	if event.is_action_pressed("toggle_map_view"):
-		# Don't open map view if other menus are visible
-		if not ($GlobalMenuView.visible or $SystemMenuView.visible or $ResourcesMenuView.visible or $OptionsView.visible or $KeybindsView.visible or $GamepadView.visible or $ContextMenu.visible or $PlateView.visible or $ConfirmationModal.visible):
-			toggle_map_view()
-			get_viewport().set_input_as_handled()
+		ui_state_machine.handle_toggle_map()
+		get_viewport().set_input_as_handled()
 		return
 
-	# Check if escape key is pressed
-	if event.is_action_pressed("menu_cancel"):
-		# Check if any menu is currently visible
-		if $GlobalMenuView.visible:
-			# GlobalMenuView handles its own escape
-			return
-		elif $SystemMenuView.visible:
-			# SystemMenuView handles its own escape
-			return
-		elif $ResourcesMenuView.visible:
-			# ResourcesMenuView handles its own escape
-			return
-		elif $OptionsView.visible:
-			# OptionsView handles its own escape
-			return
-		elif $KeybindsView.visible:
-			# KeybindsView handles its own escape
-			return
-		elif $GamepadView.visible:
-			# GamepadView handles its own escape
-			return
-		elif $MapView.visible:
-			# MapView handles its own escape
-			return
-		elif $ContextMenu.visible:
-			# ContextMenu handles its own escape
-			return
-		elif $PlateView.visible:
-			# PlateView handles its own escape
-			return
-		elif $ConfirmationModal.visible:
-			# ConfirmationModal handles its own escape
-			return
-		else:
-			# No menus open - open global menu
-			open_global_menu()
-			get_viewport().set_input_as_handled()
+	# Handle open_menu action (Backspace)
+	if event.is_action_pressed("open_menu"):
+		ui_state_machine.handle_open_menu()
+		get_viewport().set_input_as_handled()
+		return
+
+	# Handle cancel action (ESC)
+	if event.is_action_pressed("cancel"):
+		ui_state_machine.handle_cancel()
+		get_viewport().set_input_as_handled()
+		return
+
+## State machine callback - show/hide views based on state transitions
+func _on_ui_state_changed(old_state: int, new_state: int) -> void:
+	var state_enum = ui_state_machine.State
+	Logger.info("Interface: State changed %s -> %s" % [state_enum.keys()[old_state], state_enum.keys()[new_state]], self)
+
+	# Hide views based on old state
+	var State = ui_state_machine.State
+	match old_state:
+		State.MENU_GLOBAL:
+			$GlobalMenuView.visible = false
+		State.MENU_SYSTEM:
+			$SystemMenuView.visible = false
+		State.MENU_RESOURCES:
+			$ResourcesMenuView.visible = false
+		State.MENU_OPTIONS:
+			$OptionsView.visible = false
+		State.MENU_KEYBINDS:
+			$KeybindsView.visible = false
+		State.MENU_GAMEPAD:
+			$GamepadView.visible = false
+		State.MENU_MAP:
+			$MapView.close_view()
+		State.CONTEXT_MENU:
+			$ContextMenu.visible = false
+		State.PLATE_VIEW:
+			$PlateView.visible = false
+		State.CONFIRMATION_MODAL:
+			$ConfirmationModal.visible = false
+
+	# Show views based on new state
+	match new_state:
+		State.MENU_GLOBAL:
+			$GlobalMenuView.open_menu()
+		State.MENU_SYSTEM:
+			$SystemMenuView.open_menu()
+		State.MENU_RESOURCES:
+			$ResourcesMenuView.open_menu()
+		State.MENU_OPTIONS:
+			$OptionsView.open_view()
+		State.MENU_KEYBINDS:
+			$KeybindsView.visible = true
+		State.MENU_GAMEPAD:
+			$GamepadView.visible = true
+		State.MENU_MAP:
+			$MapView.open_view()
+		State.CONTEXT_MENU:
+			# Context menu opens itself via open_selection_menu_for_actor
+			pass
+		State.PLATE_VIEW:
+			# Plate view opens itself via open_plate_for_actor
+			pass
+		State.CONFIRMATION_MODAL:
+			# Confirmation modal opens itself
+			pass

@@ -19,6 +19,7 @@ const ZOOM_IN: String = "zoom_in"
 const ZOOM_OUT: String = "zoom_out"
 const CAMERA_LOCK: String = "camera_lock"
 const CAMERA_RECENTER: String = "camera_recenter"
+const OPEN_MENU: String = "open_menu"
 
 # Config file settings
 var CONFIG_FILE_PATH: String = io.get_dir() + "options.cfg"
@@ -40,7 +41,8 @@ const DEFAULT_KEYBINDS: Dictionary = {
 	ZOOM_IN: "page_up",
 	ZOOM_OUT: "page_down",
 	CAMERA_LOCK: "space",
-	CAMERA_RECENTER: "space"
+	CAMERA_RECENTER: "space",
+	OPEN_MENU: "backspace"
 }
 
 # Default gamepad bindings
@@ -58,7 +60,8 @@ const DEFAULT_GAMEPAD: Dictionary = {
 	ZOOM_IN: "right_shoulder",
 	ZOOM_OUT: "left_shoulder",
 	CAMERA_LOCK: "left_stick",
-	CAMERA_RECENTER: "right_stick"
+	CAMERA_RECENTER: "right_stick",
+	OPEN_MENU: "select"
 }
 
 # Display names for actions
@@ -76,7 +79,8 @@ const ACTION_LABELS: Dictionary = {
 	ZOOM_IN: "Zoom In",
 	ZOOM_OUT: "Zoom Out",
 	CAMERA_LOCK: "Camera Lock",
-	CAMERA_RECENTER: "Camera Recenter"
+	CAMERA_RECENTER: "Camera Recenter",
+	OPEN_MENU: "Global Menu"
 }
 
 func _init_actions() -> void:

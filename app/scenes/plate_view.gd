@@ -16,6 +16,10 @@ var char_mapper: CharacterWidthMapper
 @onready var rich_text_label: RichTextLabel = $Overlay/CenterContainer/PanelContainer/VBox/ScrollContainer/RichTextLabel
 @onready var title_label: Label = $Overlay/CenterContainer/PanelContainer/VBox/Title
 @onready var pagination_label: Label = $Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationLabel
+@onready var bottom_bar: HBoxContainer = $Overlay/CenterContainer/PanelContainer/VBox/BottomBar
+
+var prev_button: Button
+var next_button: Button
 
 func _ready() -> void:
 	visible = false
@@ -25,8 +29,35 @@ func _ready() -> void:
 	char_mapper = CharacterWidthMapper.new()
 	char_mapper.initialize(rich_text_label)
 
+	# Create pagination buttons
+	_create_pagination_buttons()
+
 	# Connect visibility changed signal to apply theme when visible
 	visibility_changed.connect(_on_visibility_changed)
+
+func _create_pagination_buttons() -> void:
+	# Create Previous button
+	prev_button = Button.new()
+	prev_button.text = "←"
+	prev_button.custom_minimum_size = Vector2(40, 24)
+	prev_button.pressed.connect(_on_prev_button_pressed)
+	bottom_bar.add_child(prev_button)
+	bottom_bar.move_child(prev_button, 0)  # Move to first position
+
+	# Pagination label is already in the middle (created in scene)
+
+	# Create Next button
+	next_button = Button.new()
+	next_button.text = "→"
+	next_button.custom_minimum_size = Vector2(40, 24)
+	next_button.pressed.connect(_on_next_button_pressed)
+	bottom_bar.add_child(next_button)  # Add to end
+
+func _on_prev_button_pressed() -> void:
+	previous_page()
+
+func _on_next_button_pressed() -> void:
+	next_page()
 
 
 func _on_visibility_changed() -> void:
@@ -184,6 +215,12 @@ func render_page() -> void:
 	# Update pagination label
 	pagination_label.set_text("%d/%d" % [current_page + 1, total_pages])
 
+	# Update button enabled states
+	if prev_button:
+		prev_button.disabled = (current_page == 0)
+	if next_button:
+		next_button.disabled = (current_page >= total_pages - 1)
+
 func next_page() -> void:
 	if current_page < total_pages - 1:
 		current_page += 1
@@ -198,15 +235,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 
-	if event.is_action_pressed("menu_cancel"):
+	# Cancel action is handled by UIStateMachine via interface.gd
+	# We only handle navigation here
+	if event.is_action_pressed("menu_accept"):
 		close_plate()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("menu_accept"):
-		close_plate()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("menu_next_page") or event.is_action_pressed("ui_down"):
+	elif event.is_action_pressed("ui_down"):
 		next_page()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("menu_previous_page") or event.is_action_pressed("ui_up"):
+	elif event.is_action_pressed("ui_up"):
 		previous_page()
 		get_viewport().set_input_as_handled()
