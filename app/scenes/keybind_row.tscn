@@ -1,0 +1,25 @@
+[gd_scene load_steps=2 format=3 uid="uid://dpqk7vh8mdbmo"]
+
+[ext_resource type="Script" path="res://scenes/keybind_row.gd" id="1_script"]
+
+[node name="KeybindRow" type="HBoxContainer"]
+custom_minimum_size = Vector2(0, 32)
+script = ExtResource("1_script")
+
+[node name="ActionLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Action Name"
+vertical_alignment = 1
+
+[node name="BindingButton" type="Button" parent="."]
+custom_minimum_size = Vector2(150, 28)
+layout_mode = 2
+size_flags_horizontal = 6
+text = "Not Bound"
+
+[node name="ResetButton" type="Button" parent="."]
+custom_minimum_size = Vector2(60, 28)
+layout_mode = 2
+text = "Reset"

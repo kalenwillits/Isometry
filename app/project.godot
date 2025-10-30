@@ -34,6 +34,7 @@ Transition="*res://autoload/transition.tscn"
 Secret="*res://autoload/secrets.gd"
 Config="*res://autoload/config.gd"
 InputIconMapper="*res://autoload/input_icon_mapper.gd"
+Keybinds="*res://autoload/keybinds.gd"
 
 [debug]
 

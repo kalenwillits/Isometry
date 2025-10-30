@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-const CONFIG_FILE_PATH: String = "user://options.cfg"
+var CONFIG_FILE_PATH: String = io.get_dir() + "options.cfg"
 const CONFIG_SECTION_DISPLAY: String = "display"
 const CONFIG_SECTION_INPUT: String = "input"
 

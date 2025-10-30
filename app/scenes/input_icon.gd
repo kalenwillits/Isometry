@@ -3,6 +3,9 @@ extends Button
 # Automatically adapts based on the user's selected icon mode
 # Now clickable with mouse support
 
+const DarkModeTheme = preload("res://themes/DarkMode.res")
+const UbuntuMonoFont = preload("res://themes/UbuntuMono-Bold.ttf")
+
 signal icon_clicked()
 
 @export var action_name: String = "":
@@ -35,18 +38,29 @@ func _ready() -> void:
 
 	# Connect to icon mode change signal
 	InputIconMapper.icon_mode_changed.connect(_on_icon_mode_changed)
+
+	# Connect to keybind changes signal
+	Keybinds.binding_changed.connect(_on_binding_changed)
+
 	_refresh_display()
 
 func _on_button_pressed() -> void:
 	icon_clicked.emit()
 
 func _exit_tree() -> void:
-	# Disconnect signal when removed
+	# Disconnect signals when removed
 	if InputIconMapper.icon_mode_changed.is_connected(_on_icon_mode_changed):
 		InputIconMapper.icon_mode_changed.disconnect(_on_icon_mode_changed)
+	if Keybinds.binding_changed.is_connected(_on_binding_changed):
+		Keybinds.binding_changed.disconnect(_on_binding_changed)
 
 func _on_icon_mode_changed(_new_mode: InputIconMapper.IconMode) -> void:
 	_refresh_display()
+
+func _on_binding_changed(changed_action: String, _binding_type: String) -> void:
+	"""Called when any keybind changes - refresh if it's our action"""
+	if changed_action == action_name:
+		refresh()
 
 # Refresh the display based on current action and icon mode
 func _refresh_display() -> void:
@@ -98,8 +112,13 @@ func _refresh_display() -> void:
 		if event_to_display == null and events.size() > 0:
 			event_to_display = events[0]
 	else:
-		# Keyboard mode: show first event
-		if events.size() > 0:
+		# Keyboard mode: prioritize keyboard/mouse events
+		for event in events:
+			if event is InputEventKey or event is InputEventMouseButton:
+				event_to_display = event
+				break
+		# Fall back to first event if no keyboard/mouse events found
+		if event_to_display == null and events.size() > 0:
 			event_to_display = events[0]
 
 	# Display the single event
@@ -142,29 +161,15 @@ func _add_icon(icon_path: String) -> void:
 func _add_text_label(text: String) -> void:
 	var label = Label.new()
 	label.text = text
+	label.add_theme_font_override("font", UbuntuMonoFont)
 	label.add_theme_font_size_override("font_size", text_size)
+	label.add_theme_color_override("font_color", Color.WHITE)
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 2)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Let button handle mouse
 
-	# Add a subtle background to text labels
-	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = Color(0.2, 0.2, 0.2, 0.8)
-	style_box.corner_radius_top_left = 2
-	style_box.corner_radius_top_right = 2
-	style_box.corner_radius_bottom_left = 2
-	style_box.corner_radius_bottom_right = 2
-	style_box.content_margin_left = 2
-	style_box.content_margin_right = 2
-	style_box.content_margin_top = 0
-	style_box.content_margin_bottom = 0
-
-	# Create a panel container to hold the label with background
-	var panel = PanelContainer.new()
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Let button handle mouse
-	panel.add_theme_stylebox_override("panel", style_box)
-	panel.add_child(label)
-
-	content_container.add_child(panel)
+	content_container.add_child(label)
 
 # Add optional label text after the icon/key
 func _add_optional_label() -> void:

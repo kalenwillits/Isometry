@@ -3,8 +3,6 @@ extends HBoxContainer
 # Shows Accept, Cancel, and optionally Page navigation hints
 # Now emits signals when hints are clicked
 
-const InputIconScene = preload("res://scenes/input_icon.tscn")
-
 signal accept_clicked()
 signal cancel_clicked()
 signal prev_clicked()
@@ -41,16 +39,12 @@ func _build_hints() -> void:
 		_add_hint("menu_next_page", "Next", func(): next_clicked.emit())
 
 func _add_hint(action_name: String, label_text: String, on_click: Callable) -> void:
-	# Add the InputIcon with integrated label
-	var input_icon = InputIconScene.instantiate()
-	input_icon.action_name = action_name
-	input_icon.label_text = "  " + label_text  # Add spacing before label
-	input_icon.icon_size = Vector2i(12, 12)
-	input_icon.text_size = 12
-	# Connect the icon's click signal to emit our signal
-	input_icon.icon_clicked.connect(on_click)
-
-	add_child(input_icon)
+	# Create regular button
+	var button = Button.new()
+	button.text = label_text.strip_edges()
+	button.custom_minimum_size = Vector2(60, 24)
+	button.pressed.connect(on_click)
+	add_child(button)
 
 func _add_spacer() -> void:
 	var spacer = Control.new()

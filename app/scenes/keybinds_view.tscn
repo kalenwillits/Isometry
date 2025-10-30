@@ -1,0 +1,109 @@
+[gd_scene load_steps=5 format=3 uid="uid://c3kma4g21xb5e"]
+
+[ext_resource type="Script" path="res://scenes/keybinds_view.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
+[ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_panel"]
+[ext_resource type="PackedScene" uid="uid://dwgdvxl47cj6e" path="res://scenes/menu_hints.tscn" id="4_menu_hints"]
+
+[node name="KeybindsView" type="CanvasLayer"]
+layer = 10
+visible = false
+script = ExtResource("1_script")
+
+[node name="Overlay" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Overlay/CenterContainer"]
+custom_minimum_size = Vector2(600, 500)
+layout_mode = 2
+theme = ExtResource("2_theme")
+theme_override_styles/panel = ExtResource("3_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="Overlay/CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="Overlay/CenterContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+theme_override_font_sizes/font_size = 24
+text = "Keyboard & Mouse Bindings"
+horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="RowsContainer" type="VBoxContainer" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="KeybindsList" type="VBoxContainer" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/RowsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Spacer2" type="Control" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="NavigationContainer" type="HBoxContainer" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="PageLabel" type="Label" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/NavigationContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("2_theme")
+text = "Page 1 / 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MenuHints" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/NavigationContainer" instance=ExtResource("4_menu_hints")]
+layout_mode = 2
+show_accept = false
+show_pagination = true
+
+[node name="ResetAllButton" type="Button" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/NavigationContainer"]
+custom_minimum_size = Vector2(80, 24)
+layout_mode = 2
+theme = ExtResource("2_theme")
+text = "Reset"
+
+[node name="Spacer3" type="Control" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="ButtonsContainer" type="CenterContainer" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/ButtonsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="SaveButton" type="Button" parent="Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/ButtonsContainer/HBox"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+theme = ExtResource("2_theme")
+text = "Save"
+visible = false

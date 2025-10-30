@@ -105,6 +105,18 @@ func open_options_view() -> void:
 func close_options_view() -> void:
 	$OptionsView.close_view()
 
+func open_keybinds_view() -> void:
+	$KeybindsView.visible = true
+
+func close_keybinds_view() -> void:
+	$KeybindsView.visible = false
+
+func open_gamepad_view() -> void:
+	$GamepadView.visible = true
+
+func close_gamepad_view() -> void:
+	$GamepadView.visible = false
+
 func open_map_view() -> void:
 	Logger.info("Interface: Opening map view", self)
 	$MapView.open_view()
@@ -127,7 +139,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Check for map view toggle
 	if event.is_action_pressed("toggle_map_view"):
 		# Don't open map view if other menus are visible
-		if not ($GlobalMenuView.visible or $SystemMenuView.visible or $ResourcesMenuView.visible or $OptionsView.visible or $ContextMenu.visible or $PlateView.visible or $ConfirmationModal.visible):
+		if not ($GlobalMenuView.visible or $SystemMenuView.visible or $ResourcesMenuView.visible or $OptionsView.visible or $KeybindsView.visible or $GamepadView.visible or $ContextMenu.visible or $PlateView.visible or $ConfirmationModal.visible):
 			toggle_map_view()
 			get_viewport().set_input_as_handled()
 		return
@@ -146,6 +158,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		elif $OptionsView.visible:
 			# OptionsView handles its own escape
+			return
+		elif $KeybindsView.visible:
+			# KeybindsView handles its own escape
+			return
+		elif $GamepadView.visible:
+			# GamepadView handles its own escape
 			return
 		elif $MapView.visible:
 			# MapView handles its own escape

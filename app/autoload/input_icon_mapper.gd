@@ -2,7 +2,7 @@ extends Node
 # InputIconMapper - Utility for mapping input events to icon paths and display text
 # This handles converting Godot input events to gamepad icon filenames or keyboard text labels
 
-const CONFIG_FILE_PATH: String = "user://options.cfg"
+var CONFIG_FILE_PATH: String = io.get_dir() + "options.cfg"
 const CONFIG_SECTION_INPUT: String = "input"
 const ICON_BASE_PATH: String = "res://assets/gamepad-icons/"
 const ICON_DPI: String = "96dpi"  # Default DPI to use

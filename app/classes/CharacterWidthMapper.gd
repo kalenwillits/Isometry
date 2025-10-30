@@ -25,7 +25,7 @@ class_name CharacterWidthMapper
 ## var width = mapper.get_char_width("A")
 ## var text_width = mapper.calculate_text_width("Hello World")
 
-const CACHE_PATH_USER = "user://assets/character_widths.tres"
+var CACHE_PATH_USER = io.get_dir() + "assets/character_widths.tres"
 const CACHE_PATH_RES = "res://assets/character_widths.tres"
 
 var char_widths: Dictionary = {}
@@ -96,7 +96,7 @@ func generate_character_widths(rich_text_label: RichTextLabel) -> void:
 ## Save the character width mapping to cache
 func save_to_cache() -> void:
 	# Ensure assets directory exists
-	var cache_dir = "user://assets"
+	var cache_dir = io.get_dir() + "assets"
 	if not DirAccess.dir_exists_absolute(cache_dir):
 		DirAccess.make_dir_absolute(cache_dir)
 
@@ -107,7 +107,7 @@ func save_to_cache() -> void:
 	var err = ResourceSaver.save(data_resource, CACHE_PATH_USER)
 	if err == OK:
 		Logger.info("Saved character width mapping to %s" % CACHE_PATH_USER, self)
-		Logger.info("To commit this mapping: copy from user:// to res://assets/", self)
+		Logger.info("To commit this mapping: copy from executable directory to res://assets/", self)
 	else:
 		Logger.warn("Failed to save character width mapping: %d" % err, self)
 

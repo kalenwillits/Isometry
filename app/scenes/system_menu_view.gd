@@ -15,6 +15,13 @@ func _create_menu_items() -> void:
 	keybinds_button.pressed.connect(_on_keybinds_button_pressed)
 	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(keybinds_button)
 
+	# Create "Gamepad" button
+	var gamepad_button = Button.new()
+	gamepad_button.custom_minimum_size = Vector2(256, 24)
+	gamepad_button.text = "Gamepad"
+	gamepad_button.pressed.connect(_on_gamepad_button_pressed)
+	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(gamepad_button)
+
 	# Create "Options" button
 	var options_button = Button.new()
 	options_button.custom_minimum_size = Vector2(256, 24)
@@ -30,7 +37,11 @@ func _create_menu_items() -> void:
 	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(exit_button)
 
 func _on_keybinds_button_pressed() -> void:
-	# Placeholder for keybinds functionality
+	get_parent().open_keybinds_view()
+	close_menu()
+
+func _on_gamepad_button_pressed() -> void:
+	get_parent().open_gamepad_view()
 	close_menu()
 
 func _on_options_button_pressed() -> void:
