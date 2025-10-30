@@ -145,6 +145,7 @@ func activate_selected() -> void:
 		var action_key = item.get_meta("action_key")
 		Finder.select(Group.ACTIONS).invoke_action.rpc_id(1, action_key, caller_name, target_name)
 		close_menu()
+		UIStateMachine.close_context_menu()
 
 func _on_action_item_clicked(index: int) -> void:
 	selected_index = index

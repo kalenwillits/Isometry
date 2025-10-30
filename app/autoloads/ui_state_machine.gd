@@ -22,6 +22,7 @@ enum State {
 var current_state: State = State.GAMEPLAY
 var previous_state: State = State.GAMEPLAY
 var map_opened_from_gameplay: bool = false  # Track how MENU_MAP was opened
+var context_menu_opened_from: State = State.GAMEPLAY  # Track where CONTEXT_MENU was opened from
 
 signal state_changed(old_state: State, new_state: State)
 
@@ -87,8 +88,8 @@ func handle_cancel() -> void:
 				transition_to(State.MENU_GLOBAL)
 
 		State.CONTEXT_MENU:
-			# Close context menu
-			transition_to(State.GAMEPLAY)
+			# Close context menu, return to where it was opened from
+			transition_to(context_menu_opened_from)
 
 		State.PLATE_VIEW:
 			# Close plate view
@@ -134,6 +135,15 @@ func handle_toggle_map() -> void:
 func open_map_from_menu() -> void:
 	map_opened_from_gameplay = false
 	transition_to(State.MENU_MAP)
+
+## Open context menu from current state
+func open_context_menu() -> void:
+	context_menu_opened_from = current_state
+	transition_to(State.CONTEXT_MENU)
+
+## Close context menu and return to where it was opened from
+func close_context_menu() -> void:
+	transition_to(context_menu_opened_from)
 
 ## Get state name for debugging
 func get_state_name() -> String:

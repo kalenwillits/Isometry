@@ -76,7 +76,7 @@ func open_selection_menu_for_actor(target_actor_name: String) -> void:
 		if menu_ent:
 			var primary_actor = Finder.get_primary_actor()
 			if primary_actor:
-				ui_state_machine.transition_to(ui_state_machine.State.CONTEXT_MENU)
+				ui_state_machine.open_context_menu()
 				$ContextMenu.open_menu(target_actor.display_name, menu_ent, primary_actor.name, target_actor_name)
 			else:
 				Logger.warn("Primary actor not found", self)
@@ -92,7 +92,7 @@ func open_selection_menu_for_entity(entity_key: String, actor_name: String) -> v
 
 	var menu_ent: Entity = entity.menu.lookup()
 	if menu_ent:
-		ui_state_machine.transition_to(ui_state_machine.State.CONTEXT_MENU)
+		ui_state_machine.open_context_menu()
 		$ContextMenu.open_menu(entity.name_ if entity.get("name_") else entity_key, menu_ent, actor_name, actor_name)
 
 func open_plate_for_actor(plate_key: String, caller: String, target: String) -> void:

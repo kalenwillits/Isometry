@@ -389,9 +389,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 
-	if event.is_action_pressed("menu_cancel"):
-		_on_cancel_pressed()
-		get_viewport().set_input_as_handled()
+	# Cancel action is handled by UIStateMachine via interface.gd
 
 func _create_save_button(parent: VBoxContainer) -> void:
 	var hbox = HBoxContainer.new()
@@ -507,4 +505,5 @@ func _on_cancel_pressed() -> void:
 		has_unsaved_changes = false
 		_update_save_button_visibility()
 
-	close_view()
+	# Trigger state transition instead of closing directly
+	UIStateMachine.handle_cancel()
