@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 const KeybindRowScene = preload("res://scenes/keybind_row.tscn")
-const DarkModeTheme = preload("res://themes/DarkMode.res")
+const BaseTheme = preload("res://themes/BaseTheme.res")
 const ITEMS_PER_PAGE: int = 8
 
 var current_page: int = 0
@@ -36,6 +36,16 @@ func _ready() -> void:
 	# Load actions and build UI
 	_load_actions()
 	_calculate_pages()
+
+	# Connect visibility changed signal to apply theme when visible
+	visibility_changed.connect(_on_visibility_changed)
+
+
+func _on_visibility_changed() -> void:
+	if visible:
+		var theme_mgr = get_node_or_null("/root/ThemeManager")
+		if theme_mgr:
+			theme_mgr._apply_theme_recursive(self)
 	_show_page(0)
 
 	# Update save button visibility
@@ -113,7 +123,7 @@ func _on_reset_all_pressed() -> void:
 	"""Called when Reset All button is pressed"""
 	# Show confirmation dialog
 	var dialog = ConfirmationDialog.new()
-	dialog.theme = DarkModeTheme
+	dialog.theme = BaseTheme
 	dialog.dialog_text = "Reset all gamepad bindings to defaults?"
 	dialog.title = "Confirm Reset"
 	dialog.get_label().add_theme_font_size_override("font_size", 16)
@@ -136,7 +146,7 @@ func _on_back_pressed() -> void:
 	if has_unsaved_changes:
 		# Show confirmation dialog
 		var dialog = ConfirmationDialog.new()
-		dialog.theme = DarkModeTheme
+		dialog.theme = BaseTheme
 		dialog.dialog_text = "You have unsaved changes. Discard them?"
 		dialog.title = "Unsaved Changes"
 		dialog.get_label().add_theme_font_size_override("font_size", 16)

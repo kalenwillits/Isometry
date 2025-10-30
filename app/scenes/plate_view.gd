@@ -25,6 +25,16 @@ func _ready() -> void:
 	char_mapper = CharacterWidthMapper.new()
 	char_mapper.initialize(rich_text_label)
 
+	# Connect visibility changed signal to apply theme when visible
+	visibility_changed.connect(_on_visibility_changed)
+
+
+func _on_visibility_changed() -> void:
+	if visible:
+		var theme_mgr = get_node_or_null("/root/ThemeManager")
+		if theme_mgr:
+			theme_mgr._apply_theme_recursive(self)
+
 func open_plate(plate_ent: Entity, caller: String, target: String) -> void:
 	if plate_ent == null:
 		Logger.warn("Cannot open plate: invalid plate entity", self)

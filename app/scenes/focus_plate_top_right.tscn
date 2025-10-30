@@ -1,8 +1,8 @@
 [gd_scene load_steps=7 format=3 uid="uid://cxkeqrla7t757"]
 
-[ext_resource type="Script" path="res://scenes/focus_plate.gd" id="1_gefpo"]
-[ext_resource type="Script" path="res://classes/RightToLeftGrid.gd" id="1_rtl"]
-[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="1_r4mos"]
+[ext_resource type="Script" uid="uid://dxb34tty7suhs" path="res://scenes/focus_plate.gd" id="1_gefpo"]
+[ext_resource type="Script" uid="uid://jphbhv0giwbg" path="res://classes/RightToLeftGrid.gd" id="1_rtl"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="1_r4mos"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_hrv8t"]
 [ext_resource type="FontFile" uid="uid://c3xo3ufx5d7hs" path="res://themes/UbuntuMono-Italic.ttf" id="3_o28qo"]
 [ext_resource type="FontFile" uid="uid://c4qo7v7qabayy" path="res://themes/UbuntuMono-Bold.ttf" id="5_j31la"]

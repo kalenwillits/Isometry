@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://d0wh1foyn3y0t"]
 
 [ext_resource type="Script" uid="uid://bqlr3g0xwangd" path="res://scenes/target_group_widget.gd" id="1_group_widget"]
-[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_voh2a"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="2_voh2a"]
 
 [node name="TargetGroupWidget" type="Control"]
 layout_mode = 3

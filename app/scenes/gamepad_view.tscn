@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3 uid="uid://cyv07p46q0gp3"]
 
-[ext_resource type="Script" path="res://scenes/gamepad_view.gd" id="1_script"]
-[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
+[ext_resource type="Script" uid="uid://b4882kbkfm2p5" path="res://scenes/gamepad_view.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="2_theme"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_panel"]
-[ext_resource type="PackedScene" uid="uid://dwgdvxl47cj6e" path="res://scenes/menu_hints.tscn" id="4_menu_hints"]
+[ext_resource type="PackedScene" uid="uid://c3g5h8kak1m2n" path="res://scenes/menu_hints.tscn" id="4_menu_hints"]
 
 [node name="GamepadView" type="CanvasLayer"]
 layer = 10

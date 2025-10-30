@@ -12,6 +12,16 @@ func _ready() -> void:
 	visible = false
 	add_to_group(Group.RESOURCES_MENU)
 
+	# Connect visibility changed signal to apply theme when visible
+	visibility_changed.connect(_on_visibility_changed)
+
+
+func _on_visibility_changed() -> void:
+	if visible:
+		var theme_mgr = get_node_or_null("/root/ThemeManager")
+		if theme_mgr:
+			theme_mgr._apply_theme_recursive(self)
+
 func open_menu() -> void:
 	load_resources()
 	current_page = 0

@@ -8,6 +8,7 @@ var update_timer: float = 0.0
 const UPDATE_INTERVAL: float = 0.1
 
 func _ready() -> void:
+	super._ready()  # Call Widget's _ready to set up theming hooks
 	var entity: Entity = Repo.select(key)
 	if entity == null: return
 	var icon_texture: ImageTexture = AssetLoader.builder()\

@@ -16,6 +16,16 @@ func _ready() -> void:
 	$Overlay/CenterContainer/PanelContainer/VBox/ButtonBox/NoButton.pressed.connect(_on_no_pressed)
 	$CountdownTimer.timeout.connect(_on_countdown_tick)
 
+	# Connect visibility changed signal to apply theme when visible
+	visibility_changed.connect(_on_visibility_changed)
+
+
+func _on_visibility_changed() -> void:
+	if visible:
+		var theme_mgr = get_node_or_null("/root/ThemeManager")
+		if theme_mgr:
+			theme_mgr._apply_theme_recursive(self)
+
 func open_modal(question: String, yes_callback: Callable, no_callback: Callable = Callable(), countdown: int = 0) -> void:
 	base_question = question
 	on_yes_callback = yes_callback

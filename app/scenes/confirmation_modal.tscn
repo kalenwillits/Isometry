@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://b0vk5n8h1ydji"]
 
-[ext_resource type="Script" path="res://scenes/confirmation_modal.gd" id="1_script"]
-[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
+[ext_resource type="Script" uid="uid://36olvmsu24td" path="res://scenes/confirmation_modal.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="2_theme"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_panel"]
 
 [node name="ConfirmationModal" type="CanvasLayer"]

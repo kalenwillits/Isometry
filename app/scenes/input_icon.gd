@@ -3,7 +3,7 @@ extends Button
 # Automatically adapts based on the user's selected icon mode
 # Now clickable with mouse support
 
-const DarkModeTheme = preload("res://themes/DarkMode.res")
+const BaseTheme = preload("res://themes/BaseTheme.res")
 const UbuntuMonoFont = preload("res://themes/UbuntuMono-Bold.ttf")
 
 signal icon_clicked()

@@ -9,6 +9,11 @@ var update_timer: float = 0.0
 const UPDATE_INTERVAL: float = 0.1
 
 func _ready() -> void:
+	# Apply current theme to this widget
+	var theme_mgr = get_node_or_null("/root/ThemeManager")
+	if theme_mgr:
+		theme_mgr._apply_theme_recursive(self)
+
 	if actor == null: return
 	if actor == "": return
 	var actor_node: Actor = Finder.get_actor(actor)

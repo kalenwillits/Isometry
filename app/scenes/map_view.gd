@@ -27,6 +27,16 @@ func _ready() -> void:
 	# Set viewport to use NEAREST texture filtering for pixel-perfect rendering
 	viewport.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
 
+	# Connect visibility changed signal to apply theme when visible
+	visibility_changed.connect(_on_visibility_changed)
+
+
+func _on_visibility_changed() -> void:
+	if visible:
+		var theme_mgr = get_node_or_null("/root/ThemeManager")
+		if theme_mgr:
+			theme_mgr._apply_theme_recursive(self)
+
 func open_view() -> void:
 	Logger.info("Opening map view", self)
 

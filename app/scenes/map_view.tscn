@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://dq7v4k6n3r50p"]
 
 [ext_resource type="Script" uid="uid://cx6dl2hi6mte1" path="res://scenes/map_view.gd" id="1_script"]
-[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/DarkMode.res" id="2_theme"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="2_theme"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_panel"]
 [ext_resource type="Script" uid="uid://bhy68166w1rky" path="res://scenes/player_marker.gd" id="4_marker"]
 [ext_resource type="Script" uid="uid://ccxqoekfhwyv2" path="res://scenes/camera_viewport_indicator.gd" id="5_viewport_indicator"]

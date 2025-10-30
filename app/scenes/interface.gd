@@ -3,6 +3,11 @@ extends Node
 func _ready() -> void:
 	add_to_group(Group.INTERFACE)
 
+	# Apply theme on startup
+	var theme_mgr = get_node_or_null("/root/ThemeManager")
+	if theme_mgr:
+		theme_mgr._apply_theme_recursive(self)
+
 func _process(_delta: float) -> void:
 	update_primary_actor_info()
 		

@@ -7,6 +7,16 @@ func _ready() -> void:
 	add_to_group(Group.SYSTEM_MENU)
 	_create_menu_items()
 
+	# Connect visibility changed signal to apply theme when visible
+	visibility_changed.connect(_on_visibility_changed)
+
+
+func _on_visibility_changed() -> void:
+	if visible:
+		var theme_mgr = get_node_or_null("/root/ThemeManager")
+		if theme_mgr:
+			theme_mgr._apply_theme_recursive(self)
+
 func _create_menu_items() -> void:
 	# Create "Keybinds" button
 	var keybinds_button = Button.new()

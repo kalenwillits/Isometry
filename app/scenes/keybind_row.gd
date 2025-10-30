@@ -1,6 +1,6 @@
 extends HBoxContainer
 
-const DarkModeTheme = preload("res://themes/DarkMode.res")
+const BaseTheme = preload("res://themes/BaseTheme.res")
 
 signal binding_requested(action_name: String, binding_type: String)
 signal reset_requested(action_name: String, binding_type: String)
@@ -211,7 +211,7 @@ func _show_conflict_dialog(conflict_action: String, binding_str: String) -> void
 	"""Shows conflict dialog and handles user response"""
 	# Create confirmation dialog
 	var dialog = AcceptDialog.new()
-	dialog.theme = DarkModeTheme
+	dialog.theme = BaseTheme
 	dialog.dialog_text = "'%s' is already bound to '%s'.\nSwap bindings?" % [
 		binding_str,
 		Keybinds.get_action_label(conflict_action)
