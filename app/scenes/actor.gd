@@ -86,6 +86,11 @@ const MAX_PATH_ATTEMPTS: int = 10
 # Movement mode tracking
 var is_direct_movement_active: bool = false
 var current_input_strength: float = 0.0
+# Area targeting mode tracking
+var is_area_targeting: bool = false
+var area_targeting_action: String = ""
+var area_targeting_overlay: Node2D = null
+var area_targeting_start_pos: Vector2 = Vector2.ZERO
 var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
@@ -508,9 +513,12 @@ func _physics_process(delta) -> void:
 	use_move_view(delta)
 	if is_primary():
 		use_move_discovery()
-		use_pathing(delta)
-		click_to_move()
-		use_move_directly(delta)
+		if is_area_targeting:
+			update_area_targeting(delta)
+		else:
+			use_pathing(delta)
+			click_to_move()
+			use_move_directly(delta)
 		use_actions()
 		use_target()
 		#use_line_of_sight() # Temp disabled save incase we need this later
@@ -582,7 +590,7 @@ func use_move_discovery() -> void:
 
 func use_move_view(delta: float) -> void:
 	var view_shape: CollisionShape2D = $ViewBox.get_node_or_null("ViewShape")
-	if origin.distance_to(destination) > 0: 
+	if origin.distance_to(destination) > 0:
 		last_viewshape_destination = destination
 		last_viewshape_origin = origin
 	if view_shape:
@@ -609,39 +617,53 @@ func use_strategy() -> void:
 
 func use_actions() -> void:
 	# Block input if UI state machine says player input should be blocked
-	if get_node("/root/UIStateMachine").should_block_player_input():
+	# EXCEPT when in area targeting mode, allow input for that
+	if get_node("/root/UIStateMachine").should_block_player_input() and !is_area_targeting:
 		return
 
 	var actor_ent: Entity = Repo.select(actor)
 	if !actor_ent or !actor_ent.skills: return
-	
+
 	# Limit to 9 skills maximum to maintain action_1-9 compatibility
 	var skills_list: Array = actor_ent.skills.lookup()
 	if !skills_list: return
-	
+
 	var max_skills: int = min(skills_list.size(), 9)
-	
+
 	for i in range(max_skills):
 		var skill_ent: Entity = skills_list[i]
 		if !skill_ent: continue
-		
+
 		var skill_key: String = skill_ent.key()
 		if !skill_key: continue
-		
+
 		var action_name: String = "action_%d" % (i + 1)
 		var ui_action_block: String = Group.UI_ACTION_BLOCK_N % (i + 1)
-		
+
 		# Handle skill start (button press)
 		if Input.is_action_just_pressed(action_name) and skill_ent.start:
-			var start_signal = "action_%d_start" % (i + 1)
-			Finder.select(ui_action_block).press_button()
-			emit_skill_signal(start_signal, resolve_target())
-			
+			# Check if this is an area action
+			var start_action_ent = skill_ent.start.lookup()
+			if start_action_ent and start_action_ent.area:
+				# Enter area targeting mode
+				enter_area_targeting(skill_ent.start.key(), start_action_ent)
+				Finder.select(ui_action_block).press_button()
+			else:
+				# Normal action
+				var start_signal = "action_%d_start" % (i + 1)
+				Finder.select(ui_action_block).press_button()
+				emit_skill_signal(start_signal, resolve_target())
+
 		# Handle skill end (button release)
-		if Input.is_action_just_released(action_name) and skill_ent.end:
-			var end_signal = "action_%d_end" % (i + 1)
-			emit_skill_signal(end_signal, resolve_target())
-			Finder.select(ui_action_block).release_button()
+		if Input.is_action_just_released(action_name):
+			# Check if we're in area targeting mode for this action
+			if is_area_targeting and area_targeting_action == (skill_ent.start.key() if skill_ent.start else ""):
+				execute_area_action()
+				Finder.select(ui_action_block).release_button()
+			elif skill_ent.end:
+				var end_signal = "action_%d_end" % (i + 1)
+				emit_skill_signal(end_signal, resolve_target())
+				Finder.select(ui_action_block).release_button()
 
 func emit_skill_signal(skill_event: String, target_actor: Actor) -> void:
 	# Emit the appropriate static signal
@@ -684,6 +706,11 @@ func emit_skill_signal(skill_event: String, target_actor: Actor) -> void:
 			action_9_end.emit(target_actor)
 
 func use_target() -> void:
+	# Handle cancel during area targeting mode
+	if is_area_targeting and Input.is_action_just_pressed("cancel"):
+		cancel_area_targeting()
+		return
+
 	# Block input if UI state machine says player input should be blocked
 	if get_node("/root/UIStateMachine").should_block_player_input():
 		return
@@ -1194,6 +1221,11 @@ func build_saliencebox(value: int) -> void:
 		$SalienceBox.add_child(salience_shape)
 
 func get_relative_camera_position() -> Vector2:
+	# During area targeting, camera follows the overlay
+	if is_area_targeting and area_targeting_overlay:
+		return area_targeting_overlay.global_position
+
+	# Normal behavior - follow actor with viewshape offset
 	var view_shape: CollisionShape2D = $ViewBox.get_node_or_null("ViewShape")
 	if view_shape:
 		return global_position + view_shape.position
@@ -1756,6 +1788,154 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 			)
 	)
 	other.fader.appear()
+
+## Area Targeting Functions
+
+func enter_area_targeting(action_key: String, action_ent: Entity) -> void:
+	"""Enter area targeting mode for an AOE action"""
+	if !action_ent or !action_ent.area:
+		return
+
+	# Get the polygon entity
+	var polygon_ent = action_ent.area.lookup()
+	if !polygon_ent:
+		return
+
+	# Build the overlay using builder pattern
+	var range_limit = action_ent.range if "range" in action_ent else 10000.0
+	area_targeting_overlay = AreaTargetingOverlay.builder()\
+		.polygon(polygon_ent)\
+		.range_limit(range_limit)\
+		.start_position(global_position)\
+		.build()
+
+	# Add overlay to scene and set position
+	get_parent().add_child(area_targeting_overlay)
+	area_targeting_overlay.global_position = global_position
+
+	# Set state
+	is_area_targeting = true
+	area_targeting_action = action_key
+	area_targeting_start_pos = global_position
+
+	# Root the player
+	if "time" in action_ent and action_ent.time:
+		root(action_ent.time + 60.0)  # Root for action time + large buffer
+
+	# Set UI state
+	get_node("/root/UIStateMachine").transition_to(UIStateMachine.State.AREA_TARGETING)
+
+func update_area_targeting(delta: float) -> void:
+	"""Update area targeting overlay position based on input"""
+	if !is_area_targeting or !area_targeting_overlay:
+		return
+
+	var action_ent = Repo.select(area_targeting_action)
+	if !action_ent:
+		cancel_area_targeting()
+		return
+
+	# Get directional input
+	var motion = Input.get_vector("left", "right", "up", "down")
+
+	if motion.length() > 0:
+		# Get speed from action or use default
+		var targeting_speed = action_ent.speed if "speed" in action_ent else 300.0
+
+		# Apply isometric factor to speed based on motion angle
+		var isometric_adjustment = std.isometric_factor(motion.angle())
+		var adjusted_speed = targeting_speed * isometric_adjustment
+
+		# Move the overlay
+		var new_position = area_targeting_overlay.global_position + motion * adjusted_speed * delta
+
+		# Clamp to max range
+		var range_limit = action_ent.range if "range" in action_ent else 10000.0
+		var distance = area_targeting_start_pos.distance_to(new_position)
+
+		if distance > range_limit:
+			# Clamp to circle boundary
+			var direction = (new_position - area_targeting_start_pos).normalized()
+			new_position = area_targeting_start_pos + direction * range_limit
+			distance = range_limit
+
+		area_targeting_overlay.global_position = new_position
+		area_targeting_overlay.update_range_indicator(distance)
+
+func execute_area_action() -> void:
+	"""Execute the area action on all targets within the polygon"""
+	if !is_area_targeting or !area_targeting_overlay:
+		return
+
+	var action_ent = Repo.select(area_targeting_action)
+	if !action_ent:
+		cancel_area_targeting()
+		return
+
+	# Get all actors in the scene
+	var all_actors = get_tree().get_nodes_in_group(Group.ACTOR)
+
+	# Get the polygon entity to check bounds
+	var polygon_ent = action_ent.area.lookup()
+	if !polygon_ent:
+		cancel_area_targeting()
+		return
+
+	# Build a polygon shape for collision detection
+	var polygon_points: PackedVector2Array = []
+	for vertex in polygon_ent.vertices.lookup():
+		# Transform vertices to world space (apply isometric scale)
+		var local_point = Vector2(vertex.x, vertex.y) * area_targeting_overlay.scale
+		var world_point = area_targeting_overlay.global_position + local_point
+		polygon_points.append(world_point)
+
+	# Find all actors within the polygon
+	var targets_in_area: Array = []
+	Logger.debug("Area action: checking %d actors against polygon" % all_actors.size(), self)
+	Logger.debug("Area action: polygon points = %s" % polygon_points, self)
+	Logger.debug("Area action: caster position = %s" % global_position, self)
+
+	for actor_node in all_actors:
+		# Check if actor's position is inside the polygon
+		var is_in_polygon = Geometry2D.is_point_in_polygon(actor_node.global_position, polygon_points)
+		Logger.debug("Area action: actor %s at %s - in polygon: %s" % [actor_node.name, actor_node.global_position, is_in_polygon], self)
+		if is_in_polygon:
+			targets_in_area.append(actor_node)
+
+	Logger.debug("Area action: found %d targets in area" % targets_in_area.size(), self)
+
+	# Invoke the action on each target
+	for target_actor in targets_in_area:
+		Logger.debug("Area action: invoking on self=%s, target=%s" % [name, target_actor.name], self)
+		get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(
+			1,
+			area_targeting_action,
+			name,
+			target_actor.name
+		)
+
+	# Exit targeting mode
+	cancel_area_targeting()
+
+func cancel_area_targeting() -> void:
+	"""Cancel area targeting and clean up"""
+	if area_targeting_overlay:
+		area_targeting_overlay.queue_free()
+		area_targeting_overlay = null
+
+	is_area_targeting = false
+	area_targeting_action = ""
+	area_targeting_start_pos = Vector2.ZERO
+
+	# Stop the ActionTimer to prevent conflict with timer-based unroot
+	$ActionTimer.stop()
+
+	# Unroot the player by resetting speed
+	if speed_cache_value > 0:
+		set_speed(speed_cache_value)
+
+	# Return to gameplay state
+	get_node("/root/UIStateMachine").transition_to(UIStateMachine.State.GAMEPLAY)
 
 func is_npc() -> bool:
 	return is_in_group(Group.NPC)
