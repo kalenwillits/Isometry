@@ -68,13 +68,12 @@ func multiply(value: int) -> ResourceOperator:
 	return self
 
 func divide(value: int) -> ResourceOperator:
-	## Important!!!!
-	## If someone attempts to divide by zero, it will be treated as infitity
-	if value == 0: value = INF
 	var actor = get_actor()
 	if actor == null: return self
 	var current_value: int = actor.resources.get(resource.key())
-	var new_value: int = current_value / value
+	# Handle divide by zero: treat as division by infinity = 0
+	# Use explicit integer division to avoid float contamination
+	var new_value: int = 0 if value == 0 else int(current_value / value)
 	actor.resources[resource.key()] = enforce_bounds(new_value)
 
 	# Sync resource change to all clients
