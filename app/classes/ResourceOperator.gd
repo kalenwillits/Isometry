@@ -34,6 +34,11 @@ func plus(value: int) -> ResourceOperator:
 	var current_value: int = actor.resources.get(resource.key())
 	var new_value: int = current_value + value
 	actor.resources[resource.key()] = enforce_bounds(new_value)
+
+	# Sync resource change to all clients
+	if std.is_host_or_server():
+		Controller.sync_resource.rpc(actor_name, resource.key(), actor.resources[resource.key()])
+
 	return self
 
 func minus(value: int) -> ResourceOperator:
@@ -42,6 +47,11 @@ func minus(value: int) -> ResourceOperator:
 	var current_value: int = actor.resources.get(resource.key())
 	var new_value: int = current_value - value
 	actor.resources[resource.key()] = enforce_bounds(new_value)
+
+	# Sync resource change to all clients
+	if std.is_host_or_server():
+		Controller.sync_resource.rpc(actor_name, resource.key(), actor.resources[resource.key()])
+
 	return self
 
 func multiply(value: int) -> ResourceOperator:
@@ -50,10 +60,15 @@ func multiply(value: int) -> ResourceOperator:
 	var current_value: int = actor.resources.get(resource.key())
 	var new_value: int = current_value * value
 	actor.resources[resource.key()] = enforce_bounds(new_value)
+
+	# Sync resource change to all clients
+	if std.is_host_or_server():
+		Controller.sync_resource.rpc(actor_name, resource.key(), actor.resources[resource.key()])
+
 	return self
 
 func divide(value: int) -> ResourceOperator:
-	## Important!!!! 
+	## Important!!!!
 	## If someone attempts to divide by zero, it will be treated as infitity
 	if value == 0: value = INF
 	var actor = get_actor()
@@ -61,6 +76,11 @@ func divide(value: int) -> ResourceOperator:
 	var current_value: int = actor.resources.get(resource.key())
 	var new_value: int = current_value / value
 	actor.resources[resource.key()] = enforce_bounds(new_value)
+
+	# Sync resource change to all clients
+	if std.is_host_or_server():
+		Controller.sync_resource.rpc(actor_name, resource.key(), actor.resources[resource.key()])
+
 	return self
 
 func get_value() -> int:

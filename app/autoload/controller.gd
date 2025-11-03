@@ -30,6 +30,17 @@ func authenticate_and_spawn_actor(peer_id: int, token: PackedByteArray) -> void:
 							Logger.trace("Merged player data: %s" % data, self)
 					Logger.debug("Spawning actor with data: peer_id=%s, name=%s, speed=%s" % [data.peer_id, data.name, data.speed], self)
 					Finder.select(Group.SPAWNER).spawn(data)
+					# Sync initial resources after spawn completes
+					Queue.enqueue(
+						Queue.Item.builder()
+						.comment("Sync initial resources for peer %s" % peer_id)
+						.condition(func(): return Finder.get_actor(str(peer_id)) != null)
+						.task(func():
+							var actor = Finder.get_actor(str(peer_id))
+							if actor != null:
+								Controller.sync_all_resources.rpc(str(peer_id), actor.resources))
+						.build()
+					)
 				else:
 					Logger.warn("Authentication failed for peer_id=%s - invalid token" % peer_id, self)
 				)
@@ -138,3 +149,43 @@ func broadcast_chat(author, message: String) -> void:
 @rpc("authority", "call_local", "reliable")
 func open_plate_on_client(plate_key: String, caller: String, target: String) -> void:
 	Finder.select(Group.INTERFACE).open_plate_for_actor(plate_key, caller, target)
+
+@rpc("authority", "call_local", "reliable")
+func sync_resource(actor_name: String, resource_key: String, new_value: int) -> void:
+	"""
+	Broadcast a single resource change from server to all clients.
+	Called by server after validating and applying resource change.
+	"""
+	var actor = Finder.get_actor(actor_name)
+	if actor == null:
+		Logger.warn("sync_resource: actor %s not found" % actor_name, self)
+		return
+
+	var old_value = actor.resources.get(resource_key, 0)
+	actor.resources[resource_key] = new_value
+
+	Logger.debug("sync_resource: %s.%s: %d -> %d" % [actor_name, resource_key, old_value, new_value], self)
+	
+	# TODO -- use a finder query to locate the correct resource UI elements and update them that wy
+	# Trigger UI update if this is the primary actor
+	if actor.is_primary():
+		actor.handle_resource_change(resource_key)
+
+@rpc("authority", "call_local", "reliable")
+func sync_all_resources(actor_name: String, resources: Dictionary) -> void:
+	"""
+	Broadcast all resources for an actor (used on spawn/respawn).
+	Called by server when actor spawns or needs full resource refresh.
+	"""
+	var actor = Finder.get_actor(actor_name)
+	if actor == null:
+		Logger.warn("sync_all_resources: actor %s not found" % actor_name, self)
+		return
+
+	actor.resources = resources.duplicate()
+	Logger.debug("sync_all_resources: %s synced %d resources" % [actor_name, resources.size()], self)
+
+	# Trigger full UI refresh if primary
+	if actor.is_primary():
+		for resource_key in resources.keys():
+			actor.handle_resource_change(resource_key)

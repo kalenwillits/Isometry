@@ -27,3 +27,6 @@ func add_private_resource(resource_key: String) -> void:
 	resource_block.set_actor(Finder.get_primary_actor().get_name())
 	resource_block.set_key(resource_key)
 	$Grid.add_child(resource_block)
+	
+func update_resource() -> void:
+	pass

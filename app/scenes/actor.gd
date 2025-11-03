@@ -56,8 +56,9 @@ const NAV_PATH_MAX_DISTANCE: float = 64.0  # Increased recalculation distance
 @export var hitbox: String = ""
 @export var map: String = ""
 @export var target: String = ""
-@export var resources: Dictionary = {}
 
+
+var resources: Dictionary = {}
 var fader: Fader
 var peer_id: int = 0
 var perception: int = -1
@@ -1348,17 +1349,23 @@ func visible_to_primary(effect: bool) -> void:
 		modulate.a = 0.0
 		remove_from_group(Group.IS_VISIBLE)
 	visible = effect
-	
-func handle_resource_change(_resource: String) -> void:
-	pass
-	
+	#
+
 func handle_target() -> void:
 	Optional.of_nullable(Finder.get_actor(target))\
 	.if_present(
 		func(target_actor):
 			target_actor.set_outline_opacity(0.666)
 	)
-	
+
+func handle_resource_change(resource_key: String) -> void:
+	"""Called when a resource changes for logging/debugging"""
+	if !is_primary():
+		return  # Only log for this client's actor
+
+	# Resource UI updates automatically via ResourceBlock polling
+	Logger.debug("Resource changed: %s = %d" % [resource_key, resources.get(resource_key, 0)], self)
+
 func build_fader() -> void:
 	Fader.builder().target(self).build().deploy(self)
 	fader = get_node("Fader")
