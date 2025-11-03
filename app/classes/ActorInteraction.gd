@@ -5,7 +5,7 @@ var caller: Actor
 var target: Actor
 
 class Builder extends Object:
-	var this:  = ActorInteraction.new()
+	var this: ActorInteraction = ActorInteraction.new()
 	
 	func caller(value: Actor) -> Builder:
 		this.caller = value

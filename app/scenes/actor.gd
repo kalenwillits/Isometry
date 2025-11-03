@@ -307,6 +307,8 @@ func parse_hex_color(hex_string: String) -> Color:
 	return Color(r / 255.0, g / 255.0, b / 255.0, 1.0)
 	
 func is_primary() -> bool:
+	if not is_inside_tree():
+		return false
 	return peer_id > 0 and is_multiplayer_authority() and multiplayer.get_unique_id() == peer_id
 	
 func add_sound_as_child_node(sound_ent: Entity, state_key: String) -> void:
@@ -1640,7 +1642,7 @@ func is_point_on_navigation_region(point: Vector2) -> bool:
 
 func set_destination(point: Vector2) -> void:
 	## Where the actor is headed to.
-	if is_primary():
+	if is_inside_tree() and is_primary():
 		Logger.debug("set_destination: from %s to %s, speed=%s, substate=%s" % [position, point, speed, substate], self)
 	set_origin(position)
 	destination = point

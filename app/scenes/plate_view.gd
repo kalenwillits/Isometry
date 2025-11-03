@@ -105,7 +105,8 @@ func close_plate() -> void:
 	total_pages = 1
 
 func process_text(text: String) -> String:
-	# Use Jinja2-like syntax: {{.resource}} {{:resource}} {{.measure}} {{:measure}}
+	# Use Jinja2-like syntax: {{@resource}} {{$resource}} {{@measure}} {{$measure}}
+	# @ = target actor values, $ = caller/self actor values
 	var processed = text
 	var regex = RegEx.new()
 	regex.compile("\\{\\{([^}]+)\\}\\}")
@@ -118,19 +119,14 @@ func process_text(text: String) -> String:
 	for i in range(matches.size() - 1, -1, -1):
 		var match_ = matches[i]
 		var expression = match_.get_string(1).strip_edges()
-		# Use Dice engine to evaluate the expression
+		# Use Dice engine to evaluate and inject actor values
 		var dice = Dice.builder()\
 			.caller(caller_name)\
 			.target(target_name)\
 			.expression(expression)\
 			.build()
-		# Run injection methods
-		dice.inject_target_resources()
-		dice.inject_caller_resources()
-		dice.inject_target_measures()
-		dice.inject_caller_measures()
-		# Replace the {{ }} block with the result
-		var result = dice.expression
+		# Get processed expression with injected values
+		var result = dice.get_processed_expression()
 		processed = processed.substr(0, match_.get_start()) + result + processed.substr(match_.get_end())
 
 	return processed
