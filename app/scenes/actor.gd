@@ -1859,10 +1859,8 @@ func enter_area_targeting(action_key: String, action_ent: Entity) -> void:
 		Logger.error("Action %s missing or invalid radius attribute for area targeting" % action_key, self)
 		return
 
-	Logger.debug("enter_area_targeting: radius=%d, range=%s, speed=%s" % [action_ent.radius, action_ent.range if "range" in action_ent else "N/A", action_ent.speed if "speed" in action_ent else "N/A"], self)
-
 	# Build the overlay using builder pattern
-	var range_limit = action_ent.range if "range" in action_ent else 10000.0
+	var range_limit = action_ent.range_ if "range_" in action_ent else 10000.0
 	area_targeting_overlay = AreaTargetingOverlay.builder()\
 		.ellipse_radius(action_ent.radius)\
 		.range_limit(range_limit)\
@@ -1880,8 +1878,6 @@ func enter_area_targeting(action_key: String, action_ent: Entity) -> void:
 	# Track movement mode at time of entering targeting
 	area_targeting_was_pathing = !is_direct_movement_active
 	area_targeting_direct_control = false
-
-	Logger.debug("enter_area_targeting: overlay created, was_pathing=%s, overlay_pos=%s" % [area_targeting_was_pathing, area_targeting_overlay.global_position], self)
 
 	# Set state
 	is_area_targeting = true
@@ -1902,7 +1898,6 @@ func enter_area_targeting(action_key: String, action_ent: Entity) -> void:
 func update_area_targeting(delta: float) -> void:
 	"""Update area targeting overlay position based on input"""
 	if !is_area_targeting or !area_targeting_overlay:
-		Logger.debug("update_area_targeting: early return - is_area_targeting=%s, overlay=%s" % [is_area_targeting, area_targeting_overlay != null], self)
 		return
 
 	var action_ent = Repo.select(area_targeting_action)
@@ -1913,7 +1908,9 @@ func update_area_targeting(delta: float) -> void:
 
 	# Get directional input
 	var motion = Input.get_vector("left", "right", "up", "down")
-	Logger.debug("update_area_targeting: motion=%s, was_pathing=%s, direct_control=%s" % [motion, area_targeting_was_pathing, area_targeting_direct_control], self)
+
+	# Update caster position in overlay for line drawing
+	area_targeting_overlay.caster_position = area_targeting_start_pos
 
 	# Check if player is providing movement input - switch to direct control mode
 	if motion.length() > 0 and area_targeting_was_pathing and !area_targeting_direct_control:
@@ -1925,28 +1922,34 @@ func update_area_targeting(delta: float) -> void:
 		var mouse_pos = get_global_mouse_position()
 		var target_position = mouse_pos
 
-		# Clamp target to max range
-		var range_limit = action_ent.range if "range" in action_ent else 10000.0
-		var distance_to_caster = area_targeting_start_pos.distance_to(target_position)
-		if distance_to_caster > range_limit:
-			var direction = (target_position - area_targeting_start_pos).normalized()
-			target_position = area_targeting_start_pos + direction * range_limit
-
 		# Lerp ellipse toward target at constant speed
-		var lerp_speed = action_ent.speed if "speed" in action_ent else 300.0
+		var lerp_speed = action_ent.speed
 		var current_pos = area_targeting_overlay.global_position
 		var direction_to_target = (target_position - current_pos).normalized()
 		var distance_to_target = current_pos.distance_to(target_position)
 
 		var move_distance = lerp_speed * delta
+		var new_position: Vector2
 		if move_distance < distance_to_target:
-			area_targeting_overlay.global_position = current_pos + direction_to_target * move_distance
+			new_position = current_pos + direction_to_target * move_distance
 		else:
-			area_targeting_overlay.global_position = target_position
+			new_position = target_position
+
+		# Clamp center to max range (simple circular boundary)
+		var range_limit = action_ent.range_ if "range_" in action_ent else 10000.0
+		var center_distance = area_targeting_start_pos.distance_to(new_position)
+
+		if center_distance > range_limit:
+			var direction = (new_position - area_targeting_start_pos).normalized()
+			new_position = area_targeting_start_pos + direction * range_limit
+			center_distance = range_limit
+
+		# Apply final position
+		area_targeting_overlay.global_position = new_position
 
 		# Update range indicator
-		var final_distance = area_targeting_start_pos.distance_to(area_targeting_overlay.global_position)
-		area_targeting_overlay.update_range_indicator(final_distance)
+		area_targeting_overlay.update_range_indicator(center_distance)
+		area_targeting_overlay.queue_redraw()
 
 	else:
 		# DIRECT CONTROL MODE: Input vectors move the ellipse directly
@@ -1961,18 +1964,55 @@ func update_area_targeting(delta: float) -> void:
 			# Move the overlay
 			var new_position = area_targeting_overlay.global_position + motion * adjusted_speed * delta
 
-			# Clamp to max range
-			var range_limit = action_ent.range if "range" in action_ent else 10000.0
-			var distance = area_targeting_start_pos.distance_to(new_position)
+			# Clamp center to max range (simple circular boundary)
+			var range_limit = action_ent.range_ if "range_" in action_ent else 10000.0
+			var center_distance = area_targeting_start_pos.distance_to(new_position)
 
-			if distance > range_limit:
-				# Clamp to circle boundary
+			if center_distance > range_limit:
 				var direction = (new_position - area_targeting_start_pos).normalized()
 				new_position = area_targeting_start_pos + direction * range_limit
-				distance = range_limit
+				center_distance = range_limit
 
+			# Apply final position
 			area_targeting_overlay.global_position = new_position
-			area_targeting_overlay.update_range_indicator(distance)
+
+			# Update range indicator
+			area_targeting_overlay.update_range_indicator(center_distance)
+			area_targeting_overlay.queue_redraw()
+		else:
+			# No keyboard input - follow mouse cursor
+			var mouse_pos = get_global_mouse_position()
+			var target_position = mouse_pos
+
+			# Lerp toward mouse at constant speed
+			var lerp_speed = action_ent.speed if "speed" in action_ent else 300.0
+			var current_pos = area_targeting_overlay.global_position
+			var distance_to_target = current_pos.distance_to(target_position)
+
+			var new_position: Vector2
+			if distance_to_target > 0:
+				var direction_to_target = (target_position - current_pos).normalized()
+				var move_distance = lerp_speed * delta
+				if move_distance < distance_to_target:
+					new_position = current_pos + direction_to_target * move_distance
+				else:
+					new_position = target_position
+			else:
+				new_position = current_pos
+
+			# Clamp center to max range (simple circular boundary)
+			var range_limit = action_ent.range_ if "range_" in action_ent else 10000.0
+			var center_distance = area_targeting_start_pos.distance_to(new_position)
+
+			if center_distance > range_limit:
+				var direction = (new_position - area_targeting_start_pos).normalized()
+				new_position = area_targeting_start_pos + direction * range_limit
+				center_distance = range_limit
+
+			# Apply final position
+			area_targeting_overlay.global_position = new_position
+			area_targeting_overlay.update_range_indicator(center_distance)
+			area_targeting_overlay.queue_redraw()
 
 func execute_area_action() -> void:
 	"""Execute the area action on all targets within the ellipse"""

@@ -82,6 +82,31 @@ func is_point_in_ellipse(point: Vector2) -> bool:
 
 	return (scaled_x * scaled_x + scaled_y * scaled_y) <= 1.0
 
+func get_furthest_point_distance(from_point: Vector2) -> float:
+	"""Get distance from a point to the furthest edge of the ellipse"""
+	# The ellipse is scaled (1.0, 0.5) creating a 2:1 aspect ratio
+	# semi-major axis (horizontal): radius * 1.0 = radius
+	# semi-minor axis (vertical): radius * 0.5 = radius / 2
+
+	# Direction from the reference point to ellipse center
+	var direction = (global_position - from_point).normalized()
+
+	# Distance from ellipse center to edge in the direction away from the reference point
+	# For an ellipse with semi-axes a and b, the distance to edge at angle θ is:
+	# r(θ) = (a*b) / sqrt((a*sin(θ))^2 + (b*cos(θ))^2)
+	# Use direction components directly to respect isometric scaling
+	var a = radius  # semi-major axis (horizontal)
+	var b = radius * 0.5  # semi-minor axis (vertical, due to scale)
+
+	var cos_theta = direction.x
+	var sin_theta = direction.y
+	# Ellipse parametric formula with correct axis mapping
+	var edge_distance = (a * b) / sqrt((a * sin_theta) * (a * sin_theta) + (b * cos_theta) * (b * cos_theta))
+
+	# Total distance = center distance + edge distance
+	var center_distance = global_position.distance_to(from_point)
+	return center_distance + edge_distance
+
 ## Builder Pattern
 
 class AreaTargetingOverlayBuilder:
