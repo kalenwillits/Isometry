@@ -5,35 +5,42 @@ const FILL_COLOR: Color = Color(1.0, 0.3, 0.0, 0.3)  # Semi-transparent orange
 const OUTLINE_COLOR: Color = Color(1.0, 0.5, 0.0, 0.8)  # Bright orange outline
 const OUTLINE_WIDTH: float = 2.0
 const RANGE_INDICATOR_COLOR: Color = Color(1.0, 0.0, 0.0, 0.2)  # Red when at max range
+const LINE_WIDTH: float = 2.0
+const ELLIPSE_POINTS: int = 32  # Number of points to draw smooth ellipse
 
-var polygon_vertices: PackedVector2Array = []
+var radius: int = 100  # Ellipse radius in pixels
+var ellipse_vertices: PackedVector2Array = []
 var max_range: float = 0.0
-var start_position: Vector2 = Vector2.ZERO
+var caster_position: Vector2 = Vector2.ZERO
 var is_at_max_range: bool = false
 
 func _init() -> void:
-	# Apply initial setup
+	# Apply isometric scale
 	scale = Vector2(1.0, 0.5)
 	z_index = 100
 
 static func builder() -> AreaTargetingOverlayBuilder:
 	return AreaTargetingOverlayBuilder.new()
 
-func set_polygon(polygon_entity) -> void:
-	"""Set the polygon shape from a Polygon entity"""
-	if !polygon_entity:
-		return
-
-	polygon_vertices.clear()
-	for vertex in polygon_entity.vertices.lookup():
-		polygon_vertices.append(Vector2(vertex.x, vertex.y))
-
+func set_ellipse_radius(r: int) -> void:
+	"""Set the ellipse radius and regenerate vertices"""
+	radius = r
+	_generate_ellipse_vertices()
 	queue_redraw()
 
-func set_range_limit(range: float, start_pos: Vector2) -> void:
+func _generate_ellipse_vertices() -> void:
+	"""Generate vertices for a 2:1 ellipse"""
+	ellipse_vertices.clear()
+	for i in range(ELLIPSE_POINTS):
+		var angle = (i / float(ELLIPSE_POINTS)) * TAU
+		var x = radius * cos(angle)
+		var y = radius * sin(angle)  # Will be scaled by 0.5 due to Node2D scale
+		ellipse_vertices.append(Vector2(x, y))
+
+func set_range_limit(range: float, caster_pos: Vector2) -> void:
 	"""Set the maximum range from the caster"""
 	max_range = range
-	start_position = start_pos
+	caster_position = caster_pos
 
 func update_range_indicator(current_distance: float) -> void:
 	"""Update whether we're at max range"""
@@ -44,54 +51,61 @@ func update_range_indicator(current_distance: float) -> void:
 		queue_redraw()
 
 func _draw() -> void:
-	if polygon_vertices.size() < 3:
+	if ellipse_vertices.size() < 3:
 		return
 
-	# Draw filled polygon
+	# Draw line from caster to ellipse center
+	if caster_position != Vector2.ZERO:
+		var line_start = to_local(caster_position)
+		var line_end = Vector2.ZERO  # Ellipse center
+		draw_line(line_start, line_end, OUTLINE_COLOR, LINE_WIDTH)
+
+	# Draw filled ellipse
 	var fill_color = RANGE_INDICATOR_COLOR if is_at_max_range else FILL_COLOR
-	draw_colored_polygon(polygon_vertices, fill_color)
+	draw_colored_polygon(ellipse_vertices, fill_color)
 
-	# Draw outline - close the polygon by appending first vertex
-	var closed_polygon = polygon_vertices.duplicate()
-	closed_polygon.append(polygon_vertices[0])
-	draw_polyline(closed_polygon, OUTLINE_COLOR, OUTLINE_WIDTH)
+	# Draw outline - close the ellipse by appending first vertex
+	var closed_ellipse = ellipse_vertices.duplicate()
+	closed_ellipse.append(ellipse_vertices[0])
+	draw_polyline(closed_ellipse, OUTLINE_COLOR, OUTLINE_WIDTH)
 
-func get_world_polygon() -> PackedVector2Array:
-	"""Get the polygon vertices in world space (accounting for position and scale)"""
-	var world_verts: PackedVector2Array = []
-	for vert in polygon_vertices:
-		# Apply scale and position to get world coordinates
-		var world_vert = global_position + (vert * scale)
-		world_verts.append(world_vert)
-	return world_verts
+func is_point_in_ellipse(point: Vector2) -> bool:
+	"""Check if a point is inside the ellipse using standard ellipse equation"""
+	# Convert point to local coordinates relative to ellipse center
+	var local_point = point - global_position
+
+	# Account for isometric scaling (0.5 in Y)
+	# Ellipse equation: (x/a)^2 + (y/b)^2 <= 1
+	# Where a = radius, b = radius (since scale handles the 2:1 ratio)
+	var scaled_x = local_point.x / radius
+	var scaled_y = local_point.y / (radius * 0.5)  # Account for isometric scale
+
+	return (scaled_x * scaled_x + scaled_y * scaled_y) <= 1.0
 
 ## Builder Pattern
 
 class AreaTargetingOverlayBuilder:
-	var _overlay: AreaTargetingOverlay
-	var _polygon_entity: Entity
+	var _overlay: AreaTargetingOverlay = AreaTargetingOverlay.new()
+	var _radius: int
 	var _range: float
-	var _start_pos: Vector2
+	var _caster_pos: Vector2
 
-	func _init():
-		_overlay = AreaTargetingOverlay.new()
-
-	func polygon(polygon_entity: Entity) -> AreaTargetingOverlayBuilder:
-		_polygon_entity = polygon_entity
+	func ellipse_radius(r: int) -> AreaTargetingOverlayBuilder:
+		_radius = r
 		return self
 
 	func range_limit(range: float) -> AreaTargetingOverlayBuilder:
 		_range = range
 		return self
 
-	func start_position(pos: Vector2) -> AreaTargetingOverlayBuilder:
-		_start_pos = pos
+	func caster_position(pos: Vector2) -> AreaTargetingOverlayBuilder:
+		_caster_pos = pos
 		return self
 
 	func build() -> AreaTargetingOverlay:
-		if _polygon_entity:
-			_overlay.set_polygon(_polygon_entity)
+		if _radius > 0:
+			_overlay.set_ellipse_radius(_radius)
 
-		_overlay.set_range_limit(_range, _start_pos)
+		_overlay.set_range_limit(_range, _caster_pos)
 
 		return _overlay

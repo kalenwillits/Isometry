@@ -92,6 +92,8 @@ var is_area_targeting: bool = false
 var area_targeting_action: String = ""
 var area_targeting_overlay: Node2D = null
 var area_targeting_start_pos: Vector2 = Vector2.ZERO
+var area_targeting_was_pathing: bool = false  # Track if pathing was active when entering targeting
+var area_targeting_direct_control: bool = false  # Track if direct control is active during targeting
 var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
@@ -649,9 +651,9 @@ func use_actions() -> void:
 
 		# Handle skill start (button press)
 		if Input.is_action_just_pressed(action_name) and skill_ent.start:
-			# Check if this is an area action
+			# Check if this is an area action (using radius for ellipse system)
 			var start_action_ent = skill_ent.start.lookup()
-			if start_action_ent and start_action_ent.area:
+			if start_action_ent and ("radius" in start_action_ent) and start_action_ent.radius > 0:
 				# Enter area targeting mode
 				enter_area_targeting(skill_ent.start.key(), start_action_ent)
 				Finder.select(ui_action_block).press_button()
@@ -1847,30 +1849,48 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 
 func enter_area_targeting(action_key: String, action_ent: Entity) -> void:
 	"""Enter area targeting mode for an AOE action"""
-	if !action_ent or !action_ent.area:
+	Logger.debug("enter_area_targeting: action_key=%s, action_ent=%s" % [action_key, action_ent != null], self)
+
+	if !action_ent:
 		return
 
-	# Get the polygon entity
-	var polygon_ent = action_ent.area.lookup()
-	if !polygon_ent:
+	# Require radius attribute for ellipse-based targeting
+	if !("radius" in action_ent) or action_ent.radius <= 0:
+		Logger.error("Action %s missing or invalid radius attribute for area targeting" % action_key, self)
 		return
+
+	Logger.debug("enter_area_targeting: radius=%d, range=%s, speed=%s" % [action_ent.radius, action_ent.range if "range" in action_ent else "N/A", action_ent.speed if "speed" in action_ent else "N/A"], self)
 
 	# Build the overlay using builder pattern
 	var range_limit = action_ent.range if "range" in action_ent else 10000.0
 	area_targeting_overlay = AreaTargetingOverlay.builder()\
-		.polygon(polygon_ent)\
+		.ellipse_radius(action_ent.radius)\
 		.range_limit(range_limit)\
-		.start_position(global_position)\
+		.caster_position(global_position)\
 		.build()
 
 	# Add overlay to scene and set position
 	get_parent().add_child(area_targeting_overlay)
 	area_targeting_overlay.global_position = global_position
 
+	# Force the overlay to update its visuals now that it's in the scene tree
+	area_targeting_overlay.caster_position = global_position
+	area_targeting_overlay.queue_redraw()
+
+	# Track movement mode at time of entering targeting
+	area_targeting_was_pathing = !is_direct_movement_active
+	area_targeting_direct_control = false
+
+	Logger.debug("enter_area_targeting: overlay created, was_pathing=%s, overlay_pos=%s" % [area_targeting_was_pathing, area_targeting_overlay.global_position], self)
+
 	# Set state
 	is_area_targeting = true
 	area_targeting_action = action_key
 	area_targeting_start_pos = global_position
+
+	# Play casting animation if specified
+	if "casting" in action_ent and action_ent.casting and action_ent.casting != "":
+		set_state(action_ent.casting)
 
 	# Root the player
 	if "time" in action_ent and action_ent.time:
@@ -1882,42 +1902,80 @@ func enter_area_targeting(action_key: String, action_ent: Entity) -> void:
 func update_area_targeting(delta: float) -> void:
 	"""Update area targeting overlay position based on input"""
 	if !is_area_targeting or !area_targeting_overlay:
+		Logger.debug("update_area_targeting: early return - is_area_targeting=%s, overlay=%s" % [is_area_targeting, area_targeting_overlay != null], self)
 		return
 
 	var action_ent = Repo.select(area_targeting_action)
 	if !action_ent:
+		Logger.error("update_area_targeting: action entity lookup failed for key: %s" % area_targeting_action, self)
 		cancel_area_targeting()
 		return
 
 	# Get directional input
 	var motion = Input.get_vector("left", "right", "up", "down")
+	Logger.debug("update_area_targeting: motion=%s, was_pathing=%s, direct_control=%s" % [motion, area_targeting_was_pathing, area_targeting_direct_control], self)
 
-	if motion.length() > 0:
-		# Get speed from action or use default
-		var targeting_speed = action_ent.speed if "speed" in action_ent else 300.0
+	# Check if player is providing movement input - switch to direct control mode
+	if motion.length() > 0 and area_targeting_was_pathing and !area_targeting_direct_control:
+		area_targeting_direct_control = true
 
-		# Apply isometric factor to speed based on motion angle
-		var isometric_adjustment = std.isometric_factor(motion.angle())
-		var adjusted_speed = targeting_speed * isometric_adjustment
+	# Two movement modes: trailing (pathing mode) or direct control
+	if area_targeting_was_pathing and !area_targeting_direct_control:
+		# TRAILING MODE: Ellipse lerps toward cursor position
+		var mouse_pos = get_global_mouse_position()
+		var target_position = mouse_pos
 
-		# Move the overlay
-		var new_position = area_targeting_overlay.global_position + motion * adjusted_speed * delta
-
-		# Clamp to max range
+		# Clamp target to max range
 		var range_limit = action_ent.range if "range" in action_ent else 10000.0
-		var distance = area_targeting_start_pos.distance_to(new_position)
+		var distance_to_caster = area_targeting_start_pos.distance_to(target_position)
+		if distance_to_caster > range_limit:
+			var direction = (target_position - area_targeting_start_pos).normalized()
+			target_position = area_targeting_start_pos + direction * range_limit
 
-		if distance > range_limit:
-			# Clamp to circle boundary
-			var direction = (new_position - area_targeting_start_pos).normalized()
-			new_position = area_targeting_start_pos + direction * range_limit
-			distance = range_limit
+		# Lerp ellipse toward target at constant speed
+		var lerp_speed = action_ent.speed if "speed" in action_ent else 300.0
+		var current_pos = area_targeting_overlay.global_position
+		var direction_to_target = (target_position - current_pos).normalized()
+		var distance_to_target = current_pos.distance_to(target_position)
 
-		area_targeting_overlay.global_position = new_position
-		area_targeting_overlay.update_range_indicator(distance)
+		var move_distance = lerp_speed * delta
+		if move_distance < distance_to_target:
+			area_targeting_overlay.global_position = current_pos + direction_to_target * move_distance
+		else:
+			area_targeting_overlay.global_position = target_position
+
+		# Update range indicator
+		var final_distance = area_targeting_start_pos.distance_to(area_targeting_overlay.global_position)
+		area_targeting_overlay.update_range_indicator(final_distance)
+
+	else:
+		# DIRECT CONTROL MODE: Input vectors move the ellipse directly
+		if motion.length() > 0:
+			# Get speed from action or use default
+			var targeting_speed = action_ent.speed if "speed" in action_ent else 300.0
+
+			# Apply isometric factor to speed based on motion angle
+			var isometric_adjustment = std.isometric_factor(motion.angle())
+			var adjusted_speed = targeting_speed * isometric_adjustment
+
+			# Move the overlay
+			var new_position = area_targeting_overlay.global_position + motion * adjusted_speed * delta
+
+			# Clamp to max range
+			var range_limit = action_ent.range if "range" in action_ent else 10000.0
+			var distance = area_targeting_start_pos.distance_to(new_position)
+
+			if distance > range_limit:
+				# Clamp to circle boundary
+				var direction = (new_position - area_targeting_start_pos).normalized()
+				new_position = area_targeting_start_pos + direction * range_limit
+				distance = range_limit
+
+			area_targeting_overlay.global_position = new_position
+			area_targeting_overlay.update_range_indicator(distance)
 
 func execute_area_action() -> void:
-	"""Execute the area action on all targets within the polygon"""
+	"""Execute the area action on all targets within the ellipse"""
 	if !is_area_targeting or !area_targeting_overlay:
 		return
 
@@ -1929,31 +1987,17 @@ func execute_area_action() -> void:
 	# Get all actors in the scene
 	var all_actors = get_tree().get_nodes_in_group(Group.ACTOR)
 
-	# Get the polygon entity to check bounds
-	var polygon_ent = action_ent.area.lookup()
-	if !polygon_ent:
-		cancel_area_targeting()
-		return
-
-	# Build a polygon shape for collision detection
-	var polygon_points: PackedVector2Array = []
-	for vertex in polygon_ent.vertices.lookup():
-		# Transform vertices to world space (apply isometric scale)
-		var local_point = Vector2(vertex.x, vertex.y) * area_targeting_overlay.scale
-		var world_point = area_targeting_overlay.global_position + local_point
-		polygon_points.append(world_point)
-
-	# Find all actors within the polygon
+	# Find all actors within the ellipse using the overlay's detection method
 	var targets_in_area: Array = []
-	Logger.debug("Area action: checking %d actors against polygon" % all_actors.size(), self)
-	Logger.debug("Area action: polygon points = %s" % polygon_points, self)
+	Logger.debug("Area action: checking %d actors against ellipse" % all_actors.size(), self)
+	Logger.debug("Area action: ellipse center = %s, radius = %d" % [area_targeting_overlay.global_position, area_targeting_overlay.radius], self)
 	Logger.debug("Area action: caster position = %s" % global_position, self)
 
 	for actor_node in all_actors:
-		# Check if actor's position is inside the polygon
-		var is_in_polygon = Geometry2D.is_point_in_polygon(actor_node.global_position, polygon_points)
-		Logger.debug("Area action: actor %s at %s - in polygon: %s" % [actor_node.name, actor_node.global_position, is_in_polygon], self)
-		if is_in_polygon:
+		# Check if actor's position is inside the ellipse
+		var is_in_ellipse = area_targeting_overlay.is_point_in_ellipse(actor_node.global_position)
+		Logger.debug("Area action: actor %s at %s - in ellipse: %s" % [actor_node.name, actor_node.global_position, is_in_ellipse], self)
+		if is_in_ellipse:
 			targets_in_area.append(actor_node)
 
 	Logger.debug("Area action: found %d targets in area" % targets_in_area.size(), self)
@@ -1980,6 +2024,11 @@ func cancel_area_targeting() -> void:
 	is_area_targeting = false
 	area_targeting_action = ""
 	area_targeting_start_pos = Vector2.ZERO
+	area_targeting_was_pathing = false
+	area_targeting_direct_control = false
+
+	# Return to idle animation state
+	set_state(KeyFrames.IDLE)
 
 	# Stop the ActionTimer to prevent conflict with timer-based unroot
 	$ActionTimer.stop()
