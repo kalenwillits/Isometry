@@ -65,8 +65,14 @@ func _on_visibility_changed() -> void:
 		var theme_mgr = get_node_or_null("/root/ThemeManager")
 		if theme_mgr:
 			theme_mgr._apply_theme_recursive(self)
+			
+			
+func reset() -> void:
+	title_label.set_text("")
+	rich_text_label.set_text("")
 
 func open_plate(plate_ent: Entity, caller: String, target: String) -> void:
+	reset()
 	if plate_ent == null:
 		Logger.warn("Cannot open plate: invalid plate entity", self)
 		return

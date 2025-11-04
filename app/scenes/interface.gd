@@ -100,9 +100,9 @@ func open_plate_for_actor(plate_key: String, caller: String, target: String) -> 
 	if plate_ent == null:
 		Logger.warn("Plate entity not found: %s" % plate_key, self)
 		return
-
 	ui_state_machine.transition_to(ui_state_machine.State.PLATE_VIEW)
 	$PlateView.open_plate(plate_ent, caller, target)
+
 
 func open_global_menu() -> void:
 	$GlobalMenuView.open_menu()

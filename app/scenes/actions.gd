@@ -320,11 +320,17 @@ func open_chat(_self_name: String, _target_name: String, _params: Dictionary) ->
 
 func open_plate(self_name: String, target_name: String, params: Dictionary) -> void:
 	## plate: KeyRef to Plate entity
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null: return
 	var plate_key: String = params.get("plate", "")
 	if plate_key.is_empty():
 		Logger.warn("open_plate called without plate parameter", self)
 		return
 
-	# Call RPC on the calling client only
-	Controller.open_plate_on_client.rpc_id(self_name.to_int(), plate_key, self_name, target_name)
+	Queue.enqueue(
+		Queue.Item.builder()
+		.comment("Call open_plate_on_client")
+		.task(func(): Controller.open_plate_on_client.rpc_id(self_actor.peer_id, plate_key, self_name, target_name))
+		.build()
+	)
 # ----------------------------------------------------------------------- Actions #
