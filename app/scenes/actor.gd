@@ -87,6 +87,7 @@ const MAX_PATH_ATTEMPTS: int = 10
 # Movement mode tracking
 var is_direct_movement_active: bool = false
 var current_input_strength: float = 0.0
+var last_movement_mode: String = "pathing"  # Track last intentional movement mode: "pathing" or "direct"
 # Area targeting mode tracking
 var is_area_targeting: bool = false
 var area_targeting_action: String = ""
@@ -978,6 +979,7 @@ func click_to_move() -> void:
 		return
 
 	if Input.is_action_pressed("interact"):
+		last_movement_mode = "pathing"
 		is_direct_movement_active = false  # Switch to pathfinding mode
 		current_input_strength = 0.0  # Reset input strength
 		var mouse_pos = get_global_mouse_position()
@@ -1230,11 +1232,7 @@ func build_saliencebox(value: int) -> void:
 		$SalienceBox.add_child(salience_shape)
 
 func get_relative_camera_position() -> Vector2:
-	# During area targeting, camera follows the overlay
-	if is_area_targeting and area_targeting_overlay:
-		return area_targeting_overlay.global_position
-
-	# Normal behavior - follow actor with viewshape offset
+	# Camera follows actor position (not overlay during area targeting)
 	var view_shape: CollisionShape2D = $ViewBox.get_node_or_null("ViewShape")
 	if view_shape:
 		return global_position + view_shape.position
@@ -1632,6 +1630,7 @@ func use_move_directly(delta) -> void:
 
 	if current_input_strength > 0:
 		# Activate direct movement mode and clear any active pathing
+		last_movement_mode = "direct"
 		if not is_direct_movement_active:
 			is_direct_movement_active = true
 
@@ -1876,8 +1875,8 @@ func enter_area_targeting(action_key: String, action_ent: Entity) -> void:
 	area_targeting_overlay.queue_redraw()
 
 	# Track movement mode at time of entering targeting
-	area_targeting_was_pathing = !is_direct_movement_active
-	area_targeting_direct_control = false
+	area_targeting_was_pathing = (last_movement_mode == "pathing")
+	area_targeting_direct_control = (last_movement_mode == "direct")  # Start in direct control if using direct movement
 
 	# Set state
 	is_area_targeting = true
@@ -1951,6 +1950,10 @@ func update_area_targeting(delta: float) -> void:
 		area_targeting_overlay.update_range_indicator(center_distance)
 		area_targeting_overlay.queue_redraw()
 
+		# Make actor face the ellipse center
+		if position.distance_squared_to(area_targeting_overlay.global_position) > DESTINATION_PRECISION * DESTINATION_PRECISION:
+			look_at_point(area_targeting_overlay.global_position)
+
 	else:
 		# DIRECT CONTROL MODE: Input vectors move the ellipse directly
 		if motion.length() > 0:
@@ -1979,40 +1982,10 @@ func update_area_targeting(delta: float) -> void:
 			# Update range indicator
 			area_targeting_overlay.update_range_indicator(center_distance)
 			area_targeting_overlay.queue_redraw()
-		else:
-			# No keyboard input - follow mouse cursor
-			var mouse_pos = get_global_mouse_position()
-			var target_position = mouse_pos
 
-			# Lerp toward mouse at constant speed
-			var lerp_speed = action_ent.speed if "speed" in action_ent else 300.0
-			var current_pos = area_targeting_overlay.global_position
-			var distance_to_target = current_pos.distance_to(target_position)
-
-			var new_position: Vector2
-			if distance_to_target > 0:
-				var direction_to_target = (target_position - current_pos).normalized()
-				var move_distance = lerp_speed * delta
-				if move_distance < distance_to_target:
-					new_position = current_pos + direction_to_target * move_distance
-				else:
-					new_position = target_position
-			else:
-				new_position = current_pos
-
-			# Clamp center to max range (simple circular boundary)
-			var range_limit = action_ent.range_ if "range_" in action_ent else 10000.0
-			var center_distance = area_targeting_start_pos.distance_to(new_position)
-
-			if center_distance > range_limit:
-				var direction = (new_position - area_targeting_start_pos).normalized()
-				new_position = area_targeting_start_pos + direction * range_limit
-				center_distance = range_limit
-
-			# Apply final position
-			area_targeting_overlay.global_position = new_position
-			area_targeting_overlay.update_range_indicator(center_distance)
-			area_targeting_overlay.queue_redraw()
+			# Make actor face the ellipse center
+			if position.distance_squared_to(area_targeting_overlay.global_position) > DESTINATION_PRECISION * DESTINATION_PRECISION:
+				look_at_point(area_targeting_overlay.global_position)
 
 func execute_area_action() -> void:
 	"""Execute the area action on all targets within the ellipse"""
