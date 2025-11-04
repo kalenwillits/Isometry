@@ -425,6 +425,10 @@ func _ready() -> void:
 	$HitBox.area_entered.connect(_on_hit_box_body_entered)
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
 	
+	# Configure CharacterBody2D for smooth wall sliding
+	motion_mode = MOTION_MODE_FLOATING
+	wall_min_slide_angle = 0.0  # Allow sliding at any angle for smooth corner navigation
+
 	# Configure NavigationAgent2D for all actors (primary and NPCs)
 	var _actor_ent: Entity = Repo.select(actor)
 	$NavigationAgent.radius = NAV_AGENT_RADIUS
@@ -1580,7 +1584,18 @@ func use_pathing(delta: float) -> void:
 	
 	velocity = motion * base_speed * speed_multiplier * isometric_adjustment
 	move_and_slide()
-	
+
+	# Handle wall collisions by sliding along wall normals
+	if get_slide_collision_count() > 0:
+		for i in range(get_slide_collision_count()):
+			var collision = get_slide_collision(i)
+			var collider = collision.get_collider()
+			# Check if we hit a wall (TileMapLayer)
+			if collider is TileMapLayer:
+				var wall_normal = collision.get_normal()
+				# Slide along the wall instead of stopping
+				velocity = velocity.slide(wall_normal)
+
 	match substate:
 		SubState.IDLE, SubState.START, SubState.END:
 			look_at_point(next_position)
@@ -1632,6 +1647,17 @@ func use_move_directly(delta) -> void:
 
 		# Apply movement
 		move_and_slide()
+
+		# Handle wall collisions by sliding along wall normals
+		if get_slide_collision_count() > 0:
+			for i in range(get_slide_collision_count()):
+				var collision = get_slide_collision(i)
+				var collider = collision.get_collider()
+				# Check if we hit a wall (TileMapLayer)
+				if collider is TileMapLayer:
+					var wall_normal = collision.get_normal()
+					# Slide along the wall instead of stopping
+					velocity = velocity.slide(wall_normal)
 
 		# Keep destination at current position to prevent pathback when input stops
 		set_destination(position)
