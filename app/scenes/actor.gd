@@ -1541,8 +1541,12 @@ func use_line_of_sight() -> void:
 	_use_line_of_sight_tick += 1
 
 func use_pathing(delta: float) -> void:
+	# Skip pathing if in direct movement mode
+	if is_direct_movement_active:
+		return
+
 	last_position = position
-	
+
 	# DEBUG: Log movement state
 	if is_primary():
 		Logger.debug("use_pathing: pos=%s, dest=%s, dist=%.2f, substate=%s" % [position, destination, position.distance_to(destination), substate], self)
@@ -1596,42 +1600,52 @@ func snap_radial(radians: float) -> int:
 func get_speed(delta: float) -> float:
 	return BASE_ACTOR_SPEED * delta * speed * SPEED_NORMAL
 	
-func use_move_directly(_delta) -> void:
+func use_move_directly(delta) -> void:
 	# Block input if UI state machine says player input should be blocked
-	if get_node("/root/UIStateMachine").should_block_player_input():
+	if UIStateMachine.should_block_player_input():
 		return
 
 	# Get input vector - this handles both keyboard and controller
 	var motion = Input.get_vector("left", "right", "up", "down")
-	
-	if motion.length() > 0:
-		if is_primary():
-			Logger.debug("use_move_directly: motion=%s, substate=%s" % [motion, substate], self)
-		is_direct_movement_active = true
-		
-		# Calculate input strength based on motion magnitude
-		# For keyboard: motion will be normalized (length = 1.0)
-		# For controller: motion length varies from 0.0 to 1.0 based on stick deflection
-		current_input_strength = motion.length()
-		
-		# Set destination based on input direction using navigation
+
+	# Calculate input strength (0.0 to 1.0)
+	# For keyboard: motion will be normalized (length = 1.0)
+	# For controller: motion length varies based on stick deflection
+	current_input_strength = motion.length()
+
+	if current_input_strength > 0:
+		# Activate direct movement mode and clear any active pathing
+		if not is_direct_movement_active:
+			is_direct_movement_active = true
+
+		# Normalize direction
 		var direction = motion.normalized()
-		var new_destination: Vector2 = position + direction * DESTINATION_PRECISION * 5
-		
-		# Reset stuck detection when player manually moves
-		stuck_timer = 0.0
-		path_recalculation_attempts = 0
-		
-		# Use navigation system for pathing
-		set_destination(new_destination)
-		$NavigationAgent.target_position = new_destination
-		
+
+		# Calculate base speed using actor's speed properties
+		var base_speed = get_speed(delta)
+
+		# Apply isometric factor based on movement direction
+		var isometric_adjustment = std.isometric_factor(direction.angle())
+
+		# Set velocity with all factors applied
+		velocity = direction * base_speed * isometric_adjustment * current_input_strength
+
+		# Apply movement
+		move_and_slide()
+
+		# Keep destination at current position to prevent pathback when input stops
+		set_destination(position)
+		$NavigationAgent.target_position = position
+
+		# Update heading to face movement direction (only when not performing actions)
+		match substate:
+			SubState.IDLE, SubState.START, SubState.END:
+				var target_point = position + direction
+				look_at_point(target_point)
 	else:
-		# No input - stop immediately if we were in direct movement mode
-		if is_direct_movement_active:
-			is_direct_movement_active = false
-			current_input_strength = 0.0
-			set_destination(position)  # Stop at current position
+		# No input - deactivate direct movement and stop
+		is_direct_movement_active = false
+		velocity = Vector2.ZERO
 
 
 func is_point_on_navigation_region(point: Vector2) -> bool:
@@ -1701,17 +1715,20 @@ func use_state() -> void:
 
 	match state:
 		KeyFrames.IDLE:
-			if !position.is_equal_approx(destination):
+			# Check if actor is moving (has velocity) or has a destination to reach
+			if velocity.length() > 0.1 or !position.is_equal_approx(destination):
 				set_animation_speed(std.isometric_factor(velocity.angle()))
 				if speed > 0.33:
 					set_state(KeyFrames.RUN)
 				else:
 					set_state(KeyFrames.WALK)
 		KeyFrames.WALK:
-			if position.is_equal_approx(destination):
+			# Stop walking if not moving and reached destination
+			if velocity.length() <= 0.1 and position.is_equal_approx(destination):
 				set_state(KeyFrames.IDLE)
-		KeyFrames.RUN: 
-			if position.is_equal_approx(destination):
+		KeyFrames.RUN:
+			# Stop running if not moving and reached destination
+			if velocity.length() <= 0.1 and position.is_equal_approx(destination):
 				set_state(KeyFrames.IDLE)
 
 func _on_heading_change(_radial):
@@ -1730,6 +1747,8 @@ func _on_hit_box_body_entered(other):
 func use_collisions(effect: bool) -> void:
 	set_collision_layer_value(Layer.BASE, effect)
 	set_collision_mask_value(Layer.BASE, effect)
+	set_collision_layer_value(Layer.WALL, effect)
+	set_collision_mask_value(Layer.WALL, effect)
 	$HitBox.set_collision_layer_value(Layer.HITBOX, effect)
 	$HitBox.set_collision_mask_value(Layer.HITBOX, effect)
 	$ViewBox.set_collision_layer_value(Layer.VIEWBOX, effect)
