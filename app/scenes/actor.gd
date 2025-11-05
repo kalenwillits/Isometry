@@ -96,6 +96,7 @@ var area_targeting_overlay: Node2D = null
 var area_targeting_start_pos: Vector2 = Vector2.ZERO
 var area_targeting_was_pathing: bool = false  # Track if pathing was active when entering targeting
 var area_targeting_direct_control: bool = false  # Track if direct control is active during targeting
+var area_targeting_highlighted_actors: Array = []  # Track actors highlighted by area targeting
 var measures: Dictionary = {
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
@@ -1961,6 +1962,9 @@ func update_area_targeting(delta: float) -> void:
 		if position.distance_squared_to(area_targeting_overlay.global_position) > DESTINATION_PRECISION * DESTINATION_PRECISION:
 			look_at_point(area_targeting_overlay.global_position)
 
+		# Update highlighted actors in ellipse
+		_update_area_targeting_highlights()
+
 	else:
 		# DIRECT CONTROL MODE: Input vectors move the ellipse directly
 		if motion.length() > 0:
@@ -1993,6 +1997,40 @@ func update_area_targeting(delta: float) -> void:
 			# Make actor face the ellipse center
 			if position.distance_squared_to(area_targeting_overlay.global_position) > DESTINATION_PRECISION * DESTINATION_PRECISION:
 				look_at_point(area_targeting_overlay.global_position)
+
+			# Update highlighted actors in ellipse
+			_update_area_targeting_highlights()
+
+func _update_area_targeting_highlights() -> void:
+	"""Update outline highlights for actors in the area targeting ellipse"""
+	if !is_area_targeting or !area_targeting_overlay:
+		return
+
+	# Build a set of actors currently in the ellipse
+	var actors_in_ellipse: Array = []
+
+	# Check self (primary actor) - not in in_view
+	if area_targeting_overlay.is_point_in_ellipse(global_position):
+		actors_in_ellipse.append(self)
+
+	# Check other actors in view
+	for actor_name in in_view.keys():
+		var actor = Finder.get_actor(actor_name)
+		if actor and area_targeting_overlay.is_point_in_ellipse(actor.global_position):
+			actors_in_ellipse.append(actor)
+
+	# Remove highlights from actors no longer in ellipse
+	for actor in area_targeting_highlighted_actors:
+		if actor not in actors_in_ellipse:
+			actor.set_outline_opacity(0.0)
+
+	# Add highlights to new actors in ellipse
+	for actor in actors_in_ellipse:
+		if actor not in area_targeting_highlighted_actors:
+			actor.set_outline_opacity(0.333)
+
+	# Update tracked list
+	area_targeting_highlighted_actors = actors_in_ellipse
 
 func execute_area_action() -> void:
 	"""Execute the area action on all targets within the ellipse"""
@@ -2040,6 +2078,12 @@ func cancel_area_targeting() -> void:
 	if area_targeting_overlay:
 		area_targeting_overlay.queue_free()
 		area_targeting_overlay = null
+
+	# Clear highlights from all tracked actors
+	for actor in area_targeting_highlighted_actors:
+		if actor:
+			actor.set_outline_opacity(0.0)
+	area_targeting_highlighted_actors.clear()
 
 	is_area_targeting = false
 	area_targeting_action = ""

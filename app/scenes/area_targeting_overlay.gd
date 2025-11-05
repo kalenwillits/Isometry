@@ -1,9 +1,8 @@
 class_name AreaTargetingOverlay
 extends Node2D
 
-const OUTLINE_COLOR: Color = Color(1.0, 0.5, 0.0, 0.8)  # Bright orange outline
 const OUTLINE_WIDTH: float = 1.0
-const RANGE_INDICATOR_COLOR: Color = Color(1.0, 0.0, 0.0, 0.2)  # Red when at max range
+const RANGE_INDICATOR_COLOR: Color = Color(1.0, 0.0, 0.0, 0.33)  # Red when at max range
 const LINE_WIDTH: float = 1.0
 const ELLIPSE_POINTS: int = 32  # Number of points to draw smooth ellipse
 
@@ -12,7 +11,7 @@ var ellipse_vertices: PackedVector2Array = []
 var max_range: float = 0.0
 var caster_position: Vector2 = Vector2.ZERO
 var is_at_max_range: bool = false
-var ellipse_color: Color = Color(1.0, 0.3, 0.0, 0.33)  # Configurable color with 33% alpha
+var ellipse_color: Color = Color(1.0, 0.3, 0.0, 0.33)  # Configurable color with 33% alpha (fill, outline, and line)
 
 func _init() -> void:
 	# Apply isometric scale
@@ -59,7 +58,8 @@ func _draw() -> void:
 		var line_start = to_local(caster_position)
 		var direction = (Vector2.ZERO - line_start).normalized()
 		var line_end = line_start + direction * (line_start.length() - radius)  # Stop at near edge of ellipse
-		draw_line(line_start, line_end, OUTLINE_COLOR, LINE_WIDTH)
+		var line_color = RANGE_INDICATOR_COLOR if is_at_max_range else ellipse_color
+		draw_line(line_start, line_end, line_color, LINE_WIDTH)
 
 	# Draw filled ellipse
 	var fill_color = RANGE_INDICATOR_COLOR if is_at_max_range else ellipse_color
@@ -68,7 +68,8 @@ func _draw() -> void:
 	# Draw outline - close the ellipse by appending first vertex
 	var closed_ellipse = ellipse_vertices.duplicate()
 	closed_ellipse.append(ellipse_vertices[0])
-	draw_polyline(closed_ellipse, OUTLINE_COLOR, OUTLINE_WIDTH)
+	var outline_color = RANGE_INDICATOR_COLOR if is_at_max_range else ellipse_color
+	draw_polyline(closed_ellipse, outline_color, OUTLINE_WIDTH)
 
 func is_point_in_ellipse(point: Vector2) -> bool:
 	"""Check if a point is inside the ellipse using standard ellipse equation"""
