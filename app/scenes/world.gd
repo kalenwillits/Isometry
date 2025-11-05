@@ -103,9 +103,11 @@ func build_deployments() -> void:
 		if map_ent.deployments == null: continue
 		for deployment_ent in map_ent.deployments.lookup():
 			var actor_ent: Entity = deployment_ent.actor.lookup()
+			# Generate random negative peer_id for NPC (will be synced across network)
+			var npc_peer_id = -randi_range(1, 9_999_999)
 			var data := {
-				"peer_id": 0,  # NPC 
-				"map": map_ent.key(), 
+				"peer_id": npc_peer_id,  # NPC with random negative peer_id
+				"map": map_ent.key(),
 				"actor": deployment_ent.actor.key(),
 				"location/x": deployment_ent.location.lookup().x,
 				"location/y": deployment_ent.location.lookup().y,
@@ -142,6 +144,7 @@ func spawn_actor(data: Dictionary) -> Actor:
 	var main_ent = Repo.select(Group.MAIN_ENTITY)
 	var builder: Actor.ActorBuilder = Actor.builder()
 	var location: Vector2 = get_actor_location(data)
+
 	builder.display_name(std.coalesce(data.get("name"), data.get("actor", main_ent.actor.lookup().name_)))\
 	.username(data.get("username", ""))\
 	.token(data.get("token", "".to_utf8_buffer()))\
@@ -154,6 +157,7 @@ func spawn_actor(data: Dictionary) -> Actor:
 	.speed(data.get("speed", main_ent.actor.lookup().speed))\
 	.perception(data.get("perception", -1))\
 	.salience(data.get("salience", -1))
+
 	return builder.build()
 
 func _on_connected_to_server() -> void:

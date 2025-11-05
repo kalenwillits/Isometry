@@ -146,7 +146,7 @@ class ActorBuilder extends Object:
 	func peer_id(value: int) -> ActorBuilder:
 		this.peer_id = value
 		return self
-		
+
 	func display_name(value: String) -> ActorBuilder:
 		this.display_name = value
 		return self
@@ -368,7 +368,7 @@ func set_substate(value: SubState) -> void:
 		Logger.debug("set_substate: BLOCKED - cannot change substate!", self)
 
 func _enter_tree():
-	set_name(str(peer_id) if peer_id > 0 else str(-randi_range(1, 9_999_999)))
+	set_name(str(peer_id))
 	add_to_group(Group.ACTOR)
 	add_to_group(map)
 	add_to_group(name)

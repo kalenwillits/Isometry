@@ -165,7 +165,7 @@ func sync_resource(actor_name: String, resource_key: String, new_value: int) -> 
 	actor.resources[resource_key] = new_value
 
 	Logger.debug("sync_resource: %s.%s: %d -> %d" % [actor_name, resource_key, old_value, new_value], self)
-	
+
 	# TODO -- use a finder query to locate the correct resource UI elements and update them that wy
 	# Trigger UI update if this is the primary actor
 	if actor.is_primary():
