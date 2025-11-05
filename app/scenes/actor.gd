@@ -91,6 +91,7 @@ var last_movement_mode: String = "pathing"  # Track last intentional movement mo
 # Area targeting mode tracking
 var is_area_targeting: bool = false
 var area_targeting_action: String = ""
+var area_targeting_skill: Entity = null
 var area_targeting_overlay: Node2D = null
 var area_targeting_start_pos: Vector2 = Vector2.ZERO
 var area_targeting_was_pathing: bool = false  # Track if pathing was active when entering targeting
@@ -652,11 +653,10 @@ func use_actions() -> void:
 
 		# Handle skill start (button press)
 		if Input.is_action_just_pressed(action_name) and skill_ent.start:
-			# Check if this is an area action (using radius for ellipse system)
-			var start_action_ent = skill_ent.start.lookup()
-			if start_action_ent and ("radius" in start_action_ent) and start_action_ent.radius > 0:
+			# Check if this is an area skill (using radius for ellipse system)
+			if ("radius" in skill_ent) and skill_ent.radius > 0:
 				# Enter area targeting mode
-				enter_area_targeting(skill_ent.start.key(), start_action_ent)
+				enter_area_targeting(skill_ent.start.key(), skill_ent)
 				Finder.select(ui_action_block).press_button()
 			else:
 				# Normal action
@@ -1846,25 +1846,33 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 
 ## Area Targeting Functions
 
-func enter_area_targeting(action_key: String, action_ent: Entity) -> void:
-	"""Enter area targeting mode for an AOE action"""
-	Logger.debug("enter_area_targeting: action_key=%s, action_ent=%s" % [action_key, action_ent != null], self)
+func enter_area_targeting(action_key: String, skill_ent: Entity) -> void:
+	"""Enter area targeting mode for an AOE skill"""
+	Logger.debug("enter_area_targeting: action_key=%s, skill_ent=%s" % [action_key, skill_ent != null], self)
 
-	if !action_ent:
+	if !skill_ent:
 		return
 
 	# Require radius attribute for ellipse-based targeting
-	if !("radius" in action_ent) or action_ent.radius <= 0:
-		Logger.error("Action %s missing or invalid radius attribute for area targeting" % action_key, self)
+	if !("radius" in skill_ent) or skill_ent.radius <= 0:
+		Logger.error("Skill missing or invalid radius attribute for area targeting" % action_key, self)
 		return
 
+	# Store skill entity reference
+	area_targeting_skill = skill_ent
+
 	# Build the overlay using builder pattern
-	var range_limit = action_ent.range_ if "range_" in action_ent else 10000.0
-	area_targeting_overlay = AreaTargetingOverlay.builder()\
-		.ellipse_radius(action_ent.radius)\
+	var range_limit = skill_ent.range_ if "range_" in skill_ent else 10000.0
+	var builder = AreaTargetingOverlay.builder()\
+		.ellipse_radius(skill_ent.radius)\
 		.range_limit(range_limit)\
-		.caster_position(global_position)\
-		.build()
+		.caster_position(global_position)
+
+	# Add color if specified
+	if "color" in skill_ent and skill_ent.color and skill_ent.color != "":
+		builder = builder.color(skill_ent.color)
+
+	area_targeting_overlay = builder.build()
 
 	# Add overlay to scene and set position
 	get_parent().add_child(area_targeting_overlay)
@@ -1884,12 +1892,12 @@ func enter_area_targeting(action_key: String, action_ent: Entity) -> void:
 	area_targeting_start_pos = global_position
 
 	# Play casting animation if specified
-	if "casting" in action_ent and action_ent.casting and action_ent.casting != "":
-		set_state(action_ent.casting)
+	if "casting" in skill_ent and skill_ent.casting and skill_ent.casting != "":
+		set_state(skill_ent.casting)
 
 	# Root the player
-	if "time" in action_ent and action_ent.time:
-		root(action_ent.time + 60.0)  # Root for action time + large buffer
+	if "time" in skill_ent and skill_ent.time:
+		root(skill_ent.time + 60.0)  # Root for action time + large buffer
 
 	# Set UI state
 	get_node("/root/UIStateMachine").transition_to(UIStateMachine.State.AREA_TARGETING)
@@ -1899,9 +1907,8 @@ func update_area_targeting(delta: float) -> void:
 	if !is_area_targeting or !area_targeting_overlay:
 		return
 
-	var action_ent = Repo.select(area_targeting_action)
-	if !action_ent:
-		Logger.error("update_area_targeting: action entity lookup failed for key: %s" % area_targeting_action, self)
+	if !area_targeting_skill:
+		Logger.error("update_area_targeting: skill entity not found", self)
 		cancel_area_targeting()
 		return
 
@@ -1922,7 +1929,7 @@ func update_area_targeting(delta: float) -> void:
 		var target_position = mouse_pos
 
 		# Lerp ellipse toward target at constant speed
-		var lerp_speed = action_ent.speed
+		var lerp_speed = area_targeting_skill.speed
 		var current_pos = area_targeting_overlay.global_position
 		var direction_to_target = (target_position - current_pos).normalized()
 		var distance_to_target = current_pos.distance_to(target_position)
@@ -1935,7 +1942,7 @@ func update_area_targeting(delta: float) -> void:
 			new_position = target_position
 
 		# Clamp center to max range (simple circular boundary)
-		var range_limit = action_ent.range_ if "range_" in action_ent else 10000.0
+		var range_limit = area_targeting_skill.range_ if "range_" in area_targeting_skill else 10000.0
 		var center_distance = area_targeting_start_pos.distance_to(new_position)
 
 		if center_distance > range_limit:
@@ -1957,8 +1964,8 @@ func update_area_targeting(delta: float) -> void:
 	else:
 		# DIRECT CONTROL MODE: Input vectors move the ellipse directly
 		if motion.length() > 0:
-			# Get speed from action or use default
-			var targeting_speed = action_ent.speed if "speed" in action_ent else 300.0
+			# Get speed from skill or use default
+			var targeting_speed = area_targeting_skill.speed if "speed" in area_targeting_skill else 300.0
 
 			# Apply isometric factor to speed based on motion angle
 			var isometric_adjustment = std.isometric_factor(motion.angle())
@@ -1968,7 +1975,7 @@ func update_area_targeting(delta: float) -> void:
 			var new_position = area_targeting_overlay.global_position + motion * adjusted_speed * delta
 
 			# Clamp center to max range (simple circular boundary)
-			var range_limit = action_ent.range_ if "range_" in action_ent else 10000.0
+			var range_limit = area_targeting_skill.range_ if "range_" in area_targeting_skill else 10000.0
 			var center_distance = area_targeting_start_pos.distance_to(new_position)
 
 			if center_distance > range_limit:
@@ -2036,6 +2043,7 @@ func cancel_area_targeting() -> void:
 
 	is_area_targeting = false
 	area_targeting_action = ""
+	area_targeting_skill = null
 	area_targeting_start_pos = Vector2.ZERO
 	area_targeting_was_pathing = false
 	area_targeting_direct_control = false

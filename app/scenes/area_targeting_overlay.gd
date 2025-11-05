@@ -1,11 +1,10 @@
 class_name AreaTargetingOverlay
 extends Node2D
 
-const FILL_COLOR: Color = Color(1.0, 0.3, 0.0, 0.3)  # Semi-transparent orange
 const OUTLINE_COLOR: Color = Color(1.0, 0.5, 0.0, 0.8)  # Bright orange outline
-const OUTLINE_WIDTH: float = 2.0
+const OUTLINE_WIDTH: float = 1.0
 const RANGE_INDICATOR_COLOR: Color = Color(1.0, 0.0, 0.0, 0.2)  # Red when at max range
-const LINE_WIDTH: float = 2.0
+const LINE_WIDTH: float = 1.0
 const ELLIPSE_POINTS: int = 32  # Number of points to draw smooth ellipse
 
 var radius: int = 100  # Ellipse radius in pixels
@@ -13,6 +12,7 @@ var ellipse_vertices: PackedVector2Array = []
 var max_range: float = 0.0
 var caster_position: Vector2 = Vector2.ZERO
 var is_at_max_range: bool = false
+var ellipse_color: Color = Color(1.0, 0.3, 0.0, 0.33)  # Configurable color with 33% alpha
 
 func _init() -> void:
 	# Apply isometric scale
@@ -54,14 +54,15 @@ func _draw() -> void:
 	if ellipse_vertices.size() < 3:
 		return
 
-	# Draw line from caster to ellipse center
+	# Draw line from caster to ellipse edge (shortened by radius)
 	if caster_position != Vector2.ZERO:
 		var line_start = to_local(caster_position)
-		var line_end = Vector2.ZERO  # Ellipse center
+		var direction = (Vector2.ZERO - line_start).normalized()
+		var line_end = line_start + direction * (line_start.length() - radius)  # Stop at near edge of ellipse
 		draw_line(line_start, line_end, OUTLINE_COLOR, LINE_WIDTH)
 
 	# Draw filled ellipse
-	var fill_color = RANGE_INDICATOR_COLOR if is_at_max_range else FILL_COLOR
+	var fill_color = RANGE_INDICATOR_COLOR if is_at_max_range else ellipse_color
 	draw_colored_polygon(ellipse_vertices, fill_color)
 
 	# Draw outline - close the ellipse by appending first vertex
@@ -114,6 +115,7 @@ class AreaTargetingOverlayBuilder:
 	var _radius: int
 	var _range: float
 	var _caster_pos: Vector2
+	var _color: Color = Color(1.0, 0.3, 0.0, 0.33)  # Default orange with 33% alpha
 
 	func ellipse_radius(r: int) -> AreaTargetingOverlayBuilder:
 		_radius = r
@@ -127,10 +129,18 @@ class AreaTargetingOverlayBuilder:
 		_caster_pos = pos
 		return self
 
+	func color(hex_color: String) -> AreaTargetingOverlayBuilder:
+		"""Set the ellipse color from hex string, forcing 33% alpha"""
+		var parsed_color = Color(hex_color)
+		parsed_color.a = 0.33  # Force 33% alpha
+		_color = parsed_color
+		return self
+
 	func build() -> AreaTargetingOverlay:
 		if _radius > 0:
 			_overlay.set_ellipse_radius(_radius)
 
 		_overlay.set_range_limit(_range, _caster_pos)
+		_overlay.ellipse_color = _color
 
 		return _overlay
