@@ -227,7 +227,7 @@ class ActorBuilder extends Object:
 				this.resources[resource_ent.key()] = this.resources.get(resource_ent.key(), resource_ent.default)
 			# build measures
 			for measure_ent in Repo.query([Group.MEASURE_ENTITY]):
-				this.measure[measure_ent.key()] = this.build_measure(measure_ent)
+				this.measures[measure_ent.key()] = this.build_measure(measure_ent)
 			if _username and _password:
 				this.username = _username
 				this.set_token(Secret.encrypt("%s.%s" % [_username, _password]))
@@ -1168,8 +1168,9 @@ func build_timers() -> void:
 		
 func _local_measure_handler(caller_name: String, target_name: String, _expression: String) -> int:
 	return Dice.builder()\
-		.target_name(target_name)\
+		.expression(_expression)\
 		.caller_name(caller_name)\
+		.target_name(target_name)\
 		.build()\
 		.evaluate()
 
