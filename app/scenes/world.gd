@@ -102,6 +102,7 @@ func build_deployments() -> void:
 	for map_ent in Repo.query([Group.MAP_ENTITY]):
 		if map_ent.deployments == null: continue
 		for deployment_ent in map_ent.deployments.lookup():
+			if deployment_ent == null: continue
 			var actor_ent: Entity = deployment_ent.actor.lookup()
 			# Generate random negative peer_id for NPC (will be synced across network)
 			var npc_peer_id = -randi_range(1, 9_999_999)

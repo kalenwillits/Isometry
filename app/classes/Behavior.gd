@@ -56,9 +56,3 @@ func fallback() -> void:
 
 func arm() -> void:
 	state = Behavior.State.ACTIVE
-#
-#func use(interaction: ActorInteraction):
-	#if goals_are_met(interaction):
-		#state = Behavior.State.ADVANCE
-	#else:
-		#state = Behavior.State.ACTIVE

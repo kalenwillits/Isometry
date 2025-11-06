@@ -227,7 +227,11 @@ class ActorBuilder extends Object:
 				this.resources[resource_ent.key()] = this.resources.get(resource_ent.key(), resource_ent.default)
 			# build measures
 			for measure_ent in Repo.query([Group.MEASURE_ENTITY]):
-				this.measures[measure_ent.key()] = this.build_measure(measure_ent)
+				var measure_id = measure_ent.key()
+				if not this.measures.has(measure_id):
+					this.measures[measure_id] = this.build_measure(measure_ent)
+				else:
+					push_warning("Entity measure '%s' conflicts with built-in measure, skipping" % measure_id)
 			if _username and _password:
 				this.username = _username
 				this.set_token(Secret.encrypt("%s.%s" % [_username, _password]))
@@ -554,7 +558,7 @@ func _built_in_measure__distance_to_target() -> int:
 	var target_actor: Actor = Finder.get_actor(target)
 	if target_actor != null:
 		return isometric_distance_to_actor(target_actor)
-	return -1
+	return 0
 	
 func _built_in_measure__distance_to_destination() -> int:
 	return isometric_distance_to_point(destination) * BASE_TILE_SIZE
