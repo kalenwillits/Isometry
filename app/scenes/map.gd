@@ -148,7 +148,7 @@ func build_isometric_tilemap() -> void:
 		tilemap_layer.name = layer_ent.key()
 		tilemap_layer.tile_set = tileset
 		tilemap_layer.y_sort_enabled = layer_ent.ysort
-		tilemap_layer.z_index = layer_ent.ysort			
+		tilemap_layer.z_index = layer_ent.ysort
 		tilemap_layer.z_as_relative = true
 		tilemap_layer.set_visibility_layer_bit(0, false) # Reset defualt state to none
 		tilemap_layer.set_visibility_layer_bit(layer_index, true)

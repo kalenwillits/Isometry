@@ -16,7 +16,8 @@ var ellipse_color: Color = Color(1.0, 0.3, 0.0, 0.33)  # Configurable color with
 func _init() -> void:
 	# Apply isometric scale
 	scale = Vector2(1.0, 0.5)
-	z_index = 100
+	z_index = 0
+	y_sort_enabled = true
 
 static func builder() -> AreaTargetingOverlayBuilder:
 	return AreaTargetingOverlayBuilder.new()

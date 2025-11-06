@@ -25,7 +25,8 @@ class Builder extends Object:
 
 	func build() -> ChargingIndicator:
 		this.name = "ChargingIndicator"
-		this.z_index = 0  # Draw below the actor
+		this.z_index = 0
+		this.y_sort_enabled = true
 		return this
 
 static func builder() -> Builder:
