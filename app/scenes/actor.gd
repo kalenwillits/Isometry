@@ -57,7 +57,10 @@ const NAV_PATH_MAX_DISTANCE: float = 64.0  # Increased recalculation distance
 @export var map: String = ""
 @export var target: String = ""
 
-
+var charge: float = 0.0
+var charging_skill_index: int = -1  # Which skill (1-9) is currently charging, -1 if none
+var charging_skill_max_charge: float = 0.0  # Max charge from skill entity
+var charging_indicator: Node2D = null  # Visual indicator for skill charging
 var resources: Dictionary = {}
 var fader: Fader
 var peer_id: int = 0
@@ -98,6 +101,7 @@ var area_targeting_was_pathing: bool = false  # Track if pathing was active when
 var area_targeting_direct_control: bool = false  # Track if direct control is active during targeting
 var area_targeting_highlighted_actors: Array = []  # Track actors highlighted by area targeting
 var measures: Dictionary = {
+	"charge": _built_in_measure__charge,
 	"distance_to_target": _built_in_measure__distance_to_target,
 	"distance_to_destination": _built_in_measure__distance_to_destination,
 	"has_target": _built_in_measure__has_target,
@@ -433,6 +437,9 @@ func _ready() -> void:
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	$HitBox.area_entered.connect(_on_hit_box_body_entered)
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
+
+	# Create charging indicator
+	build_charging_indicator()
 	
 	# Configure CharacterBody2D for smooth wall sliding
 	motion_mode = MOTION_MODE_FLOATING
@@ -553,6 +560,20 @@ func _built_in_measure__line_of_sight() -> int:
 			if target_actor.get_name() in in_view:
 				return 1
 	return 0
+	
+func _built_in_measure__charge() -> int:
+	var charge_hundredths: int = int(charge * 100)
+	charge = 0
+
+	# Reset charging state when charge is consumed
+	charging_skill_index = -1
+	charging_skill_max_charge = 0.0
+
+	# Reset charging indicator visual
+	if charging_indicator:
+		charging_indicator.set_charge_progress(0.0, 0.0)
+
+	return charge_hundredths
 
 func _built_in_measure__distance_to_target() -> int:
 	var target_actor: Actor = Finder.get_actor(target)
@@ -655,9 +676,20 @@ func use_actions() -> void:
 
 		var action_name: String = "action_%d" % (i + 1)
 		var ui_action_block: String = Group.UI_ACTION_BLOCK_N % (i + 1)
+		var skill_index: int = i + 1  # 1-9 for tracking
 
 		# Handle skill start (button press)
 		if Input.is_action_just_pressed(action_name) and skill_ent.start:
+			# Cancel previous charging skill if switching to a different one
+			if charging_skill_index != -1 and charging_skill_index != skill_index:
+				charge = 0.0
+				charging_skill_index = -1
+				charging_skill_max_charge = 0.0
+
+				# Reset charging indicator visual
+				if charging_indicator:
+					charging_indicator.set_charge_progress(0.0, 0.0)
+
 			# Check if this is an area skill (using radius for ellipse system)
 			if ("radius" in skill_ent) and skill_ent.radius > 0:
 				# Enter area targeting mode
@@ -669,8 +701,38 @@ func use_actions() -> void:
 				Finder.select(ui_action_block).press_button()
 				emit_skill_signal(start_signal, resolve_target())
 
+		# Handle charging while button is held
+		if Input.is_action_pressed(action_name):
+			# Only charge if skill has a charge attribute > 0
+			if ("charge" in skill_ent) and skill_ent.charge > 0:
+				# Initialize charging if not already
+				if charging_skill_index != skill_index:
+					charging_skill_index = skill_index
+					charging_skill_max_charge = float(skill_ent.charge)
+
+					# Update charging indicator color from skill
+					if charging_indicator and ("color" in skill_ent):
+						var skill_color_str: String = skill_ent.color
+						charging_indicator.set_color(Color.from_string(skill_color_str, Color.WHITE))
+
+				# Accumulate charge, clamped to max
+				charge = min(charge + get_physics_process_delta_time(), charging_skill_max_charge)
+
+				# Update charging indicator visual
+				if charging_indicator:
+					charging_indicator.set_charge_progress(charge, charging_skill_max_charge)
+
 		# Handle skill end (button release)
 		if Input.is_action_just_released(action_name):
+			# Clear charging state for this skill
+			if charging_skill_index == skill_index:
+				charging_skill_index = -1
+				charging_skill_max_charge = 0.0
+
+				# Reset charging indicator visual
+				if charging_indicator:
+					charging_indicator.set_charge_progress(0.0, 0.0)
+
 			# Check if we're in area targeting mode for this action
 			if is_area_targeting and area_targeting_action == (skill_ent.start.key() if skill_ent.start else ""):
 				execute_area_action()
@@ -1261,6 +1323,22 @@ func build_base() -> void:
 		existing_base.queue_free()
 	collision_shape.set_name(base_name)
 	add_child(collision_shape)
+
+	# Update charging indicator size when base changes
+	if charging_indicator:
+		charging_indicator.set_size(base)
+
+func build_charging_indicator() -> void:
+	var actor_ent: Entity = Repo.select(actor)
+	var base_size: int = actor_ent.base if actor_ent else 0
+
+	charging_indicator = (
+		ChargingIndicator.builder()
+		.size(base_size)
+		.color(Color.WHITE)
+		.build()
+	)
+	charging_indicator.deploy(self)
 	
 func build_hitbox() -> void:
 	if !hitbox: return
