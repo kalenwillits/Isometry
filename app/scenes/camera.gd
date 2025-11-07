@@ -1,16 +1,16 @@
 extends Camera2D
 
 # TODO - allow custom optio ns
-const CAMERA_ZOOM_MIN: int = 1
+const CAMERA_ZOOM_MIN: int = 0
 const CAMERA_ZOOM_DEFAULT: int = 3
-const CAMERA_ZOOM_MAX: int = 11
+const CAMERA_ZOOM_MAX: int = 10
 
 @export var zoom_level: int = CAMERA_ZOOM_DEFAULT
 
 # Base resolution for margin calculation
 const BASE_RESOLUTION: Vector2 = Vector2(800, 600)
 const CAMERA_MARGIN_RATIO: float = 33.33 / 600.0  # Proportion of screen height
-const CAMERA_SPEED: float = 111.1
+const CAMERA_SPEED: float = 333.0
 const CAMERA_TOLERANCE: float = 100.0
 
 # Dynamic margin based on current resolution

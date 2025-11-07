@@ -480,6 +480,7 @@ func _ready() -> void:
 		$ViewBox.area_exited.connect(_on_view_box_area_exited)
 		fader.fade()
 		set_camera_target()
+		Finder.select(Group.CAMERA).snap_to(get_relative_camera_position())
 		Transition.appear()
 		is_awake(true)
 		visible_to_primary(true)
@@ -624,15 +625,41 @@ func use_move_discovery() -> void:
 
 func use_move_view(delta: float) -> void:
 	var view_shape: CollisionShape2D = $ViewBox.get_node_or_null("ViewShape")
-	if origin.distance_to(destination) > 0:
+
+	# Calculate direction based on movement mode
+	var direction: Vector2 = Vector2.ZERO
+	var use_isometric_angle: float = 0.0
+
+	if is_direct_movement_active and velocity.length() > 0:
+		# Use actual velocity direction for direct movement
+		# Store as backwards direction (like pathfinding does) so negation works consistently
+		direction = -velocity.normalized()
+		use_isometric_angle = velocity.angle()
+	elif origin.distance_to(destination) > 0:
+		# Use pathfinding direction
 		last_viewshape_destination = destination
 		last_viewshape_origin = origin
-	if view_shape:
-		var direction: Vector2 = last_viewshape_destination.direction_to(last_viewshape_origin)
-		var offset_distance: float = perception * VIEW_SPEED
+		# This calculates direction FROM destination TO origin (backwards)
+		direction = last_viewshape_destination.direction_to(last_viewshape_origin)
+		use_isometric_angle = origin.angle_to(destination)
+
+	if view_shape and direction != Vector2.ZERO:
+		# Get camera zoom level for scaling look-ahead distance
+		var camera = get_tree().get_first_node_in_group("camera")
+		var zoom_scale: float = 1.0
+		if camera and camera.has_method("get"):
+			# Curved zoom scaling: stronger effect when zoomed out, gentler when zoomed in
+			# Using exponential curve: effect diminishes as we zoom in
+			var zoom_level = camera.zoom_level
+			var normalized_zoom = zoom_level / 10.0  # 0.0 to 1.0
+			# More aggressive when zoomed out: 2.2x at zoom 0, ~1.4x at zoom 5, 1.0x at zoom 10
+			zoom_scale = 1.0 + (1.2 * pow(1.0 - normalized_zoom, 2.0))
+
+		var offset_distance: float = perception * VIEW_SPEED * zoom_scale * 0.5
+		# Negate direction to look ahead instead of behind
 		var viewpoint: Vector2 = -direction * offset_distance
 		# Apply isometric factor but clamp it to prevent extreme distortion
-		var viewpoint_isometric_factor = std.isometric_factor(origin.angle_to(destination))
+		var viewpoint_isometric_factor = std.isometric_factor(use_isometric_angle)
 		viewpoint_isometric_factor = max(viewpoint_isometric_factor, 0.5)  # Prevent too much Y compression
 		viewpoint.y *= viewpoint_isometric_factor / 2
 		var viewshape_distance_to_viewpoint: float = view_shape.position.distance_to(viewpoint)
@@ -1297,10 +1324,18 @@ func build_saliencebox(value: int) -> void:
 		$SalienceBox.add_child(salience_shape)
 
 func get_relative_camera_position() -> Vector2:
-	# Camera follows actor position (not overlay during area targeting)
 	var view_shape: CollisionShape2D = $ViewBox.get_node_or_null("ViewShape")
 	if view_shape:
-		return global_position + view_shape.position
+		# Scale the camera offset based on zoom level
+		# When zoomed in, camera should be closer to actor (less offset applied)
+		var camera = get_tree().get_first_node_in_group("camera")
+		var offset_scale: float = 1.0
+		if camera and camera.has_method("get"):
+			var zoom_level = camera.zoom_level
+			var normalized_zoom = zoom_level / 10.0  # 0.0 to 1.0
+			# Exponential curve: 1.0x offset at zoom 0, ~0.51x at zoom 5, 0.3x at zoom 10
+			offset_scale = 0.3 + (0.7 * pow(1.0 - normalized_zoom, 2.0))
+		return global_position + (view_shape.position * offset_scale)
 	return global_position
 
 func set_camera_target():
