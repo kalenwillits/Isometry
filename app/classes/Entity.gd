@@ -8,6 +8,7 @@ const KEY_ALIASES: Dictionary = {
 	"if": "if_", 
 	"else": "else_",
 	"range": "range_",
+	"floor": "floor_",
 }
 
 var _type: String

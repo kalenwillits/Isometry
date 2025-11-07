@@ -1,9 +1,9 @@
 extends Camera2D
 
 # TODO - allow custom optio ns
-const CAMERA_ZOOM_MIN: int = 0
-const CAMERA_ZOOM_DEFAULT: int = 3
-const CAMERA_ZOOM_MAX: int = 10
+const CAMERA_ZOOM_MIN: int = 1
+const CAMERA_ZOOM_DEFAULT: int = 2
+const CAMERA_ZOOM_MAX: int = 9
 
 @export var zoom_level: int = CAMERA_ZOOM_DEFAULT
 

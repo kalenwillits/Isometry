@@ -40,6 +40,13 @@ func _ready() -> void:
 	Logger.debug("Queued parallax layer build for map: %s" % name, self)
 	Queue.enqueue(
 		Queue.Item.builder()
+		.comment("build floor layers for map %s" % name)
+		.task(build_floor_layers)
+		.build()
+	)
+	Logger.debug("Queued floor layer build for map: %s" % name, self)
+	Queue.enqueue(
+		Queue.Item.builder()
 		.comment("build isometric tilemap in map %s" % name)
 		.task(build_isometric_tilemap)
 		.condition(func(): return Repo.get_child_count() != 0)
@@ -70,6 +77,47 @@ func build_parallax_layers() -> void:
 				parallax_scene.set_effect(parallax_ent.effect)
 				parallax_scene.add_to_group(name) # Add to this map's group
 				add_child(parallax_scene)
+	)
+
+func build_floor_layers() -> void:
+	Logger.debug("Building floor layers for map: %s" % name, self)
+	var map_ent = Repo.query([name]).pop_front()
+	Optional.of_nullable(map_ent.floor_).if_present(
+		func(key_ref_array):
+			for floor_ent in key_ref_array.lookup():
+				Logger.trace("Creating floor: %s for map: %s" % [floor_ent.name_, name], self)
+
+				# Load texture
+				var texture = AssetLoader.builder()\
+					.key(floor_ent.texture)\
+					.type(AssetLoader.Type.IMAGE)\
+					.archive(Cache.campaign)\
+					.build()\
+					.pull()
+
+				# Create Sprite2D
+				var sprite = Sprite2D.new()
+				sprite.name = floor_ent.name_
+				sprite.texture = texture
+				sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST # Pixel art style
+				sprite.centered = false # Position at top-left corner
+
+				# Set position from Vertex
+				if floor_ent.location:
+					var vertex_ent = floor_ent.location.lookup()
+					if vertex_ent:
+						sprite.position = Vector2(vertex_ent.x, vertex_ent.y)
+
+				# Z-ordering: between parallax (0) and tiles (varies)
+				sprite.z_index = -1
+				sprite.z_as_relative = true
+
+				# Add to map's group for visibility toggling
+				sprite.add_to_group(name)
+				sprite.add_to_group(Group.FLOOR_SPRITE)
+
+				# Add to scene
+				add_child(sprite)
 	)
 	
 func build_audio() -> void:

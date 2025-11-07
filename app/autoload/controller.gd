@@ -109,6 +109,8 @@ func render_map(map: String) -> void:
 					map_layer.enabled = map_node.name == map
 				for parallax_layer in Finder.query([Group.PARALLAX, map_node.name]):
 					parallax_layer.set_visibility(map_node.name == map)
+				for floor_sprite in Finder.query([Group.FLOOR_SPRITE, map_node.name]):
+					floor_sprite.visible = map_node.name == map
 				for audio_fader in Finder.query([Group.AUDIO, map_node.name]):
 					audio_fader.fade_in() if map_node.name == map else audio_fader.fade_out()
 				).build()

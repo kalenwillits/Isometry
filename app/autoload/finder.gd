@@ -2,13 +2,18 @@ extends Node
 
 func query(tags: Array) -> Array:
 	var results: Array = []
+	var initialized: bool = false
+
 	for tag in tags:
 		if tag == null: continue
 		var subquery = get_tree().get_nodes_in_group(tag)
-		if results.is_empty():
+
+		if not initialized:
 			results = subquery
+			initialized = true
 		else:
 			results = std.intersect(results, subquery)
+
 	return results
 	
 func select(tag: String) -> Node:
