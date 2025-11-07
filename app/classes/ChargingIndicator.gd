@@ -25,15 +25,20 @@ class Builder extends Object:
 
 	func build() -> ChargingIndicator:
 		this.name = "ChargingIndicator"
-		this.z_index = 0
-		this.y_sort_enabled = true
 		return this
 
 static func builder() -> Builder:
 	return Builder.new()
+	
+func _ready() -> void:
+	z_index = 1
+	y_sort_enabled = false
+	z_as_relative = true
+
 
 func deploy(node: Node) -> void:
 	node.add_child(self)
+	node.move_child(self, 0)  # Position at top of hierarchy
 
 func set_charge_progress(current_charge: float, max_charge: float) -> void:
 	if max_charge > 0:

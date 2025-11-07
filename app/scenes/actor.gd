@@ -437,9 +437,6 @@ func _ready() -> void:
 	$Sprite.set_sprite_frames(SpriteFrames.new())
 	$HitBox.area_entered.connect(_on_hit_box_body_entered)
 	$ViewBox.area_entered.connect(_on_view_box_area_entered)
-
-	# Create charging indicator
-	build_charging_indicator()
 	
 	# Configure CharacterBody2D for smooth wall sliding
 	motion_mode = MOTION_MODE_FLOATING
@@ -454,6 +451,7 @@ func _ready() -> void:
 	$NavigationAgent.path_max_distance = NAV_PATH_MAX_DISTANCE
 	var actor_ent: Entity = Repo.select(actor)
 	if is_primary():
+		build_charging_indicator()
 		visible_groups = {}  # Initialize group tracking for primary actor
 
 		# Add primary actor's own group to visible groups

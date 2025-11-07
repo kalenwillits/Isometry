@@ -2,9 +2,9 @@ extends Timer
 class_name Fader
 
 const TRANSITION_TIME: float = 1.1
-const RED: int = 1.0
-const GREEN: int = 1.0
-const BLUE: int = 1.0
+const RED: float = 1.0
+const GREEN: float = 1.0
+const BLUE: float = 1.0
 
 enum State {
 	IS_FADING,

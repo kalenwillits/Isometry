@@ -13,10 +13,9 @@ var caster_position: Vector2 = Vector2.ZERO
 var is_at_max_range: bool = false
 var ellipse_color: Color = Color(1.0, 0.3, 0.0, 0.33)  # Configurable color with 33% alpha (fill, outline, and line)
 
-func _init() -> void:
-	# Apply isometric scale
+func _ready() -> void:
 	scale = Vector2(1.0, 0.5)
-	z_index = 0
+	z_index = 1
 	y_sort_enabled = true
 
 static func builder() -> AreaTargetingOverlayBuilder:
