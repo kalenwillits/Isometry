@@ -85,7 +85,7 @@ func build_floor_layers() -> void:
 	Optional.of_nullable(map_ent.floor_).if_present(
 		func(key_ref_array):
 			for floor_ent in key_ref_array.lookup():
-				Logger.trace("Creating floor: %s for map: %s" % [floor_ent.name_, name], self)
+				Logger.trace("Creating floor: %s for map: %s" % [floor_ent.key(), name], self)
 
 				# Load texture
 				var texture = AssetLoader.builder()\
@@ -97,7 +97,7 @@ func build_floor_layers() -> void:
 
 				# Create Sprite2D
 				var sprite = Sprite2D.new()
-				sprite.name = floor_ent.name_
+				sprite.name = floor_ent.key()
 				sprite.texture = texture
 				sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST # Pixel art style
 				sprite.centered = false # Position at top-left corner
