@@ -2157,7 +2157,11 @@ func _update_area_targeting_highlights() -> void:
 	# Remove highlights from actors no longer in ellipse
 	for actor in area_targeting_highlighted_actors:
 		if actor not in actors_in_ellipse:
-			actor.set_outline_opacity(0.0)
+			# Preserve direct target outline if this actor is currently targeted
+			if target and actor.name == target:
+				actor.set_outline_opacity(0.666)  # Direct target opacity
+			else:
+				actor.set_outline_opacity(0.0)
 
 	# Add highlights to new actors in ellipse
 	for actor in actors_in_ellipse:
