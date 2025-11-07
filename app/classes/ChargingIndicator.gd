@@ -2,8 +2,8 @@ extends Node2D
 class_name ChargingIndicator
 
 const BASE_SIZE_MULTIPLIER: float = 0.5  # Scale factor to match actor base size
-const OUTLINE_WIDTH: float = 0.2  # Width of the charging outline
-const OUTLINE_OPACITY: float = 0.33  # 33% opacity
+const OUTLINE_WIDTH: float = 0.3  # Width of the charging outline
+const OUTLINE_OPACITY: float = 0.2 
 
 var charge_percent: float = 0.0  # 0.0 to 1.0
 var skill_color: Color = Color.WHITE

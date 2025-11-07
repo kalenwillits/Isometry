@@ -473,8 +473,6 @@ func _ready() -> void:
 							.task(func(): Finder.select(Group.UI_ACTION_BLOCK_N % slot_number).render(skill_ent.key()))
 							.build()
 						)
-		$NavigationAgent.debug_enabled = true
-		$NavigationAgent.debug_use_custom = true
 		build_discoverybox(perception)
 		$DiscoveryBox.body_entered.connect(_on_discovery_box_body_entered)
 		line_of_sight_entered.connect(_on_line_of_sight_entered)
@@ -540,6 +538,7 @@ func _physics_process(delta) -> void:
 			use_pathing(delta)
 			click_to_move()
 			use_move_directly(delta)
+			use_visible_pathing()
 		use_actions()
 		use_target()
 		#use_line_of_sight() # Temp disabled save incase we need this later
@@ -1742,8 +1741,7 @@ func use_move_directly(delta) -> void:
 					# Slide along the wall instead of stopping
 					velocity = velocity.slide(wall_normal)
 
-		# Keep destination at current position to prevent pathback when input stops
-		set_destination(position)
+		# Keep NavigationAgent at current position to prevent pathfinding interference
 		$NavigationAgent.target_position = position
 
 		# Update heading to face movement direction (only when not performing actions)
@@ -1752,9 +1750,30 @@ func use_move_directly(delta) -> void:
 				var target_point = position + direction
 				look_at_point(target_point)
 	else:
-		# No input - deactivate direct movement and stop
-		is_direct_movement_active = false
-		velocity = Vector2.ZERO
+		# Only reset destination if we were actively moving directly
+		# Don't interfere with pathing destinations
+		if is_direct_movement_active:
+			is_direct_movement_active = false
+			set_destination(position)
+			velocity = Vector2.ZERO
+
+func use_visible_pathing() -> void:
+	# Only enable debug visualization when using pathfinding (not direct movement)
+	var should_show_debug = not is_direct_movement_active
+
+	# Set debug properties
+	$NavigationAgent.debug_enabled = should_show_debug
+	$NavigationAgent.debug_use_custom = should_show_debug
+
+	# Set the custom color to the actor's group color
+	if group_outline_color:
+		var path_color: Color = group_outline_color
+		$NavigationAgent.debug_path_custom_color.r = path_color.r
+		$NavigationAgent.debug_path_custom_color.g = path_color.g
+		$NavigationAgent.debug_path_custom_color.b = path_color.b
+	$NavigationAgent.debug_path_custom_color.a = 0.2
+
+
 
 
 func is_point_on_navigation_region(point: Vector2) -> bool:

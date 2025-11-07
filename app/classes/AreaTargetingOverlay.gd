@@ -2,7 +2,7 @@ class_name AreaTargetingOverlay
 extends Node2D
 
 const OUTLINE_WIDTH: float = 1.0
-const RANGE_INDICATOR_COLOR: Color = Color(1.0, 0.0, 0.0, 0.33)  # Red when at max range
+const RANGE_INDICATOR_COLOR: Color = Color(1.0, 1.0, 1.0, 0.2)  # Red when at max range
 const LINE_WIDTH: float = 1.0
 const ELLIPSE_POINTS: int = 32  # Number of points to draw smooth ellipse
 
@@ -11,7 +11,7 @@ var ellipse_vertices: PackedVector2Array = []
 var max_range: float = 0.0
 var caster_position: Vector2 = Vector2.ZERO
 var is_at_max_range: bool = false
-var ellipse_color: Color = Color(1.0, 0.3, 0.0, 0.33)  # Configurable color with 33% alpha (fill, outline, and line)
+var ellipse_color: Color = Color(1.0, 1.0, 1.0, 0.2)  # Configurable color with 33% alpha (fill, outline, and line)
 
 func _ready() -> void:
 	scale = Vector2(1.0, 0.5)
