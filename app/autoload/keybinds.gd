@@ -20,6 +20,10 @@ const ZOOM_OUT: String = "zoom_out"
 const CAMERA_LOCK: String = "camera_lock"
 const CAMERA_RECENTER: String = "camera_recenter"
 const OPEN_MENU: String = "open_menu"
+const MOVE_UP: String = "move_up"
+const MOVE_DOWN: String = "move_down"
+const MOVE_LEFT: String = "move_left"
+const MOVE_RIGHT: String = "move_right"
 
 # Config file settings
 var CONFIG_FILE_PATH: String = io.get_dir() + "options.cfg"
@@ -42,7 +46,11 @@ const DEFAULT_KEYBINDS: Dictionary = {
 	ZOOM_OUT: "page_down",
 	CAMERA_LOCK: "space",
 	CAMERA_RECENTER: "space",
-	OPEN_MENU: "backspace"
+	OPEN_MENU: "backspace",
+	MOVE_UP: "up_arrow",
+	MOVE_DOWN: "down_arrow",
+	MOVE_LEFT: "left_arrow",
+	MOVE_RIGHT: "right_arrow"
 }
 
 # Default gamepad bindings
@@ -61,7 +69,11 @@ const DEFAULT_GAMEPAD: Dictionary = {
 	ZOOM_OUT: "left_shoulder",
 	CAMERA_LOCK: "left_stick",
 	CAMERA_RECENTER: "right_stick",
-	OPEN_MENU: "select"
+	OPEN_MENU: "select",
+	MOVE_UP: "left_stick_up",
+	MOVE_DOWN: "left_stick_down",
+	MOVE_LEFT: "left_stick_left",
+	MOVE_RIGHT: "left_stick_right"
 }
 
 # Display names for actions
@@ -80,7 +92,11 @@ const ACTION_LABELS: Dictionary = {
 	ZOOM_OUT: "Zoom Out",
 	CAMERA_LOCK: "Camera Lock",
 	CAMERA_RECENTER: "Camera Recenter",
-	OPEN_MENU: "Global Menu"
+	OPEN_MENU: "Global Menu",
+	MOVE_UP: "Move Up",
+	MOVE_DOWN: "Move Down",
+	MOVE_LEFT: "Move Left",
+	MOVE_RIGHT: "Move Right"
 }
 
 func _init_actions() -> void:
@@ -114,14 +130,16 @@ func get_keybind(action_name: String) -> String:
 	return ""
 
 func get_gamepad_bind(action_name: String) -> String:
-	"""Returns the current gamepad binding as a string (e.g., 'a+b')"""
+	"""Returns the current gamepad binding as a string (e.g., 'a+b' or 'left_stick_up')"""
 	var events = InputMap.action_get_events(action_name)
-	var joy_buttons: Array = []
+	var joy_inputs: Array = []
 	for event in events:
 		if event is InputEventJoypadButton:
-			joy_buttons.append(_joy_button_to_string(event.button_index))
-	if joy_buttons.size() > 0:
-		return "+".join(joy_buttons)
+			joy_inputs.append(_joy_button_to_string(event.button_index))
+		elif event is InputEventJoypadMotion:
+			joy_inputs.append(_joy_motion_to_string(event.axis, event.axis_value))
+	if joy_inputs.size() > 0:
+		return "+".join(joy_inputs)
 	return ""
 
 func set_keybind(action_name: String, binding: String) -> void:
@@ -314,7 +332,7 @@ func _remove_gamepad_events(action_name: String) -> void:
 	"""Removes all gamepad events from an action"""
 	var events = InputMap.action_get_events(action_name)
 	for event in events:
-		if event is InputEventJoypadButton:
+		if event is InputEventJoypadButton or event is InputEventJoypadMotion:
 			InputMap.action_erase_event(action_name, event)
 
 func _event_to_string(event: InputEvent) -> String:
@@ -352,6 +370,22 @@ func _joy_button_to_string(button_index: int) -> String:
 			return joy_name
 	return str(button_index)
 
+func _joy_motion_to_string(axis: int, axis_value: float) -> String:
+	"""Converts axis and axis_value to analog stick name"""
+	# Search for matching motion in JOY_MAP
+	for joy_name in JOY_MAP.keys():
+		var joy_data = JOY_MAP[joy_name]
+		if joy_data is String:
+			# Parse format "0:axis:value"
+			var parts = joy_data.split(":")
+			if parts.size() == 3:
+				var map_axis = int(parts[1])
+				var map_value = float(parts[2])
+				if map_axis == axis and map_value == axis_value:
+					return joy_name
+	# Fallback to raw format
+	return "axis_" + str(axis) + "_" + str(axis_value)
+
 func bind(action_name: String, binding: String) -> void:
 	"""
 	Binds an input string to an action.
@@ -361,6 +395,7 @@ func bind(action_name: String, binding: String) -> void:
 	- "mouse_left", "mouse_right", "mouse_wheel_up" - mouse buttons
 	- "joy_a", "joy_b", "joy_left_shoulder" - gamepad buttons
 	- "joy_a+joy_b" - gamepad combinations (adds multiple events)
+	- "joy_left_stick_up", "joy_right_stick_down" - analog stick motion
 	"""
 	var event = null
 
@@ -388,9 +423,23 @@ func bind(action_name: String, binding: String) -> void:
 				push_error("Unknown gamepad button: ", button_name)
 				return
 
-			event = InputEventJoypadButton.new()
-			event.button_index = joy_button
-			InputMap.action_add_event(action_name, event)
+			# Check if it's an analog motion (string) or button (int)
+			if joy_button is String:
+				# Parse analog motion format: "0:axis:value"
+				var parts = joy_button.split(":")
+				if parts.size() != 3:
+					push_error("Invalid analog motion format: ", joy_button)
+					return
+
+				event = InputEventJoypadMotion.new()
+				event.axis = int(parts[1])
+				event.axis_value = float(parts[2])
+				InputMap.action_add_event(action_name, event)
+			else:
+				# It's a button
+				event = InputEventJoypadButton.new()
+				event.button_index = joy_button
+				InputMap.action_add_event(action_name, event)
 
 	# Handle keyboard key inputs (including modifiers)
 	else:
@@ -544,5 +593,14 @@ const JOY_MAP: Dictionary = {
 	"paddle2": JOY_BUTTON_PADDLE2,
 	"paddle3": JOY_BUTTON_PADDLE3,
 	"paddle4": JOY_BUTTON_PADDLE4,
-	"touchpad": JOY_BUTTON_TOUCHPAD
+	"touchpad": JOY_BUTTON_TOUCHPAD,
+	# Analog stick motion (format: "axis:value")
+	"left_stick_up": "0:1:-1.0",     # axis 1, negative
+	"left_stick_down": "0:1:1.0",    # axis 1, positive
+	"left_stick_left": "0:0:-1.0",   # axis 0, negative
+	"left_stick_right": "0:0:1.0",   # axis 0, positive
+	"right_stick_up": "0:3:-1.0",    # axis 3, negative
+	"right_stick_down": "0:3:1.0",   # axis 3, positive
+	"right_stick_left": "0:2:-1.0",  # axis 2, negative
+	"right_stick_right": "0:2:1.0"   # axis 2, positive
 }

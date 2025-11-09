@@ -1737,7 +1737,7 @@ func use_move_directly(delta) -> void:
 		return
 
 	# Get input vector - this handles both keyboard and controller
-	var motion = Input.get_vector("left", "right", "up", "down")
+	var motion = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
 	# Calculate input strength (0.0 to 1.0)
 	# For keyboard: motion will be normalized (length = 1.0)
@@ -2049,7 +2049,7 @@ func update_area_targeting(delta: float) -> void:
 		return
 
 	# Get directional input
-	var motion = Input.get_vector("left", "right", "up", "down")
+	var motion = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
 	# Update caster position in overlay for line drawing
 	area_targeting_overlay.caster_position = area_targeting_start_pos

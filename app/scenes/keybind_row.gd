@@ -76,7 +76,7 @@ func _start_listening() -> void:
 
 	binding_button.text = "Press key..."
 	if binding_type == "gamepad":
-		binding_button.text = "Press button..."
+		binding_button.text = "Press button or move stick..."
 
 	# Request focus
 	set_process_input(true)
@@ -104,6 +104,9 @@ func _input(event: InputEvent) -> void:
 	elif binding_type == "gamepad":
 		if event is InputEventJoypadButton:
 			_handle_joy_binding(event)
+			get_viewport().set_input_as_handled()
+		elif event is InputEventJoypadMotion:
+			_handle_joy_motion_binding(event)
 			get_viewport().set_input_as_handled()
 
 func _handle_key_binding(event: InputEventKey) -> void:
@@ -185,6 +188,34 @@ func _handle_joy_binding(event: InputEventJoypadButton) -> void:
 		if pressed_joy_buttons.size() == 0 and joy_combo_to_bind.size() > 0:
 			var binding_str = "+".join(joy_combo_to_bind)
 			_apply_binding(binding_str)
+
+func _handle_joy_motion_binding(event: InputEventJoypadMotion) -> void:
+	"""Handles gamepad analog stick motion binding"""
+	# Only trigger when axis movement exceeds threshold to avoid capturing drift
+	if abs(event.axis_value) < 0.5:
+		return
+
+	# Find the motion name in the JOY_MAP
+	var motion_name: String = ""
+	for name in Keybinds.JOY_MAP.keys():
+		var joy_data = Keybinds.JOY_MAP[name]
+		if joy_data is String:
+			# Parse format "0:axis:value"
+			var parts = joy_data.split(":")
+			if parts.size() == 3:
+				var map_axis = int(parts[1])
+				var map_value = float(parts[2])
+				# Check if axis matches and direction matches (same sign)
+				if map_axis == event.axis and sign(map_value) == sign(event.axis_value):
+					motion_name = name
+					break
+
+	if motion_name == "":
+		_stop_listening()
+		return
+
+	# Apply the binding immediately (analog stick doesn't support combos)
+	_apply_binding(motion_name)
 
 func _apply_binding(binding_str: String) -> void:
 	"""Applies the captured binding after checking for conflicts"""
