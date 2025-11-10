@@ -29,7 +29,7 @@ func invoke(funckey: String, kwargs: Dictionary) -> Variant:
 	return functions[funckey].call(kwargs)
 
 func _process(_deleta: float):
-	if Input.is_action_just_pressed(\"toggle_developer_console\"):
+	if Keybinds.is_action_just_pressed(\"toggle_developer_console\"):
 		visible = !visible
 		if visible:
 			InputPrompt.grab_focus()

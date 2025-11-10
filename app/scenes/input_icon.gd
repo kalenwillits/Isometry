@@ -85,13 +85,18 @@ func _refresh_display() -> void:
 
 	visible = true
 
-	# Get action events from InputMap
-	if not InputMap.has_action(action_name):
-		_add_text_label("?")
-		_add_optional_label()
-		return
+	# Get action events - first try generic system, then fall back to InputMap
+	var events = GenericInputManager.get_action_input_events(action_name)
 
-	var events = InputMap.action_get_events(action_name)
+	# If not in generic system, check traditional InputMap
+	if events.size() == 0:
+		if not InputMap.has_action(action_name):
+			_add_text_label("?")
+			_add_optional_label()
+			return
+
+		events = InputMap.action_get_events(action_name)
+
 	if events.size() == 0:
 		_add_text_label("Unbound")
 		_add_optional_label()
@@ -117,24 +122,29 @@ func _refresh_display() -> void:
 			_display_single_event(display_data)
 	else:
 		# Keyboard mode: prioritize keyboard/mouse events
-		var event_to_display: InputEvent = null
+		# Collect ALL keyboard/mouse events for multi-button combos
+		var keyboard_events = []
 		for event in events:
 			if event is InputEventKey or event is InputEventMouseButton:
-				event_to_display = event
-				break
-		# Fall back to first event if no keyboard/mouse events found
-		if event_to_display == null and events.size() > 0:
-			event_to_display = events[0]
+				keyboard_events.append(event)
 
-		# Display the single event
-		if event_to_display != null:
-			var display_data = InputIconMapper.event_to_display(event_to_display, current_icon_mode)
+		# Display multi-button combo or single event
+		if keyboard_events.size() > 1:
+			# Multi-button keyboard combo (e.g., A+B+C)
+			_display_keyboard_event_combo(keyboard_events)
+		elif keyboard_events.size() == 1:
+			# Single keyboard event
+			var display_data = InputIconMapper.event_to_display(keyboard_events[0], current_icon_mode)
 
 			# Check if this is a keyboard modifier combo (contains "+")
 			if display_data.type == "text" and "+" in display_data.value:
 				_display_keyboard_combo(display_data.value)
 			else:
 				_display_single_event(display_data)
+		elif events.size() > 0:
+			# Fall back to first event if no keyboard/mouse events found
+			var display_data = InputIconMapper.event_to_display(events[0], current_icon_mode)
+			_display_single_event(display_data)
 
 	# Add optional label text after the icon
 	_add_optional_label()
@@ -171,6 +181,33 @@ func _display_gamepad_combo(gamepad_events: Array) -> void:
 
 		# Add "+" separator between buttons (except after last button)
 		if i < gamepad_events.size() - 1:
+			_add_text_label_to_container("+", combo_container)
+
+	# Add the combo container to main content container
+	content_container.add_child(combo_container)
+
+# Display multiple keyboard keys/buttons as a combo (e.g., A+B+C)
+func _display_keyboard_event_combo(keyboard_events: Array) -> void:
+	# Create a nested container with no spacing for tight combo display
+	var combo_container = HBoxContainer.new()
+	combo_container.add_theme_constant_override("separation", 0)
+	combo_container.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	for i in range(keyboard_events.size()):
+		var event = keyboard_events[i]
+		var display_data = InputIconMapper.event_to_display(event, current_icon_mode)
+
+		# Display the key in combo container
+		match display_data.type:
+			"icon":
+				_add_icon_to_container(display_data.value, combo_container)
+			"text":
+				_add_text_label_to_container(display_data.value, combo_container)
+			"none":
+				pass
+
+		# Add "+" separator between keys (except after last key)
+		if i < keyboard_events.size() - 1:
 			_add_text_label_to_container("+", combo_container)
 
 	# Add the combo container to main content container

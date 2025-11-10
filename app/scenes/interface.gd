@@ -158,8 +158,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	# Handle open_menu action (Backspace)
-	if event.is_action_pressed("open_menu"):
+	# Handle open_menu action (Home key by default)
+	if Keybinds.is_action_just_pressed(Keybinds.OPEN_MENU):
 		ui_state_machine.handle_open_menu()
 		get_viewport().set_input_as_handled()
 		return

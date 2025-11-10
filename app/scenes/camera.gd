@@ -67,7 +67,7 @@ func _physics_process(delta: float) -> void:
 		handle_recenter(delta)
 		
 func handle_recenter(delta: float) -> void:
-	if Input.is_action_pressed("camera_recenter"):
+	if Keybinds.is_action_pressed("camera_recenter"):
 		use_target(delta)
 
 func handle_focus_events(delta: float) -> void:
@@ -75,19 +75,19 @@ func handle_focus_events(delta: float) -> void:
 		use_target(delta)
 	else:
 		use_margin_panning(delta)
-		
+
 func handle_zoom_events() -> void:
-	if Input.is_action_just_pressed("zoom_in"):
+	if Keybinds.is_action_just_pressed("zoom_in"):
 		zoom_in()
-	elif Input.is_action_just_pressed("zoom_out"):
+	elif Keybinds.is_action_just_pressed("zoom_out"):
 		zoom_out()
 
 func use_target(delta: float) -> void:
 	if get_target():
 		pan_to(get_target().get_relative_camera_position(), delta)
-	
+
 func handle_camera_lock() -> void:
-	if Input.is_action_just_pressed("camera_lock"):
+	if Keybinds.is_action_just_pressed("camera_lock"):
 		_lock = !_lock
 
 func zoom_in() -> void:

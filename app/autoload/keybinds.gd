@@ -46,7 +46,7 @@ const DEFAULT_KEYBINDS: Dictionary = {
 	ZOOM_OUT: "page_down",
 	CAMERA_LOCK: "space",
 	CAMERA_RECENTER: "space",
-	OPEN_MENU: "backspace",
+	OPEN_MENU: "home",
 	MOVE_UP: "up_arrow",
 	MOVE_DOWN: "down_arrow",
 	MOVE_LEFT: "left_arrow",
@@ -108,6 +108,70 @@ func _ready() -> void:
 	_init_actions()
 	load_bindings()
 
+# ========================== Generic Input API ==========================
+# New API that uses the generic input system for true multi-button support
+
+func is_action_pressed(action_name: String) -> bool:
+	"""
+	Checks if an action is currently pressed (held).
+	Handles both single and multi-button combos via generic system.
+	Falls back to traditional InputMap if action not in generic system.
+	"""
+	if GenericInputManager.get_action_generic_ids(action_name).size() > 0:
+		return GenericInputManager.is_action_pressed(action_name)
+	# Fallback to traditional InputMap
+	return Input.is_action_pressed(action_name)
+
+func is_action_just_pressed(action_name: String) -> bool:
+	"""
+	Checks if an action was just activated this frame.
+	For combos (A+B+C): all but last must be held, last must be just_pressed.
+	Falls back to traditional InputMap if action not in generic system.
+	"""
+	if GenericInputManager.get_action_generic_ids(action_name).size() > 0:
+		return GenericInputManager.is_action_just_pressed(action_name)
+	# Fallback to traditional InputMap
+	return Input.is_action_just_pressed(action_name)
+
+func is_action_just_released(action_name: String) -> bool:
+	"""
+	Checks if an action was just released this frame.
+	For combos, true if any button was released (breaks the combo).
+	Falls back to traditional InputMap if action not in generic system.
+	"""
+	if GenericInputManager.get_action_generic_ids(action_name).size() > 0:
+		return GenericInputManager.is_action_just_released(action_name)
+	# Fallback to traditional InputMap
+	return Input.is_action_just_released(action_name)
+
+func set_assignment(action_name: String, input_events: Array) -> bool:
+	"""
+	Assigns input events to an action using the generic input system.
+	Supports single inputs and multi-button combos.
+
+	Args:
+		action_name: The logical action constant (e.g., Keybinds.MOVE_UP)
+		input_events: Array of InputEvent objects to assign
+
+	Returns:
+		true on success, false if not enough generic IDs available
+	"""
+	return GenericInputManager.assign_action(action_name, input_events)
+
+func get_assignment_ids(action_name: String) -> Array:
+	"""
+	Returns the array of generic IDs assigned to an action.
+	Used internally for mapping logical actions to generic inputs.
+	"""
+	return GenericInputManager.get_action_generic_ids(action_name)
+
+func get_assignment_events(action_name: String) -> Array:
+	"""
+	Returns the array of InputEvent objects assigned to an action.
+	Used by UI to display current bindings.
+	"""
+	return GenericInputManager.get_action_input_events(action_name)
+
 # ========================== Public API ==========================
 
 func get_all_actions() -> Array:
@@ -122,8 +186,27 @@ func get_action_label(action_name: String) -> String:
 	return ACTION_LABELS.get(action_name, action_name)
 
 func get_keybind(action_name: String) -> String:
-	"""Returns the current keyboard binding as a string (e.g., 'ctrl+x')"""
-	var events = InputMap.action_get_events(action_name)
+	"""Returns the current keyboard binding as a string (e.g., 'ctrl+x' or 'a+b+c')"""
+	# First check generic system
+	var events = GenericInputManager.get_action_input_events(action_name)
+	if events.size() > 0:
+		# Check if these are keyboard/mouse events
+		var is_keyboard = false
+		for event in events:
+			if event is InputEventKey or event is InputEventMouseButton:
+				is_keyboard = true
+				break
+
+		if is_keyboard:
+			# Convert events to string representation
+			var key_parts: Array = []
+			for event in events:
+				if event is InputEventKey or event is InputEventMouseButton:
+					key_parts.append(_event_to_string(event))
+			return "+".join(key_parts)
+
+	# Fallback to traditional InputMap
+	events = InputMap.action_get_events(action_name)
 	for event in events:
 		if event is InputEventKey or event is InputEventMouseButton:
 			return _event_to_string(event)
@@ -131,7 +214,29 @@ func get_keybind(action_name: String) -> String:
 
 func get_gamepad_bind(action_name: String) -> String:
 	"""Returns the current gamepad binding as a string (e.g., 'a+b' or 'left_stick_up')"""
-	var events = InputMap.action_get_events(action_name)
+	# First check generic system
+	var events = GenericInputManager.get_action_input_events(action_name)
+	if events.size() > 0:
+		# Check if these are gamepad events
+		var is_gamepad = false
+		for event in events:
+			if event is InputEventJoypadButton or event is InputEventJoypadMotion:
+				is_gamepad = true
+				break
+
+		if is_gamepad:
+			# Convert events to string representation
+			var joy_inputs: Array = []
+			for event in events:
+				if event is InputEventJoypadButton:
+					joy_inputs.append(_joy_button_to_string(event.button_index))
+				elif event is InputEventJoypadMotion:
+					joy_inputs.append(_joy_motion_to_string(event.axis, event.axis_value))
+			if joy_inputs.size() > 0:
+				return "+".join(joy_inputs)
+
+	# Fallback to traditional InputMap
+	events = InputMap.action_get_events(action_name)
 	var joy_inputs: Array = []
 	for event in events:
 		if event is InputEventJoypadButton:
@@ -144,31 +249,48 @@ func get_gamepad_bind(action_name: String) -> String:
 
 func set_keybind(action_name: String, binding: String) -> void:
 	"""Sets the keyboard/mouse binding for an action"""
-	# Remove existing keyboard/mouse events
+	# Remove any existing assignment from generic system
+	GenericInputManager.unassign_action(action_name)
+
+	# Remove existing keyboard/mouse events from traditional system
 	_remove_keyboard_mouse_events(action_name)
 
 	# Add new binding
 	if binding != "":
-		bind(action_name, binding)
+		# Parse binding string and create InputEvent array
+		var events = _parse_keyboard_binding(binding)
+		if events.size() > 0:
+			# Use generic system for assignments
+			if not GenericInputManager.assign_action(action_name, events):
+				push_error("Failed to assign keyboard binding for %s" % action_name)
 
 	binding_changed.emit(action_name, "keyboard")
 
 func set_gamepad_bind(action_name: String, binding: String) -> void:
 	"""Sets the gamepad binding for an action"""
-	# Remove existing gamepad events
+	# Remove any existing assignment from generic system
+	GenericInputManager.unassign_action(action_name)
+
+	# Remove existing gamepad events from traditional system
 	_remove_gamepad_events(action_name)
 
-	# Add new binding with joy_ prefix
+	# Add new binding
 	if binding != "":
+		# Ensure joy_ prefix
 		var joy_binding = binding
 		if not joy_binding.begins_with("joy_"):
-			# Convert button names to joy_ format
 			var parts = joy_binding.split("+")
 			var joy_parts: Array = []
 			for part in parts:
 				joy_parts.append("joy_" + part)
 			joy_binding = "+".join(joy_parts)
-		bind(action_name, joy_binding)
+
+		# Parse binding string and create InputEvent array
+		var events = _parse_gamepad_binding(joy_binding)
+		if events.size() > 0:
+			# Use generic system for assignments
+			if not GenericInputManager.assign_action(action_name, events):
+				push_error("Failed to assign gamepad binding for %s" % action_name)
 
 	binding_changed.emit(action_name, "gamepad")
 
@@ -211,17 +333,19 @@ func swap_bindings(action1: String, action2: String, binding_type: String) -> vo
 func reset_to_defaults() -> void:
 	"""Resets all bindings to default values"""
 	for action_name in get_all_actions():
+		# Clear generic assignments
+		GenericInputManager.unassign_action(action_name)
 		InputMap.action_erase_events(action_name)
 
 		# Restore default keybind
 		var default_key = DEFAULT_KEYBINDS.get(action_name, "")
 		if default_key != "":
-			bind(action_name, default_key)
+			set_keybind(action_name, default_key)
 
 		# Restore default gamepad
 		var default_joy = DEFAULT_GAMEPAD.get(action_name, "")
 		if default_joy != "":
-			bind(action_name, "joy_" + default_joy)
+			set_gamepad_bind(action_name, default_joy)
 
 	save_bindings()
 	bindings_reset.emit()
@@ -295,7 +419,7 @@ func load_bindings() -> void:
 		reset_to_defaults()
 		return
 
-	# Load keyboard bindings
+	# Load keyboard and gamepad bindings
 	for action_name in get_all_actions():
 		var keybind = config.get_value(
 			KEYBINDS_SECTION,
@@ -309,22 +433,16 @@ func load_bindings() -> void:
 			DEFAULT_GAMEPAD.get(action_name, "")
 		)
 
-		# Clear existing events
+		# Clear existing assignments
+		GenericInputManager.unassign_action(action_name)
 		InputMap.action_erase_events(action_name)
 
-		# Apply loaded bindings
+		# Apply loaded bindings using new system
 		if keybind != "":
-			bind(action_name, keybind)
+			set_keybind(action_name, keybind)
 
 		if gamepad_bind != "":
-			# Add joy_ prefix if not present
-			if not gamepad_bind.begins_with("joy_"):
-				var parts = gamepad_bind.split("+")
-				var joy_parts: Array = []
-				for part in parts:
-					joy_parts.append("joy_" + part)
-				gamepad_bind = "+".join(joy_parts)
-			bind(action_name, gamepad_bind)
+			set_gamepad_bind(action_name, gamepad_bind)
 
 # ========================== Helper Methods ==========================
 
@@ -392,6 +510,108 @@ func _joy_motion_to_string(axis: int, axis_value: float) -> String:
 					return joy_name
 	# Fallback to raw format
 	return "axis_" + str(axis) + "_" + str(axis_value)
+
+func _parse_keyboard_binding(binding: String) -> Array:
+	"""
+	Parses a keyboard binding string and returns an array of InputEvent objects.
+	Supports formats like: "a", "ctrl+x", "a+b+c", "mouse_left"
+	"""
+	var events: Array = []
+
+	# Split by + to get individual keys/buttons
+	var parts = binding.split("+")
+
+	for part in parts:
+		var event = null
+
+		# Handle mouse inputs
+		if part.begins_with("mouse_"):
+			event = InputEventMouseButton.new()
+			var mouse_button = MOUSE_MAP.get(part)
+			if mouse_button == null:
+				push_error("Unknown mouse button: ", part)
+				continue
+			event.button_index = mouse_button
+			events.append(event)
+
+		# Handle keyboard keys (check for modifiers in the part)
+		else:
+			# For multi-key combos like "a+b+c", each part is a separate key
+			# For modifier combos like "ctrl+x", we need special handling
+			# We'll treat ctrl, shift, alt as modifiers only if they're in specific positions
+
+			# Check if this is a modifier key
+			var is_modifier = part in ["ctrl", "shift", "alt"]
+
+			if is_modifier and parts.size() > 1:
+				# This is a modifier in a combo, skip it (handled below)
+				continue
+
+			# Create key event
+			event = InputEventKey.new()
+			var keycode = KEY_MAP.get(part)
+			if keycode == null:
+				push_error("Unknown key: ", part)
+				continue
+
+			event.physical_keycode = keycode
+
+			# Check if earlier parts were modifiers (for traditional ctrl+x style)
+			if parts.size() > 1:
+				var part_index = parts.find(part)
+				for i in range(part_index):
+					var mod = parts[i]
+					if mod == "ctrl":
+						event.ctrl_pressed = true
+					elif mod == "shift":
+						event.shift_pressed = true
+					elif mod == "alt":
+						event.alt_pressed = true
+
+			events.append(event)
+
+	return events
+
+func _parse_gamepad_binding(binding: String) -> Array:
+	"""
+	Parses a gamepad binding string and returns an array of InputEvent objects.
+	Supports formats like: "joy_a", "joy_a+joy_b", "joy_left_stick_up"
+	"""
+	var events: Array = []
+
+	# Split by + to get individual buttons
+	var joystick_buttons = binding.split("+")
+
+	for button_str in joystick_buttons:
+		# Remove "joy_" prefix
+		var button_name = button_str.replace("joy_", "")
+		var joy_button = JOY_MAP.get(button_name)
+
+		if joy_button == null:
+			push_error("Unknown gamepad button: ", button_name)
+			continue
+
+		var event = null
+
+		# Check if it's an analog motion (string) or button (int)
+		if joy_button is String:
+			# Parse analog motion format: "0:axis:value"
+			var parts = joy_button.split(":")
+			if parts.size() != 3:
+				push_error("Invalid analog motion format: ", joy_button)
+				continue
+
+			event = InputEventJoypadMotion.new()
+			event.axis = int(parts[1])
+			event.axis_value = float(parts[2])
+			events.append(event)
+		else:
+			# It's a button
+			event = InputEventJoypadButton.new()
+			event.button_index = joy_button
+			events.append(event)
+
+	return events
 
 func bind(action_name: String, binding: String) -> void:
 	"""

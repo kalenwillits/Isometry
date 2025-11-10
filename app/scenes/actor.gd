@@ -703,7 +703,7 @@ func use_actions() -> void:
 		var skill_index: int = i + 1  # 1-9 for tracking
 
 		# Handle skill start (button press)
-		if Input.is_action_just_pressed(action_name) and skill_ent.start:
+		if Keybinds.is_action_just_pressed(action_name) and skill_ent.start:
 			# Cancel previous charging skill if switching to a different one
 			if charging_skill_index != -1 and charging_skill_index != skill_index:
 				charge = 0.0
@@ -726,7 +726,7 @@ func use_actions() -> void:
 				emit_skill_signal(start_signal, resolve_target())
 
 		# Handle charging while button is held
-		if Input.is_action_pressed(action_name):
+		if Keybinds.is_action_pressed(action_name):
 			# Only charge if skill has a charge attribute > 0
 			if ("charge" in skill_ent) and skill_ent.charge > 0:
 				# Initialize charging if not already
@@ -747,7 +747,7 @@ func use_actions() -> void:
 					charging_indicator.set_charge_progress(charge, charging_skill_max_charge)
 
 		# Handle skill end (button release)
-		if Input.is_action_just_released(action_name):
+		if Keybinds.is_action_just_released(action_name):
 			# Clear charging state for this skill
 			if charging_skill_index == skill_index:
 				charging_skill_index = -1
@@ -808,7 +808,7 @@ func emit_skill_signal(skill_event: String, target_actor: Actor) -> void:
 
 func use_target() -> void:
 	# Handle cancel during area targeting mode
-	if is_area_targeting and Input.is_action_just_pressed("cancel"):
+	if is_area_targeting and Keybinds.is_action_just_pressed("cancel"):
 		cancel_area_targeting()
 		return
 
@@ -817,38 +817,38 @@ func use_target() -> void:
 		return
 
 	# Handle cancel action for clearing target (only in GAMEPLAY state)
-	if Input.is_action_just_pressed("cancel"):
+	if Keybinds.is_action_just_pressed("cancel"):
 		set_target("")
 		target_queue.clear()
 		return
 
-	if Input.is_action_just_pressed("increment_target"):
+	if Keybinds.is_action_just_pressed("increment_target"):
 		var next = find_next_target()
 		if next != target:  # Only set if different to avoid plate deletion bug
 			set_target(next)
-	if Input.is_action_just_pressed("decrement_target"):
+	if Keybinds.is_action_just_pressed("decrement_target"):
 		var prev = find_prev_target()
 		if prev != target:  # Only set if different to avoid plate deletion bug
 			set_target(prev)
-	if Input.is_action_just_pressed("clear_target"):
+	if Keybinds.is_action_just_pressed("clear_target"):
 		set_target("")
 		target_queue.clear()
-	if Input.is_action_just_pressed("increment_target_group"):
+	if Keybinds.is_action_just_pressed("increment_target_group"):
 		target_group_index = increment_target_group()
 		target_group_changed.emit(get_target_group())
-	if Input.is_action_just_pressed("decrement_target_group"):
+	if Keybinds.is_action_just_pressed("decrement_target_group"):
 		target_group_index = decrement_target_group()
 		target_group_changed.emit(get_target_group())
-	if Input.is_action_just_pressed("open_selection_menu"):
+	if Keybinds.is_action_just_pressed("open_selection_menu"):
 		if target and target != "":
 			Finder.select(Group.INTERFACE).open_selection_menu_for_actor(target)
 		else:
 			Logger.warn("No target selected, cannot open menu", self)
 
 	# Focus slot handling - top left
-	if Input.is_action_just_pressed("clear_focus_top_left"):
+	if Keybinds.is_action_just_pressed("clear_focus_top_left"):
 		clear_focus_slot("top_left")
-	elif Input.is_action_just_pressed("focus_top_left"):
+	elif Keybinds.is_action_just_pressed("focus_top_left"):
 		var stored = get_focus_slot("top_left")
 		if stored != "":
 			select_focus_from_slot("top_left")
@@ -856,9 +856,9 @@ func use_target() -> void:
 			store_focus_in_slot("top_left")
 
 	# Focus slot handling - top right
-	if Input.is_action_just_pressed("clear_focus_top_right"):
+	if Keybinds.is_action_just_pressed("clear_focus_top_right"):
 		clear_focus_slot("top_right")
-	elif Input.is_action_just_pressed("focus_top_right"):
+	elif Keybinds.is_action_just_pressed("focus_top_right"):
 		var stored = get_focus_slot("top_right")
 		if stored != "":
 			select_focus_from_slot("top_right")
@@ -866,9 +866,9 @@ func use_target() -> void:
 			store_focus_in_slot("top_right")
 
 	# Focus slot handling - bottom left
-	if Input.is_action_just_pressed("clear_focus_bot_left"):
+	if Keybinds.is_action_just_pressed("clear_focus_bot_left"):
 		clear_focus_slot("bot_left")
-	elif Input.is_action_just_pressed("focus_bot_left"):
+	elif Keybinds.is_action_just_pressed("focus_bot_left"):
 		var stored = get_focus_slot("bot_left")
 		if stored != "":
 			select_focus_from_slot("bot_left")
@@ -876,9 +876,9 @@ func use_target() -> void:
 			store_focus_in_slot("bot_left")
 
 	# Focus slot handling - bottom right
-	if Input.is_action_just_pressed("clear_focus_bot_right"):
+	if Keybinds.is_action_just_pressed("clear_focus_bot_right"):
 		clear_focus_slot("bot_right")
-	elif Input.is_action_just_pressed("focus_bot_right"):
+	elif Keybinds.is_action_just_pressed("focus_bot_right"):
 		var stored = get_focus_slot("bot_right")
 		if stored != "":
 			select_focus_from_slot("bot_right")
@@ -1069,7 +1069,7 @@ func click_to_move() -> void:
 	if get_node("/root/UIStateMachine").should_block_player_input():
 		return
 
-	if Input.is_action_pressed("interact"):
+	if Keybinds.is_action_pressed("interact"):
 		last_movement_mode = "pathing"
 		is_direct_movement_active = false  # Switch to pathfinding mode
 		current_input_strength = 0.0  # Reset input strength
