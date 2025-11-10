@@ -33,11 +33,11 @@ func _process(_deleta: float):
 		visible = !visible
 		if visible:
 			InputPrompt.grab_focus()
-	if Input.is_action_just_pressed(\"ui_up\"):
+	if Keybinds.is_action_just_pressed(\"ui_up\"):
 		if inputs.size() > 0:
 			inputs_index = clamp(inputs_index, 0, inputs.size() - 1)
 			InputPrompt.set_text(inputs[(inputs.size() - 1) - inputs_index])
-	if Input.is_action_just_pressed(\"ui_down\"):
+	if Keybinds.is_action_just_pressed(\"ui_down\"):
 		inputs_index = clamp(inputs_index - 1, 0, inputs.size() - 1)
 		if inputs_index > 0:
 			InputPrompt.set_text(inputs[(inputs.size() - 1) - inputs_index])
