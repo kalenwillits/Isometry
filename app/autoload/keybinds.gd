@@ -235,6 +235,13 @@ func reset_action_to_default(action_name: String, binding_type: String) -> void:
 		var default_joy = DEFAULT_GAMEPAD.get(action_name, "")
 		set_gamepad_bind(action_name, default_joy)
 
+func clear_binding(action_name: String, binding_type: String) -> void:
+	"""Clears a single action's binding (sets it to empty)"""
+	if binding_type == "keyboard":
+		set_keybind(action_name, "")
+	else:
+		set_gamepad_bind(action_name, "")
+
 func get_all_bindings() -> Dictionary:
 	"""
 	Returns a snapshot of all current bindings.

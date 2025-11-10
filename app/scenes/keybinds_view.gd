@@ -105,7 +105,7 @@ func _create_navigation_row() -> void:
 
 func _create_buttons_row() -> void:
 	# Find or create buttons container
-	var btn_node = vbox.get_node_or_null(NodePath("ButtonsContainer"))
+	var btn_node = vbox.get_node_or_null(NodePath("ButtonsContainer/HBox"))
 	if btn_node:
 		buttons_container = btn_node as HBoxContainer
 

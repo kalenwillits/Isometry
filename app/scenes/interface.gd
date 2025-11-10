@@ -124,12 +124,14 @@ func open_keybinds_view() -> void:
 
 func close_keybinds_view() -> void:
 	$KeybindsView.visible = false
+	UIStateMachine.transition_to(UIStateMachine.State.MENU_SYSTEM)
 
 func open_gamepad_view() -> void:
 	$GamepadView.visible = true
 
 func close_gamepad_view() -> void:
 	$GamepadView.visible = false
+	UIStateMachine.transition_to(UIStateMachine.State.MENU_SYSTEM)
 
 func open_map_view() -> void:
 	Logger.info("Interface: Opening map view", self)

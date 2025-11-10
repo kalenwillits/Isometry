@@ -15,11 +15,12 @@ var joy_combo_to_bind: Array = []  # Tracks the full combo even after buttons ar
 
 @onready var action_label: Label = $ActionLabel
 @onready var binding_button: Button = $BindingButton
-@onready var reset_button: Button = $ResetButton
+@onready var clear_button: Button = $ResetButton
 
 func _ready() -> void:
 	binding_button.pressed.connect(_on_binding_button_pressed)
-	reset_button.pressed.connect(_on_reset_button_pressed)
+	clear_button.pressed.connect(_on_clear_button_pressed)
+	clear_button.text = "Clear"
 
 	Keybinds.binding_changed.connect(_on_binding_changed)
 	Keybinds.bindings_reset.connect(_on_bindings_reset)
@@ -42,7 +43,7 @@ func _update_display() -> void:
 		current_binding = Keybinds.get_gamepad_bind(action_name)
 
 	if current_binding == "":
-		binding_button.text = "Not Bound"
+		binding_button.text = "---"
 	else:
 		binding_button.text = _format_binding_display(current_binding)
 
@@ -267,9 +268,9 @@ func _show_conflict_dialog(conflict_action: String, binding_str: String) -> void
 	get_tree().root.add_child(dialog)
 	dialog.popup_centered()
 
-func _on_reset_button_pressed() -> void:
-	"""Called when user clicks reset button"""
-	Keybinds.reset_action_to_default(action_name, binding_type)
+func _on_clear_button_pressed() -> void:
+	"""Called when user clicks clear button"""
+	Keybinds.clear_binding(action_name, binding_type)
 	_update_display()
 
 func _on_binding_changed(changed_action: String, changed_type: String) -> void:
