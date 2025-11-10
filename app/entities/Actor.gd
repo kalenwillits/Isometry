@@ -23,6 +23,7 @@ var triggers: KeyRefArray # Trigger
 var timers: KeyRefArray # Timer
 var strategy: KeyRef # Strategy
 var speed: float
+var bearing: int = 0
 
 func _ready() -> void:
 	tag(Group.ACTOR_ENTITY)

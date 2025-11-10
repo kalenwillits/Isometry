@@ -24,6 +24,10 @@ const MOVE_UP: String = "move_up"
 const MOVE_DOWN: String = "move_down"
 const MOVE_LEFT: String = "move_left"
 const MOVE_RIGHT: String = "move_right"
+const BEARING_UP: String = "bearing_up"
+const BEARING_DOWN: String = "bearing_down"
+const BEARING_LEFT: String = "bearing_left"
+const BEARING_RIGHT: String = "bearing_right"
 
 # Config file settings
 var CONFIG_FILE_PATH: String = io.get_dir() + "options.cfg"
@@ -50,7 +54,11 @@ const DEFAULT_KEYBINDS: Dictionary = {
 	MOVE_UP: "up_arrow",
 	MOVE_DOWN: "down_arrow",
 	MOVE_LEFT: "left_arrow",
-	MOVE_RIGHT: "right_arrow"
+	MOVE_RIGHT: "right_arrow",
+	BEARING_UP: "w",
+	BEARING_DOWN: "s",
+	BEARING_LEFT: "a",
+	BEARING_RIGHT: "d"
 }
 
 # Default gamepad bindings
@@ -73,7 +81,11 @@ const DEFAULT_GAMEPAD: Dictionary = {
 	MOVE_UP: "left_stick_up",
 	MOVE_DOWN: "left_stick_down",
 	MOVE_LEFT: "left_stick_left",
-	MOVE_RIGHT: "left_stick_right"
+	MOVE_RIGHT: "left_stick_right",
+	BEARING_UP: "right_stick_up",
+	BEARING_DOWN: "right_stick_down",
+	BEARING_LEFT: "right_stick_left",
+	BEARING_RIGHT: "right_stick_right"
 }
 
 # Display names for actions
@@ -96,7 +108,11 @@ const ACTION_LABELS: Dictionary = {
 	MOVE_UP: "Move Up",
 	MOVE_DOWN: "Move Down",
 	MOVE_LEFT: "Move Left",
-	MOVE_RIGHT: "Move Right"
+	MOVE_RIGHT: "Move Right",
+	BEARING_UP: "Bearing Up",
+	BEARING_DOWN: "Bearing Down",
+	BEARING_LEFT: "Bearing Left",
+	BEARING_RIGHT: "Bearing Right"
 }
 
 func _init_actions() -> void:

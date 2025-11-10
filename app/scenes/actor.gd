@@ -100,6 +100,10 @@ var area_targeting_start_pos: Vector2 = Vector2.ZERO
 var area_targeting_was_pathing: bool = false  # Track if pathing was active when entering targeting
 var area_targeting_direct_control: bool = false  # Track if direct control is active during targeting
 var area_targeting_highlighted_actors: Array = []  # Track actors highlighted by area targeting
+# Bearing system - independent direction control
+var bearing: int = 0  # Bearing in degrees (0-360)
+var is_bearing_mode_active: bool = false  # Whether bearing input is currently active
+var bearing_vector: Vector2 = Vector2.ZERO  # Cached bearing direction vector
 var measures: Dictionary = {
 	"charge": _built_in_measure__charge,
 	"distance_to_target": _built_in_measure__distance_to_target,
@@ -530,7 +534,9 @@ func _physics_process(delta) -> void:
 	use_state()
 	use_animation()
 	use_strategy()
-	use_move_view(delta)
+	if is_primary():
+		use_bearing_input(delta)  # Process bearing input first
+	use_move_view(delta)  # Camera look-ahead (uses bearing if active)
 	if is_primary():
 		use_move_discovery()
 		if is_area_targeting:
@@ -626,11 +632,17 @@ func use_move_discovery() -> void:
 func use_move_view(delta: float) -> void:
 	var view_shape: CollisionShape2D = $ViewBox.get_node_or_null("ViewShape")
 
-	# Calculate direction based on movement mode
+	# Calculate direction based on bearing mode or movement mode
 	var direction: Vector2 = Vector2.ZERO
 	var use_isometric_angle: float = 0.0
 
-	if is_direct_movement_active and velocity.length() > 0:
+	# Priority 1: If bearing mode is active, use bearing for camera look-ahead
+	if is_bearing_mode_active and bearing_vector.length() > 0:
+		# Use bearing vector for camera direction
+		# Store as backwards direction so negation works consistently with movement
+		direction = -bearing_vector.normalized()
+		use_isometric_angle = bearing_vector.angle()
+	elif is_direct_movement_active and velocity.length() > 0:
 		# Use actual velocity direction for direct movement
 		# Store as backwards direction (like pathfinding does) so negation works consistently
 		direction = -velocity.normalized()
@@ -1411,6 +1423,12 @@ func get_salience() -> int:
 func set_token(value: PackedByteArray) -> void:
 	token = value
 
+func set_bearing(value: int) -> void:
+	bearing = clampi(value, 0, 360)
+
+func get_bearing() -> int:
+	return bearing
+
 func root(time: float) -> void:
 	for dict in $ActionTimer.timeout.get_connections():
 		$ActionTimer.timeout.disconnect(dict.callable)
@@ -1792,6 +1810,56 @@ func use_move_directly(delta) -> void:
 			set_destination(position)
 			velocity = Vector2.ZERO
 
+func use_bearing_input(delta: float) -> void:
+	# Block input if UI state machine says player input should be blocked
+	if UIStateMachine.should_block_player_input():
+		is_bearing_mode_active = false
+		bearing_vector = Vector2.ZERO
+		return
+
+	# Get bearing input vector - this handles both keyboard (WASD) and controller (right stick)
+	var bearing_input = Keybinds.get_vector(Keybinds.BEARING_LEFT, Keybinds.BEARING_RIGHT, Keybinds.BEARING_UP, Keybinds.BEARING_DOWN)
+
+	# Check if bearing input is active
+	if bearing_input.length() > 0.01:  # Small deadzone for analog sticks
+		is_bearing_mode_active = true
+
+		# Normalize the input direction
+		var direction = bearing_input.normalized()
+
+		# Convert to angle in radians (0 is right, PI/2 is up in Godot's coordinate system)
+		# We need to adjust for isometric view
+		var raw_angle = direction.angle()
+
+		# Apply isometric factor to the direction vector for correct 2.5D bearing
+		# The isometric_factor affects vertical movement more than horizontal
+		var isometric_adjustment = std.isometric_factor(raw_angle)
+
+		# Create the bearing vector with isometric adjustment
+		# This ensures bearing direction matches visual isometric space
+		bearing_vector = direction
+		bearing_vector.y *= isometric_adjustment
+		bearing_vector = bearing_vector.normalized()
+
+		# Convert bearing vector back to angle for degree calculation
+		var adjusted_angle = bearing_vector.angle()
+
+		# Convert from radians to degrees (0-360)
+		# In Godot: 0 rad = East, PI/2 = North, PI = West, 3PI/2 = South
+		# We'll map this to degrees: 0° = East, 90° = North, 180° = West, 270° = South
+		var degrees = rad_to_deg(adjusted_angle)
+
+		# Normalize to 0-360 range
+		if degrees < 0:
+			degrees += 360
+
+		# Set the bearing using the setter (which clamps 0-360)
+		set_bearing(int(degrees))
+	else:
+		# No bearing input - deactivate bearing mode
+		is_bearing_mode_active = false
+		bearing_vector = Vector2.ZERO
+
 func use_visible_pathing() -> void:
 	# Only enable debug visualization when using pathfinding (not direct movement)
 	var should_show_debug = not is_direct_movement_active
@@ -2048,8 +2116,8 @@ func update_area_targeting(delta: float) -> void:
 		cancel_area_targeting()
 		return
 
-	# Get directional input
-	var motion = Keybinds.get_vector("move_left", "move_right", "move_up", "move_down")
+	# Get directional input - use MOVE inputs for overlay control
+	var motion = Keybinds.get_vector(Keybinds.MOVE_LEFT, Keybinds.MOVE_RIGHT, Keybinds.MOVE_UP, Keybinds.MOVE_DOWN)
 
 	# Update caster position in overlay for line drawing
 	area_targeting_overlay.caster_position = area_targeting_start_pos
