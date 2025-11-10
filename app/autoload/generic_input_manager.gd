@@ -25,6 +25,9 @@ var available_ids: Array = []
 # Whether the system has been initialized
 var initialized: bool = false
 
+# State machine for action button inputs (handles priority)
+var state_machine: InputStateMachine = null
+
 
 func _ready() -> void:
 	initialize()
@@ -46,6 +49,9 @@ func initialize() -> void:
 
 		# Add to available pool
 		available_ids.append(generic_id)
+
+	# Initialize state machine
+	state_machine = InputStateMachine.builder().build()
 
 	initialized = true
 	print("GenericInputManager: Initialization complete. %d IDs available." % available_ids.size())
@@ -119,6 +125,16 @@ func assign_action(action_name: String, input_events: Array) -> bool:
 	# Store the action -> generic IDs mapping
 	action_to_generics[action_name] = generic_ids
 
+	# Register with state machine for priority handling
+	var button_keys = []
+	for input_event in input_events:
+		var button_key = _event_to_button_key(input_event)
+		if button_key != "":
+			button_keys.append(button_key)
+
+	if button_keys.size() > 0:
+		state_machine.register_binding(button_keys, action_name)
+
 	return true
 
 
@@ -160,6 +176,16 @@ func get_action_input_events(action_name: String) -> Array:
 	return events
 
 
+func get_generic_id_event(generic_id: String) -> InputEvent:
+	"""
+	Returns the InputEvent associated with a specific generic ID.
+	Returns null if the generic ID is not assigned.
+	"""
+	if generic_id in generic_to_input:
+		return generic_to_input[generic_id]
+	return null
+
+
 func is_action_pressed(action_name: String) -> bool:
 	"""
 	Checks if all inputs for an action are currently pressed (held).
@@ -176,29 +202,33 @@ func is_action_pressed(action_name: String) -> bool:
 	return true
 
 
-func is_action_just_pressed(action_name: String) -> bool:
+func is_action_just_pressed(action_name: String, check_priority: bool = true) -> bool:
 	"""
 	Checks if an action was just triggered this frame.
-	For single inputs, checks if it was just pressed.
-	For composite inputs (A+B+C):
-	  - All buttons except the last must be pressed (held)
-	  - The last button must be just_pressed this frame
+	Uses state machine for priority-aware checking.
+
+	With priority checking (default), longer combos prevent shorter ones from triggering.
+	Set check_priority=false to bypass priority logic.
 	"""
 	var generic_ids = get_action_generic_ids(action_name)
 	if generic_ids.is_empty():
 		return false
 
-	if generic_ids.size() == 1:
-		# Single input: just check if it was just pressed
-		return Input.is_action_just_pressed(generic_ids[0])
-	else:
-		# Composite input: all but last must be held, last must be just_pressed
-		for i in range(generic_ids.size() - 1):
-			if not Input.is_action_pressed(generic_ids[i]):
-				return false
+	# If priority checking is disabled, use raw check
+	if not check_priority:
+		return _check_action_just_pressed_raw(action_name)
 
-		# Check if the last button was just pressed
-		return Input.is_action_just_pressed(generic_ids[-1])
+	# Use state machine for priority checking
+	# Collect button events for this frame
+	var button_events = _collect_button_events_from_generic_ids()
+
+	# Update state machine
+	state_machine.update(button_events)
+
+	# Check if this action was triggered
+	var triggered = state_machine.get_triggered_action()
+
+	return triggered == action_name
 
 
 func is_action_just_released(action_name: String) -> bool:
@@ -243,3 +273,128 @@ func clear_all_assignments() -> void:
 	"""
 	for action_name in action_to_generics.keys():
 		unassign_action(action_name)
+
+
+# ========================== Priority System ==========================
+
+
+func _get_all_just_pressed_actions() -> Array:
+	"""
+	Returns a list of all actions that would be just_pressed this frame.
+	Used for priority checking.
+	"""
+	var active_actions = []
+
+	for action_name in action_to_generics.keys():
+		if _check_action_just_pressed_raw(action_name):
+			active_actions.append(action_name)
+
+	return active_actions
+
+
+func _check_action_just_pressed_raw(action_name: String) -> bool:
+	"""
+	Checks if an action is just_pressed WITHOUT priority logic.
+	"""
+	var generic_ids = get_action_generic_ids(action_name)
+	if generic_ids.is_empty():
+		return false
+
+	if generic_ids.size() == 1:
+		return Input.is_action_just_pressed(generic_ids[0])
+	else:
+		# Composite: all but last held, last just_pressed
+		for i in range(generic_ids.size() - 1):
+			if not Input.is_action_pressed(generic_ids[i]):
+				return false
+		return Input.is_action_just_pressed(generic_ids[-1])
+
+
+func _get_consumed_ids_for_priority() -> Array:
+	"""
+	Determines which generic IDs are consumed by higher-priority (longer) combos.
+	Returns an array of generic ID strings that should not trigger shorter actions.
+	"""
+	var active_actions = _get_all_just_pressed_actions()
+
+	# Sort by combo length (longest first)
+	active_actions.sort_custom(func(a, b):
+		return get_action_generic_ids(a).size() > get_action_generic_ids(b).size()
+	)
+
+	var consumed_ids = []
+
+	# Mark IDs as consumed in order of priority
+	for action in active_actions:
+		var ids = get_action_generic_ids(action)
+
+		# Check if any of this action's IDs are already consumed
+		var is_consumed = false
+		for id in ids:
+			if id in consumed_ids:
+				is_consumed = true
+				break
+
+		if not is_consumed:
+			# This action wins, consume its IDs
+			consumed_ids.append_array(ids)
+
+	return consumed_ids
+
+
+# ========================== State Machine Helpers ==========================
+
+
+func _event_to_button_key(event: InputEvent) -> String:
+	"""
+	Converts an InputEvent to a unique button key string.
+	Used by the state machine to identify physical inputs.
+	"""
+	if event is InputEventJoypadButton:
+		return "joy_btn_%d" % event.button_index
+	elif event is InputEventJoypadMotion:
+		return "joy_axis_%d_%d" % [event.axis, sign(event.axis_value)]
+	elif event is InputEventKey:
+		return "key_%d" % event.physical_keycode
+	elif event is InputEventMouseButton:
+		return "mouse_%d" % event.button_index
+	return ""
+
+
+func _collect_button_events_from_generic_ids() -> Array:
+	"""
+	Collects button events by checking all registered generic IDs.
+	Returns an array of ButtonEvent objects.
+	"""
+	var events = []
+	var seen_button_keys = []
+
+	# Iterate through all generic IDs to find which buttons are active
+	for generic_id in generic_to_input.keys():
+		var input_event = generic_to_input[generic_id]
+		var button_key = _event_to_button_key(input_event)
+
+		if button_key == "" or button_key in seen_button_keys:
+			continue
+
+		seen_button_keys.append(button_key)
+
+		# Determine the state of this button
+		var state = ButtonEvent.State.HELD
+
+		if Input.is_action_just_pressed(generic_id):
+			state = ButtonEvent.State.JUST_PRESSED
+		elif Input.is_action_just_released(generic_id):
+			state = ButtonEvent.State.RELEASED
+		elif Input.is_action_pressed(generic_id):
+			state = ButtonEvent.State.HELD
+		else:
+			# Not pressed, skip
+			continue
+
+		events.append(ButtonEvent.builder()
+			.button_key(button_key)
+			.state(state)
+			.build())
+
+	return events

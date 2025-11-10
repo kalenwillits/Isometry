@@ -172,6 +172,91 @@ func get_assignment_events(action_name: String) -> Array:
 	"""
 	return GenericInputManager.get_action_input_events(action_name)
 
+func get_vector(negative_x: String, positive_x: String, negative_y: String, positive_y: String, deadzone: float = 0.5) -> Vector2:
+	"""
+	Gets a 2D vector from four actions (like Input.get_vector but works with generic system).
+	Supports both analog axis inputs and digital button inputs.
+
+	Args:
+		negative_x: Action for left movement
+		positive_x: Action for right movement
+		negative_y: Action for up movement
+		positive_y: Action for down movement
+		deadzone: Minimum value to register (default 0.5)
+
+	Returns:
+		Normalized Vector2 representing the input direction
+	"""
+	var x_axis = 0.0
+	var y_axis = 0.0
+
+	# Check positive_x (right)
+	var right_ids = GenericInputManager.get_action_generic_ids(positive_x)
+	for generic_id in right_ids:
+		var value = _get_generic_input_value(generic_id, deadzone)
+		x_axis += value
+
+	# Check negative_x (left)
+	var left_ids = GenericInputManager.get_action_generic_ids(negative_x)
+	for generic_id in left_ids:
+		var value = _get_generic_input_value(generic_id, deadzone)
+		x_axis -= value
+
+	# Check negative_y (up)
+	var up_ids = GenericInputManager.get_action_generic_ids(negative_y)
+	for generic_id in up_ids:
+		var value = _get_generic_input_value(generic_id, deadzone)
+		y_axis -= value
+
+	# Check positive_y (down)
+	var down_ids = GenericInputManager.get_action_generic_ids(positive_y)
+	for generic_id in down_ids:
+		var value = _get_generic_input_value(generic_id, deadzone)
+		y_axis += value
+
+	# Create vector and clamp/normalize
+	var result = Vector2(x_axis, y_axis)
+	if result.length() > 1.0:
+		result = result.normalized()
+
+	return result
+
+func _get_generic_input_value(generic_id: String, deadzone: float) -> float:
+	"""
+	Gets the input value (0.0 to 1.0) for a generic ID.
+	Handles both analog axis and digital button inputs.
+	"""
+	var event = GenericInputManager.get_generic_id_event(generic_id)
+	if event == null:
+		return 0.0
+
+	if event is InputEventJoypadMotion:
+		# Read the actual axis value from the controller
+		var axis_value = Input.get_joy_axis(0, event.axis)
+
+		# Check if this is the positive or negative direction
+		var expected_direction = sign(event.axis_value)
+
+		# Only return value if moving in the expected direction and above deadzone
+		if sign(axis_value) == expected_direction or (expected_direction == 0 and axis_value != 0):
+			var abs_value = abs(axis_value)
+			if abs_value >= deadzone:
+				# Remap from [deadzone, 1.0] to [0.0, 1.0]
+				return (abs_value - deadzone) / (1.0 - deadzone)
+
+		return 0.0
+
+	elif event is InputEventJoypadButton:
+		return 1.0 if Input.is_joy_button_pressed(0, event.button_index) else 0.0
+
+	elif event is InputEventKey:
+		return 1.0 if Input.is_key_pressed(event.physical_keycode) else 0.0
+
+	elif event is InputEventMouseButton:
+		return 1.0 if Input.is_mouse_button_pressed(event.button_index) else 0.0
+
+	return 0.0
+
 # ========================== Public API ==========================
 
 func get_all_actions() -> Array:

@@ -1737,7 +1737,7 @@ func use_move_directly(delta) -> void:
 		return
 
 	# Get input vector - this handles both keyboard and controller
-	var motion = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var motion = Keybinds.get_vector(Keybinds.MOVE_LEFT, Keybinds.MOVE_RIGHT, Keybinds.MOVE_UP, Keybinds.MOVE_DOWN)
 
 	# Calculate input strength (0.0 to 1.0)
 	# For keyboard: motion will be normalized (length = 1.0)
