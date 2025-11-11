@@ -211,3 +211,31 @@ func format_number(value: int) -> String:
 		return str(value / 1000000000000000) + "P"
 	else:
 		return str(value / 1000000000000000000) + "E"
+		
+func calculate_bearing(to: Vector2, from: Vector2) -> int:
+	# Calculate direction from 'from' to 'to'
+	var direction = from.direction_to(to)
+
+	# Get raw angle in radians
+	var raw_angle = direction.angle()
+
+	# Apply isometric adjustment
+	var isometric_adjustment = isometric_factor(raw_angle)
+
+	# Adjust bearing vector for isometric space
+	var bearing_vector = direction
+	bearing_vector.y *= isometric_adjustment
+	bearing_vector = bearing_vector.normalized()
+
+	# Convert adjusted vector back to angle
+	var adjusted_angle = bearing_vector.angle()
+
+	# Convert radians to degrees
+	var degrees = rad_to_deg(adjusted_angle)
+
+	# Normalize to 0-360 range
+	if degrees < 0:
+		degrees += 360
+
+	return int(degrees)
+	

@@ -1752,7 +1752,14 @@ func use_pathing(delta: float) -> void:
 				look_at_point(next_position)
 
 func look_at_target() -> void:
-	Optional.of_nullable(Finder.get_actor(target)).if_present(func(target_actor): look_at_point(target_actor.position))
+	Optional.of_nullable(Finder.get_actor(target))\
+	.if_present(
+		func(target_actor): 
+		var relative_bearing: int = std.calculate_bearing(target_actor.position, self.position)
+		set_bearing(relative_bearing)
+		is_manual_bearing_locked = false
+		look_at_point(target_actor.position)
+		)
 
 func look_at_point(point: Vector2) -> void:
 	set_heading(map_radial(point.angle_to_point(position)))
@@ -1841,37 +1848,21 @@ func use_bearing_input(delta: float) -> void:
 		is_bearing_mode_active = true
 		is_manual_bearing_locked = true  # Lock bearing to manual control
 
-		# Normalize the input direction
+		# Normalize the input direction and calculate bearing
 		var direction = bearing_input.normalized()
+		var target_position = position + direction
 
-		# Convert to angle in radians (0 is right, PI/2 is up in Godot's coordinate system)
-		# We need to adjust for isometric view
+		# Use centralized bearing calculation
 		var raw_angle = direction.angle()
-
-		# Apply isometric factor to the direction vector for correct 2.5D bearing
-		# The isometric_factor affects vertical movement more than horizontal
 		var isometric_adjustment = std.isometric_factor(raw_angle)
 
-		# Create the bearing vector with isometric adjustment
-		# This ensures bearing direction matches visual isometric space
+		# Cache the bearing vector with isometric adjustment for movement
 		bearing_vector = direction
 		bearing_vector.y *= isometric_adjustment
 		bearing_vector = bearing_vector.normalized()
 
-		# Convert bearing vector back to angle for degree calculation
-		var adjusted_angle = bearing_vector.angle()
-
-		# Convert from radians to degrees (0-360)
-		# In Godot: 0 rad = East, PI/2 = North, PI = West, 3PI/2 = South
-		# We'll map this to degrees: 0° = East, 90° = North, 180° = West, 270° = South
-		var degrees = rad_to_deg(adjusted_angle)
-
-		# Normalize to 0-360 range
-		if degrees < 0:
-			degrees += 360
-
-		# Set the bearing using the setter (which clamps 0-360)
-		set_bearing(int(degrees))
+		# Calculate and set the bearing
+		set_bearing(std.calculate_bearing(target_position, position))
 	else:
 		# No bearing input - deactivate input mode but keep lock and bearing_vector
 		is_bearing_mode_active = false
@@ -1907,30 +1898,17 @@ func use_mouse_bearing_for_pathing() -> void:
 	# Calculate direction from actor to mouse cursor
 	var direction = position.direction_to(mouse_pos)
 
-	# Get raw angle
+	# Get raw angle and apply isometric adjustment for bearing_vector
 	var raw_angle = direction.angle()
-
-	# Apply isometric factor to match the visual perspective
 	var isometric_adjustment = std.isometric_factor(raw_angle)
 
-	# Create the bearing vector with isometric adjustment
-	# This ensures bearing direction matches visual isometric space
+	# Cache the bearing vector with isometric adjustment for movement
 	bearing_vector = direction
 	bearing_vector.y *= isometric_adjustment
 	bearing_vector = bearing_vector.normalized()
 
-	# Convert bearing vector back to angle for degree calculation
-	var adjusted_angle = bearing_vector.angle()
-
-	# Convert from radians to degrees (0-360)
-	var degrees = rad_to_deg(adjusted_angle)
-
-	# Normalize to 0-360 range
-	if degrees < 0:
-		degrees += 360
-
-	# Set the bearing using the setter (which clamps 0-360)
-	set_bearing(int(degrees))
+	# Use centralized bearing calculation
+	set_bearing(std.calculate_bearing(mouse_pos, position))
 
 func use_visible_pathing() -> void:
 	# Only enable debug visualization when using pathfinding (not direct movement)
