@@ -74,7 +74,7 @@ func _physics_process(delta: float) -> void:
 func handle_recenter(delta: float) -> void:
 	if Keybinds.is_action_pressed("camera_recenter"):
 		use_target(delta)
-		
+
 func handle_panning_by_bearing(delta: float) -> void:
 	if is_locked(): return
 	var motion: Vector2 = Keybinds.get_vector(
