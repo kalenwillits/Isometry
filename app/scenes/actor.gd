@@ -103,6 +103,7 @@ var area_targeting_highlighted_actors: Array = []  # Track actors highlighted by
 # Bearing system - independent direction control
 var bearing: int = 0  # Bearing in degrees (0-360)
 var is_bearing_mode_active: bool = false  # Whether bearing input is currently active
+var is_manual_bearing_locked: bool = false  # Locks bearing to manual control (persists after input stops)
 var bearing_vector: Vector2 = Vector2.ZERO  # Cached bearing direction vector
 var measures: Dictionary = {
 	"charge": _built_in_measure__charge,
@@ -535,7 +536,8 @@ func _physics_process(delta) -> void:
 	use_animation()
 	use_strategy()
 	if is_primary():
-		use_bearing_input(delta)  # Process bearing input first
+		use_bearing_input(delta)  # Process manual bearing input first
+		use_mouse_bearing_for_pathing()  # Auto-lock bearing to mouse during pathing
 	use_move_view(delta)  # Camera look-ahead (uses bearing if active)
 	if is_primary():
 		use_move_discovery()
@@ -1084,6 +1086,7 @@ func click_to_move() -> void:
 	if Keybinds.is_action_pressed("interact"):
 		last_movement_mode = "pathing"
 		is_direct_movement_active = false  # Switch to pathfinding mode
+		is_manual_bearing_locked = false  # Unlock manual bearing when switching to mouse pathing
 		current_input_strength = 0.0  # Reset input strength
 		var mouse_pos = get_global_mouse_position()
 		if is_primary():
@@ -1767,6 +1770,7 @@ func use_move_directly(delta) -> void:
 		last_movement_mode = "direct"
 		if not is_direct_movement_active:
 			is_direct_movement_active = true
+			is_manual_bearing_locked = false  # Unlock manual bearing when switching to direct movement
 
 		# Normalize direction
 		var direction = motion.normalized()
@@ -1823,6 +1827,7 @@ func use_bearing_input(delta: float) -> void:
 	# Check if bearing input is active
 	if bearing_input.length() > 0.01:  # Small deadzone for analog sticks
 		is_bearing_mode_active = true
+		is_manual_bearing_locked = true  # Lock bearing to manual control
 
 		# Normalize the input direction
 		var direction = bearing_input.normalized()
@@ -1856,9 +1861,64 @@ func use_bearing_input(delta: float) -> void:
 		# Set the bearing using the setter (which clamps 0-360)
 		set_bearing(int(degrees))
 	else:
-		# No bearing input - deactivate bearing mode
+		# No bearing input - deactivate input mode but keep lock and bearing_vector
 		is_bearing_mode_active = false
-		bearing_vector = Vector2.ZERO
+		# Don't clear bearing_vector - keep the last manual bearing direction
+		# Don't clear is_manual_bearing_locked - keep manual control until mode switch
+
+func use_mouse_bearing_for_pathing() -> void:
+	# Automatically lock bearing to mouse cursor position when using pathing
+	# This activates when:
+	# 1. NOT in direct movement mode (keyboard/joystick movement)
+	# 2. NOT manually controlling bearing with input
+	# Also syncs heading when actor is idle and stationary
+
+	# Skip if using direct movement (keyboard/joystick)
+	if is_direct_movement_active:
+		return
+
+	# Skip if manually controlling bearing (manual input takes priority)
+	if is_bearing_mode_active:
+		return
+
+	# Skip if manual bearing is locked (persists after input stops)
+	if is_manual_bearing_locked:
+		return
+
+	# Skip if UI is blocking input
+	if UIStateMachine.should_block_player_input():
+		return
+
+	# Get mouse position in world coordinates
+	var mouse_pos = get_global_mouse_position()
+
+	# Calculate direction from actor to mouse cursor
+	var direction = position.direction_to(mouse_pos)
+
+	# Get raw angle
+	var raw_angle = direction.angle()
+
+	# Apply isometric factor to match the visual perspective
+	var isometric_adjustment = std.isometric_factor(raw_angle)
+
+	# Create the bearing vector with isometric adjustment
+	# This ensures bearing direction matches visual isometric space
+	bearing_vector = direction
+	bearing_vector.y *= isometric_adjustment
+	bearing_vector = bearing_vector.normalized()
+
+	# Convert bearing vector back to angle for degree calculation
+	var adjusted_angle = bearing_vector.angle()
+
+	# Convert from radians to degrees (0-360)
+	var degrees = rad_to_deg(adjusted_angle)
+
+	# Normalize to 0-360 range
+	if degrees < 0:
+		degrees += 360
+
+	# Set the bearing using the setter (which clamps 0-360)
+	set_bearing(int(degrees))
 
 func use_visible_pathing() -> void:
 	# Only enable debug visualization when using pathfinding (not direct movement)
