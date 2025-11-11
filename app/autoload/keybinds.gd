@@ -5,7 +5,7 @@ signal binding_changed(action_name: String, binding_type: String)
 signal bindings_reset()
 
 # Action name constants
-const INTERACT: String = "interact"
+const INTERACT: String = "set_destination"
 const ACTION_1: String = "action_1"
 const ACTION_2: String = "action_2"
 const ACTION_3: String = "action_3"
@@ -36,6 +36,13 @@ const FOCUS_TOP_LEFT: String = "focus_top_left"
 const FOCUS_TOP_RIGHT: String = "focus_top_right"
 const FOCUS_BOT_LEFT: String = "focus_bot_left"
 const FOCUS_BOT_RIGHT: String = "focus_bot_right"
+const CLEAR_FOCUS_TOP_LEFT: String = "clear_focus_top_left"
+const CLEAR_FOCUS_TOP_RIGHT: String = "clear_focus_top_right"
+const CLEAR_FOCUS_BOT_LEFT: String = "clear_focus_bot_left"
+const CLEAR_FOCUS_BOT_RIGHT: String = "clear_focus_bot_right"
+const OPEN_SELECTION_MENU: String = "open_selection_menu"
+const TOGGLE_MAP_VIEW: String = "toggle_map_view"
+const TOGGLE_RESOURCES_VIEW: String = "toggle_resources_view"
 
 # Config file settings
 var CONFIG_FILE_PATH: String = io.get_dir() + "options.cfg"
@@ -74,7 +81,14 @@ const DEFAULT_KEYBINDS: Dictionary = {
 	FOCUS_TOP_LEFT: "f1",
 	FOCUS_TOP_RIGHT: "f2",
 	FOCUS_BOT_LEFT: "f3",
-	FOCUS_BOT_RIGHT: "f4"
+	FOCUS_BOT_RIGHT: "f4",
+	CLEAR_FOCUS_TOP_LEFT: "shift+f1",
+	CLEAR_FOCUS_TOP_RIGHT: "shift+f2",
+	CLEAR_FOCUS_BOT_LEFT: "shift+f3",
+	CLEAR_FOCUS_BOT_RIGHT: "shift+f4",
+	OPEN_SELECTION_MENU: "grave",
+	TOGGLE_MAP_VIEW: "",
+	TOGGLE_RESOURCES_VIEW: ""
 }
 
 # Default gamepad bindings
@@ -109,12 +123,19 @@ const DEFAULT_GAMEPAD: Dictionary = {
 	FOCUS_TOP_LEFT: "dpad_up+left_shoulder",
 	FOCUS_TOP_RIGHT: "dpad_up+right_shoulder",
 	FOCUS_BOT_LEFT: "dpad_down+left_shoulder",
-	FOCUS_BOT_RIGHT: "dpad_down+right_shoulder"
+	FOCUS_BOT_RIGHT: "dpad_down+right_shoulder",
+	CLEAR_FOCUS_TOP_LEFT: "dpad_up+dpad_left+left_shoulder",
+	CLEAR_FOCUS_TOP_RIGHT: "dpad_up+dpad_right+right_shoulder",
+	CLEAR_FOCUS_BOT_LEFT: "dpad_down+dpad_left+left_shoulder",
+	CLEAR_FOCUS_BOT_RIGHT: "dpad_down+dpad_right+right_shoulder",
+	OPEN_SELECTION_MENU: "",
+	TOGGLE_MAP_VIEW: "",
+	TOGGLE_RESOURCES_VIEW: ""
 }
 
 # Display names for actions
 const ACTION_LABELS: Dictionary = {
-	INTERACT: "Interact",
+	INTERACT: "Set Destination",
 	ACTION_1: "Action Slot 1",
 	ACTION_2: "Action Slot 2",
 	ACTION_3: "Action Slot 3",
@@ -144,7 +165,14 @@ const ACTION_LABELS: Dictionary = {
 	FOCUS_TOP_LEFT: "Focus North West",
 	FOCUS_TOP_RIGHT: "Focus North East",
 	FOCUS_BOT_LEFT: "Focus South West",
-	FOCUS_BOT_RIGHT: "Focus South East"
+	FOCUS_BOT_RIGHT: "Focus South East",
+	CLEAR_FOCUS_TOP_LEFT: "Clear Focus North West",
+	CLEAR_FOCUS_TOP_RIGHT: "Clear Focus North East",
+	CLEAR_FOCUS_BOT_LEFT: "Clear Focus South West",
+	CLEAR_FOCUS_BOT_RIGHT: "Clear Focus South East",
+	OPEN_SELECTION_MENU: "Open Selection Menu",
+	TOGGLE_MAP_VIEW: "Toggle Map View",
+	TOGGLE_RESOURCES_VIEW: "Toggle Resources View"
 }
 
 func _init_actions() -> void:
@@ -962,5 +990,7 @@ const JOY_MAP: Dictionary = {
 	"right_stick_up": "0:3:-1.0",    # axis 3, negative
 	"right_stick_down": "0:3:1.0",   # axis 3, positive
 	"right_stick_left": "0:2:-1.0",  # axis 2, negative
-	"right_stick_right": "0:2:1.0"   # axis 2, positive
+	"right_stick_right": "0:2:1.0",  # axis 2, positive
+	"left_trigger": "0:4:1.0",       # axis 4, positive (L2/LT)
+	"right_trigger": "0:5:1.0"       # axis 5, positive (R2/RT)
 }

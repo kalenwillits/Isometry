@@ -153,8 +153,14 @@ func open_close_confirmation() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Handle toggle_map_view action
-	if event.is_action_pressed("toggle_map_view"):
+	if Keybinds.is_action_just_pressed(Keybinds.TOGGLE_MAP_VIEW):
 		ui_state_machine.handle_toggle_map()
+		get_viewport().set_input_as_handled()
+		return
+
+	# Handle toggle_resources_view action
+	if Keybinds.is_action_just_pressed(Keybinds.TOGGLE_RESOURCES_VIEW):
+		ui_state_machine.handle_toggle_resources()
 		get_viewport().set_input_as_handled()
 		return
 

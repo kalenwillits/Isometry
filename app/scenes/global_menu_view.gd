@@ -45,7 +45,7 @@ func _on_map_button_pressed() -> void:
 	ui_state_machine.open_map_from_menu()
 
 func _on_resources_button_pressed() -> void:
-	ui_state_machine.transition_to(ui_state_machine.State.MENU_RESOURCES)
+	ui_state_machine.open_resources_from_menu()
 
 func _on_system_button_pressed() -> void:
 	ui_state_machine.transition_to(ui_state_machine.State.MENU_SYSTEM)

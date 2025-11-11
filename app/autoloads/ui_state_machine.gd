@@ -23,6 +23,7 @@ enum State {
 var current_state: State = State.GAMEPLAY
 var previous_state: State = State.GAMEPLAY
 var map_opened_from_gameplay: bool = false  # Track how MENU_MAP was opened
+var resources_opened_from_gameplay: bool = false  # Track how MENU_RESOURCES was opened
 var context_menu_opened_from: State = State.GAMEPLAY  # Track where CONTEXT_MENU was opened from
 
 signal state_changed(old_state: State, new_state: State)
@@ -66,8 +67,11 @@ func handle_cancel() -> void:
 			transition_to(State.MENU_GLOBAL)
 
 		State.MENU_RESOURCES:
-			# Back to global menu
-			transition_to(State.MENU_GLOBAL)
+			# Return based on how it was opened
+			if resources_opened_from_gameplay:
+				transition_to(State.GAMEPLAY)
+			else:
+				transition_to(State.MENU_GLOBAL)
 
 		State.MENU_OPTIONS:
 			# Back to system menu
@@ -136,6 +140,28 @@ func handle_toggle_map() -> void:
 func open_map_from_menu() -> void:
 	map_opened_from_gameplay = false
 	transition_to(State.MENU_MAP)
+
+## Handle toggle_resources_view action (only works from GAMEPLAY)
+func handle_toggle_resources() -> void:
+	match current_state:
+		State.GAMEPLAY:
+			# Open resources via toggle
+			resources_opened_from_gameplay = true
+			transition_to(State.MENU_RESOURCES)
+
+		State.MENU_RESOURCES:
+			# Close resources if it was opened via toggle
+			if resources_opened_from_gameplay:
+				transition_to(State.GAMEPLAY)
+
+		_:
+			# Blocked in all other states
+			print("[UIStateMachine] toggle_resources_view action blocked in state: ", State.keys()[current_state])
+
+## Transition to resources from menu (not toggle)
+func open_resources_from_menu() -> void:
+	resources_opened_from_gameplay = false
+	transition_to(State.MENU_RESOURCES)
 
 ## Open context menu from current state
 func open_context_menu() -> void:

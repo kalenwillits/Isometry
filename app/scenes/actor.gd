@@ -864,7 +864,7 @@ func use_target() -> void:
 			Logger.warn("No target selected, cannot open menu", self)
 
 	# Focus slot handling - top left
-	if Keybinds.is_action_just_pressed("clear_focus_top_left"):
+	if Keybinds.is_action_just_pressed(Keybinds.CLEAR_FOCUS_TOP_LEFT):
 		clear_focus_slot("top_left")
 	elif Keybinds.is_action_just_pressed("focus_top_left"):
 		var stored = get_focus_slot("top_left")
@@ -874,7 +874,7 @@ func use_target() -> void:
 			store_focus_in_slot("top_left")
 
 	# Focus slot handling - top right
-	if Keybinds.is_action_just_pressed("clear_focus_top_right"):
+	if Keybinds.is_action_just_pressed(Keybinds.CLEAR_FOCUS_TOP_RIGHT):
 		clear_focus_slot("top_right")
 	elif Keybinds.is_action_just_pressed("focus_top_right"):
 		var stored = get_focus_slot("top_right")
@@ -884,7 +884,7 @@ func use_target() -> void:
 			store_focus_in_slot("top_right")
 
 	# Focus slot handling - bottom left
-	if Keybinds.is_action_just_pressed("clear_focus_bot_left"):
+	if Keybinds.is_action_just_pressed(Keybinds.CLEAR_FOCUS_BOT_LEFT):
 		clear_focus_slot("bot_left")
 	elif Keybinds.is_action_just_pressed("focus_bot_left"):
 		var stored = get_focus_slot("bot_left")
@@ -894,7 +894,7 @@ func use_target() -> void:
 			store_focus_in_slot("bot_left")
 
 	# Focus slot handling - bottom right
-	if Keybinds.is_action_just_pressed("clear_focus_bot_right"):
+	if Keybinds.is_action_just_pressed(Keybinds.CLEAR_FOCUS_BOT_RIGHT):
 		clear_focus_slot("bot_right")
 	elif Keybinds.is_action_just_pressed("focus_bot_right"):
 		var stored = get_focus_slot("bot_right")
@@ -1087,7 +1087,7 @@ func click_to_move() -> void:
 	if get_node("/root/UIStateMachine").should_block_player_input():
 		return
 
-	if Keybinds.is_action_pressed("interact"):
+	if Keybinds.is_action_pressed(Keybinds.INTERACT):
 		last_movement_mode = "pathing"
 		is_direct_movement_active = false  # Switch to pathfinding mode
 		current_input_strength = 0.0  # Reset input strength
