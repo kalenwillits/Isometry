@@ -151,6 +151,64 @@ func unassign_action(action_name: String) -> void:
 	action_to_generics.erase(action_name)
 
 
+func unassign_keyboard_events(action_name: String) -> void:
+	"""
+	Removes only keyboard/mouse input events from an action.
+	Preserves gamepad events. Re-assigns remaining events if any exist.
+	"""
+	if action_name not in action_to_generics:
+		return
+
+	# Get current input events for this action
+	var current_events = get_action_input_events(action_name)
+
+	# Filter out keyboard/mouse events, keep only gamepad events
+	var gamepad_events = []
+	for event in current_events:
+		if _is_gamepad_event(event):
+			gamepad_events.append(event)
+
+	# Unassign all events
+	unassign_action(action_name)
+
+	# Re-assign gamepad events if any remain
+	if gamepad_events.size() > 0:
+		assign_action(action_name, gamepad_events)
+
+
+func unassign_gamepad_events(action_name: String) -> void:
+	"""
+	Removes only gamepad input events from an action.
+	Preserves keyboard/mouse events. Re-assigns remaining events if any exist.
+	"""
+	if action_name not in action_to_generics:
+		return
+
+	# Get current input events for this action
+	var current_events = get_action_input_events(action_name)
+
+	# Filter out gamepad events, keep only keyboard/mouse events
+	var keyboard_events = []
+	for event in current_events:
+		if not _is_gamepad_event(event):
+			keyboard_events.append(event)
+
+	# Unassign all events
+	unassign_action(action_name)
+
+	# Re-assign keyboard events if any remain
+	if keyboard_events.size() > 0:
+		assign_action(action_name, keyboard_events)
+
+
+func _is_gamepad_event(event: InputEvent) -> bool:
+	"""
+	Helper function to determine if an InputEvent is a gamepad event.
+	Returns true for joypad buttons and axes, false for keyboard/mouse.
+	"""
+	return event is InputEventJoypadButton or event is InputEventJoypadMotion
+
+
 func get_action_generic_ids(action_name: String) -> Array:
 	"""
 	Returns the array of generic IDs assigned to an action.

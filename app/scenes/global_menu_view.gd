@@ -34,6 +34,13 @@ func _create_menu_items() -> void:
 	resources_button.pressed.connect(_on_resources_button_pressed)
 	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(resources_button)
 
+	# Create "Skills" button
+	var skills_button = Button.new()
+	skills_button.custom_minimum_size = Vector2(256, 24)
+	skills_button.text = "Skills"
+	skills_button.pressed.connect(_on_skills_button_pressed)
+	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(skills_button)
+
 	# Create "System" button
 	var system_button = Button.new()
 	system_button.custom_minimum_size = Vector2(256, 24)
@@ -46,6 +53,9 @@ func _on_map_button_pressed() -> void:
 
 func _on_resources_button_pressed() -> void:
 	ui_state_machine.open_resources_from_menu()
+
+func _on_skills_button_pressed() -> void:
+	ui_state_machine.open_skills_from_menu()
 
 func _on_system_button_pressed() -> void:
 	ui_state_machine.transition_to(ui_state_machine.State.MENU_SYSTEM)

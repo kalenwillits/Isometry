@@ -50,6 +50,10 @@ func _on_chat_focus_exited() -> void:
 func _process_chat() -> void:
 	var now: int = Time.get_unix_time_from_system()
 	var num_expired_chats: int = chat_queue.filter(func(chat: Chat): return chat.get_expiry() < now).size()
-	pop_n_chat(num_expired_chats)		
+	pop_n_chat(num_expired_chats)
 	if needs_render:
 		render()
+
+func focus_chat_input() -> void:
+	"""Focus the chat input field"""
+	$VBox/LineEdit.grab_focus()

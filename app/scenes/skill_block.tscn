@@ -1,0 +1,60 @@
+[gd_scene load_steps=3 format=3 uid="uid://c8k5hl7qm4yv0"]
+
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="1_theme"]
+[ext_resource type="Script" path="res://scenes/skill_block.gd" id="2_script"]
+
+[node name="SkillBlock" type="Control"]
+custom_minimum_size = Vector2(300, 96)
+layout_mode = 3
+anchors_preset = 0
+size_flags_horizontal = 3
+theme = ExtResource("1_theme")
+script = ExtResource("2_script")
+
+[node name="Button" type="Button" parent="."]
+custom_minimum_size = Vector2(300, 96)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Content" type="HBoxContainer" parent="Button"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="Icon" type="TextureRect" parent="Button/Content"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TextContainer" type="VBoxContainer" parent="Button/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="NameLabel" type="Label" parent="Button/Content/TextContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Skill Name"
+vertical_alignment = 1
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="Button/Content/TextContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 11
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+text = "Skill description goes here"

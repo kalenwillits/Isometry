@@ -43,6 +43,8 @@ const CLEAR_FOCUS_BOT_RIGHT: String = "clear_focus_bot_right"
 const OPEN_SELECTION_MENU: String = "open_selection_menu"
 const TOGGLE_MAP_VIEW: String = "toggle_map_view"
 const TOGGLE_RESOURCES_VIEW: String = "toggle_resources_view"
+const TOGGLE_SKILLS_VIEW: String = "toggle_skills_view"
+const FOCUS_CHAT: String = "focus_chat"
 
 # Config file settings
 var CONFIG_FILE_PATH: String = io.get_dir() + "options.cfg"
@@ -88,7 +90,9 @@ const DEFAULT_KEYBINDS: Dictionary = {
 	CLEAR_FOCUS_BOT_RIGHT: "shift+f4",
 	OPEN_SELECTION_MENU: "grave",
 	TOGGLE_MAP_VIEW: "",
-	TOGGLE_RESOURCES_VIEW: ""
+	TOGGLE_RESOURCES_VIEW: "",
+	TOGGLE_SKILLS_VIEW: "",
+	FOCUS_CHAT: "enter"
 }
 
 # Default gamepad bindings
@@ -130,7 +134,9 @@ const DEFAULT_GAMEPAD: Dictionary = {
 	CLEAR_FOCUS_BOT_RIGHT: "dpad_down+dpad_right+right_shoulder",
 	OPEN_SELECTION_MENU: "",
 	TOGGLE_MAP_VIEW: "",
-	TOGGLE_RESOURCES_VIEW: ""
+	TOGGLE_RESOURCES_VIEW: "",
+	TOGGLE_SKILLS_VIEW: "",
+	FOCUS_CHAT: ""
 }
 
 # Display names for actions
@@ -172,7 +178,9 @@ const ACTION_LABELS: Dictionary = {
 	CLEAR_FOCUS_BOT_RIGHT: "Clear Focus South East",
 	OPEN_SELECTION_MENU: "Open Selection Menu",
 	TOGGLE_MAP_VIEW: "Toggle Map View",
-	TOGGLE_RESOURCES_VIEW: "Toggle Resources View"
+	TOGGLE_RESOURCES_VIEW: "Toggle Resources View",
+	TOGGLE_SKILLS_VIEW: "Toggle Skills View",
+	FOCUS_CHAT: "Focus Chat"
 }
 
 func _init_actions() -> void:
@@ -410,8 +418,8 @@ func get_gamepad_bind(action_name: String) -> String:
 
 func set_keybind(action_name: String, binding: String) -> void:
 	"""Sets the keyboard/mouse binding for an action"""
-	# Remove any existing assignment from generic system
-	GenericInputManager.unassign_action(action_name)
+	# Remove only keyboard/mouse events, preserve gamepad events
+	GenericInputManager.unassign_keyboard_events(action_name)
 
 	# Remove existing keyboard/mouse events from traditional system
 	_remove_keyboard_mouse_events(action_name)
@@ -421,16 +429,21 @@ func set_keybind(action_name: String, binding: String) -> void:
 		# Parse binding string and create InputEvent array
 		var events = _parse_keyboard_binding(binding)
 		if events.size() > 0:
-			# Use generic system for assignments
-			if not GenericInputManager.assign_action(action_name, events):
-				push_error("Failed to assign keyboard binding for %s" % action_name)
+			# Get existing gamepad events to preserve them
+			var existing_events = GenericInputManager.get_action_input_events(action_name)
+			var all_events = events + existing_events
+
+			# Assign all events (new keyboard + existing gamepad)
+			if all_events.size() > 0:
+				if not GenericInputManager.assign_action(action_name, all_events):
+					push_error("Failed to assign keyboard binding for %s" % action_name)
 
 	binding_changed.emit(action_name, "keyboard")
 
 func set_gamepad_bind(action_name: String, binding: String) -> void:
 	"""Sets the gamepad binding for an action"""
-	# Remove any existing assignment from generic system
-	GenericInputManager.unassign_action(action_name)
+	# Remove only gamepad events, preserve keyboard/mouse events
+	GenericInputManager.unassign_gamepad_events(action_name)
 
 	# Remove existing gamepad events from traditional system
 	_remove_gamepad_events(action_name)
@@ -449,9 +462,14 @@ func set_gamepad_bind(action_name: String, binding: String) -> void:
 		# Parse binding string and create InputEvent array
 		var events = _parse_gamepad_binding(joy_binding)
 		if events.size() > 0:
-			# Use generic system for assignments
-			if not GenericInputManager.assign_action(action_name, events):
-				push_error("Failed to assign gamepad binding for %s" % action_name)
+			# Get existing keyboard events to preserve them
+			var existing_events = GenericInputManager.get_action_input_events(action_name)
+			var all_events = existing_events + events
+
+			# Assign all events (existing keyboard + new gamepad)
+			if all_events.size() > 0:
+				if not GenericInputManager.assign_action(action_name, all_events):
+					push_error("Failed to assign gamepad binding for %s" % action_name)
 
 	binding_changed.emit(action_name, "gamepad")
 

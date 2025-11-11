@@ -164,6 +164,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
+	# Handle toggle_skills_view action
+	if Keybinds.is_action_just_pressed(Keybinds.TOGGLE_SKILLS_VIEW):
+		ui_state_machine.handle_toggle_skills()
+		get_viewport().set_input_as_handled()
+		return
+
+	# Handle focus_chat action (Enter key by default)
+	if Keybinds.is_action_just_pressed(Keybinds.FOCUS_CHAT):
+		# Only focus chat when in gameplay state
+		if ui_state_machine.current_state == ui_state_machine.State.GAMEPLAY:
+			var chat_widget = Finder.select(Group.UI_CHAT_WIDGET)
+			if chat_widget:
+				chat_widget.focus_chat_input()
+			get_viewport().set_input_as_handled()
+		return
+
 	# Handle open_menu action (Home key by default)
 	if Keybinds.is_action_just_pressed(Keybinds.OPEN_MENU):
 		ui_state_machine.handle_open_menu()
@@ -190,6 +206,8 @@ func _on_ui_state_changed(old_state: int, new_state: int) -> void:
 			$SystemMenuView.visible = false
 		State.MENU_RESOURCES:
 			$ResourcesMenuView.visible = false
+		State.MENU_SKILLS:
+			$SkillsMenuView.close_menu()
 		State.MENU_OPTIONS:
 			$OptionsView.visible = false
 		State.MENU_KEYBINDS:
@@ -213,6 +231,8 @@ func _on_ui_state_changed(old_state: int, new_state: int) -> void:
 			$SystemMenuView.open_menu()
 		State.MENU_RESOURCES:
 			$ResourcesMenuView.open_menu()
+		State.MENU_SKILLS:
+			$SkillsMenuView.open_menu()
 		State.MENU_OPTIONS:
 			$OptionsView.open_view()
 		State.MENU_KEYBINDS:

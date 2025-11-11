@@ -10,6 +10,7 @@ enum State {
 	MENU_GLOBAL,
 	MENU_SYSTEM,
 	MENU_RESOURCES,
+	MENU_SKILLS,
 	MENU_OPTIONS,
 	MENU_KEYBINDS,
 	MENU_GAMEPAD,
@@ -24,6 +25,7 @@ var current_state: State = State.GAMEPLAY
 var previous_state: State = State.GAMEPLAY
 var map_opened_from_gameplay: bool = false  # Track how MENU_MAP was opened
 var resources_opened_from_gameplay: bool = false  # Track how MENU_RESOURCES was opened
+var skills_opened_from_gameplay: bool = false  # Track how MENU_SKILLS was opened
 var context_menu_opened_from: State = State.GAMEPLAY  # Track where CONTEXT_MENU was opened from
 
 signal state_changed(old_state: State, new_state: State)
@@ -69,6 +71,13 @@ func handle_cancel() -> void:
 		State.MENU_RESOURCES:
 			# Return based on how it was opened
 			if resources_opened_from_gameplay:
+				transition_to(State.GAMEPLAY)
+			else:
+				transition_to(State.MENU_GLOBAL)
+
+		State.MENU_SKILLS:
+			# Return based on how it was opened
+			if skills_opened_from_gameplay:
 				transition_to(State.GAMEPLAY)
 			else:
 				transition_to(State.MENU_GLOBAL)
@@ -162,6 +171,28 @@ func handle_toggle_resources() -> void:
 func open_resources_from_menu() -> void:
 	resources_opened_from_gameplay = false
 	transition_to(State.MENU_RESOURCES)
+
+## Transition to skills from menu
+func open_skills_from_menu() -> void:
+	skills_opened_from_gameplay = false
+	transition_to(State.MENU_SKILLS)
+
+## Handle toggle_skills_view action (only works from GAMEPLAY)
+func handle_toggle_skills() -> void:
+	match current_state:
+		State.GAMEPLAY:
+			# Open skills via toggle
+			skills_opened_from_gameplay = true
+			transition_to(State.MENU_SKILLS)
+
+		State.MENU_SKILLS:
+			# Close skills if it was opened via toggle
+			if skills_opened_from_gameplay:
+				transition_to(State.GAMEPLAY)
+
+		_:
+			# Blocked in all other states
+			print("[UIStateMachine] toggle_skills_view action blocked in state: ", State.keys()[current_state])
 
 ## Open context menu from current state
 func open_context_menu() -> void:

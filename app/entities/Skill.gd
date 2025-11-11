@@ -4,6 +4,7 @@ var name_: String
 var start: KeyRef # Action - triggered on button press
 var end: KeyRef # Action - triggered on button release
 var icon: String # Icon path for UI display
+var description: String = "" # Description for UI display
 
 # Area targeting attributes
 var radius: int = 0  # Ellipse radius for area skills
