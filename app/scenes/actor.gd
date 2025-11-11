@@ -1815,6 +1815,8 @@ func use_move_directly(delta) -> void:
 			velocity = Vector2.ZERO
 
 func use_bearing_input(delta: float) -> void:
+	if !Finder.select(Group.CAMERA).is_locked(): return
+	
 	# Block input if UI state machine says player input should be blocked
 	if UIStateMachine.should_block_player_input():
 		is_bearing_mode_active = false

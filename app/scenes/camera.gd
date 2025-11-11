@@ -21,10 +21,14 @@ func get_camera_margin() -> float:
 var _target: WeakRef
 var _has_target: bool = false
 var _lock: bool = true
+
 func _ready() -> void:
 	add_to_group(Group.CAMERA)
 	make_current()
 	zoom_update()
+	
+func is_locked() -> bool:
+	return _lock
 
 func pan_to(vec: Vector2, delta: float) -> void:
 	var direction = (vec - position)
@@ -65,11 +69,21 @@ func _physics_process(delta: float) -> void:
 		handle_zoom_events()
 		handle_camera_lock()
 		handle_recenter(delta)
+		handle_panning_by_bearing(delta)
 		
 func handle_recenter(delta: float) -> void:
 	if Keybinds.is_action_pressed("camera_recenter"):
 		use_target(delta)
-
+		
+func handle_panning_by_bearing(delta: float) -> void:
+	if is_locked(): return
+	var motion: Vector2 = Keybinds.get_vector(
+		Keybinds.BEARING_LEFT, 
+		Keybinds.BEARING_RIGHT, 
+		Keybinds.BEARING_UP, 
+		Keybinds.BEARING_DOWN)
+	smooth_pan_to(position + motion, delta)
+	
 func handle_focus_events(delta: float) -> void:
 	if _has_target and _lock:
 		use_target(delta)
