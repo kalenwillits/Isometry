@@ -1184,7 +1184,7 @@ func build_skill(skill_ent: Entity, slot_number: int) -> void:
 							action_time = start_action_ent.time
 						$ActionTimer.wait_time = action_time
 						$ActionTimer.start()
-						
+
 						# Set SubState to USE for proper lifecycle management
 						substate = SubState.USE
 						get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, skill_ent.start.key(), name, target_name),

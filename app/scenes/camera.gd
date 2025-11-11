@@ -80,7 +80,7 @@ func handle_panning_by_bearing(delta: float) -> void:
 	var motion: Vector2 = Keybinds.get_vector(
 		Keybinds.BEARING_LEFT, 
 		Keybinds.BEARING_RIGHT, 
-		Keybinds.BEARING_UP, 
+		Keybinds.BEARING_UP,
 		Keybinds.BEARING_DOWN)
 	smooth_pan_to(position + motion, delta)
 	

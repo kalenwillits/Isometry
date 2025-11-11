@@ -28,6 +28,14 @@ const BEARING_UP: String = "bearing_up"
 const BEARING_DOWN: String = "bearing_down"
 const BEARING_LEFT: String = "bearing_left"
 const BEARING_RIGHT: String = "bearing_right"
+const INCREMENT_TARGET: String = "increment_target"
+const DECREMENT_TARGET: String = "decrement_target"
+const INCREMENT_TARGET_GROUP: String = "increment_target_group"
+const DECREMENT_TARGET_GROUP: String = "decrement_target_group"
+const FOCUS_TOP_LEFT: String = "focus_top_left"
+const FOCUS_TOP_RIGHT: String = "focus_top_right"
+const FOCUS_BOT_LEFT: String = "focus_bot_left"
+const FOCUS_BOT_RIGHT: String = "focus_bot_right"
 
 # Config file settings
 var CONFIG_FILE_PATH: String = io.get_dir() + "options.cfg"
@@ -58,7 +66,15 @@ const DEFAULT_KEYBINDS: Dictionary = {
 	BEARING_UP: "w",
 	BEARING_DOWN: "s",
 	BEARING_LEFT: "a",
-	BEARING_RIGHT: "d"
+	BEARING_RIGHT: "d",
+	INCREMENT_TARGET: "tab",
+	DECREMENT_TARGET: "shift+tab",
+	INCREMENT_TARGET_GROUP: "equal",
+	DECREMENT_TARGET_GROUP: "minus",
+	FOCUS_TOP_LEFT: "f1",
+	FOCUS_TOP_RIGHT: "f2",
+	FOCUS_BOT_LEFT: "f3",
+	FOCUS_BOT_RIGHT: "f4"
 }
 
 # Default gamepad bindings
@@ -85,7 +101,15 @@ const DEFAULT_GAMEPAD: Dictionary = {
 	BEARING_UP: "right_stick_up",
 	BEARING_DOWN: "right_stick_down",
 	BEARING_LEFT: "right_stick_left",
-	BEARING_RIGHT: "right_stick_right"
+	BEARING_RIGHT: "right_stick_right",
+	INCREMENT_TARGET: "right_shoulder",
+	DECREMENT_TARGET: "left_shoulder",
+	INCREMENT_TARGET_GROUP: "dpad_right",
+	DECREMENT_TARGET_GROUP: "dpad_left",
+	FOCUS_TOP_LEFT: "dpad_up+left_shoulder",
+	FOCUS_TOP_RIGHT: "dpad_up+right_shoulder",
+	FOCUS_BOT_LEFT: "dpad_down+left_shoulder",
+	FOCUS_BOT_RIGHT: "dpad_down+right_shoulder"
 }
 
 # Display names for actions
@@ -112,7 +136,15 @@ const ACTION_LABELS: Dictionary = {
 	BEARING_UP: "Bearing Up",
 	BEARING_DOWN: "Bearing Down",
 	BEARING_LEFT: "Bearing Left",
-	BEARING_RIGHT: "Bearing Right"
+	BEARING_RIGHT: "Bearing Right",
+	INCREMENT_TARGET: "Next Target",
+	DECREMENT_TARGET: "Previous Target",
+	INCREMENT_TARGET_GROUP: "Next Target Group",
+	DECREMENT_TARGET_GROUP: "Previous Target Group",
+	FOCUS_TOP_LEFT: "Focus North West",
+	FOCUS_TOP_RIGHT: "Focus North East",
+	FOCUS_BOT_LEFT: "Focus South West",
+	FOCUS_BOT_RIGHT: "Focus South East"
 }
 
 func _init_actions() -> void:
