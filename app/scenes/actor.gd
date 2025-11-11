@@ -103,7 +103,7 @@ var area_targeting_highlighted_actors: Array = []  # Track actors highlighted by
 # Bearing system - independent direction control
 var bearing: int = 0  # Bearing in degrees (0-360)
 var is_bearing_mode_active: bool = false  # Whether bearing input is currently active
-var is_manual_bearing_locked: bool = false  # Locks bearing to manual control (persists after input stops)
+var is_bearing_mode_blocked: bool = false # Blocks bearing mode 
 var bearing_vector: Vector2 = Vector2.ZERO  # Cached bearing direction vector
 # Heading state machine - manages heading based on movement and camera state (primary actor only)
 var heading_state_machine: HeadingStateMachine = null
@@ -541,7 +541,6 @@ func _physics_process(delta) -> void:
 	use_strategy()
 	if is_primary():
 		use_bearing_input(delta)  # Process manual bearing input first
-		use_mouse_bearing_for_pathing()  # Auto-lock bearing to mouse during pathing
 	use_move_view(delta)  # Camera look-ahead (uses bearing if active)
 	if is_primary():
 		use_move_discovery()
@@ -1091,7 +1090,6 @@ func click_to_move() -> void:
 	if Keybinds.is_action_pressed("interact"):
 		last_movement_mode = "pathing"
 		is_direct_movement_active = false  # Switch to pathfinding mode
-		is_manual_bearing_locked = false  # Unlock manual bearing when switching to mouse pathing
 		current_input_strength = 0.0  # Reset input strength
 		var mouse_pos = get_global_mouse_position()
 		if is_primary():
@@ -1290,6 +1288,10 @@ func _local_passive_action_handler(target_actor: Actor, function: Callable) -> v
 	if target_actor.is_primary(): 
 		function.call(target_actor)
 		
+func _local_action_handler_cleanup() -> void:
+	set_substate(SubState.END)
+	is_bearing_mode_blocked = false
+		
 func _local_action_handler(target_actor: Actor, function: Callable, action_ent: Entity) -> void:
 	if is_primary():
 		Logger.debug("_local_action_handler: substate=%s, ActionTimer.stopped=%s" % [substate, $ActionTimer.is_stopped()], self)
@@ -1299,11 +1301,12 @@ func _local_action_handler(target_actor: Actor, function: Callable, action_ent: 
 			if $ActionTimer.is_stopped():  # Only allow if no action timer is running
 				if is_primary():
 					Logger.debug("_local_action_handler: executing action", self)
-				function.call(target_actor)
 				look_at_target()
+				is_bearing_mode_blocked = true
+				function.call(target_actor)
 				root(action_ent.time)
 				var timer = get_tree().create_timer(action_ent.time)
-				timer.timeout.connect(func(): set_substate(SubState.END), CONNECT_ONE_SHOT)
+				timer.timeout.connect(_local_action_handler_cleanup, CONNECT_ONE_SHOT)
 			elif is_primary():
 				Logger.debug("_local_action_handler: blocked by running ActionTimer", self)
 		_:
@@ -1754,10 +1757,9 @@ func use_pathing(delta: float) -> void:
 func look_at_target() -> void:
 	Optional.of_nullable(Finder.get_actor(target))\
 	.if_present(
-		func(target_actor): 
+		func(target_actor):
 		var relative_bearing: int = std.calculate_bearing(target_actor.position, self.position)
 		set_bearing(relative_bearing)
-		is_manual_bearing_locked = false
 		look_at_point(target_actor.position)
 		)
 
@@ -1791,7 +1793,6 @@ func use_move_directly(delta) -> void:
 		last_movement_mode = "direct"
 		if not is_direct_movement_active:
 			is_direct_movement_active = true
-			is_manual_bearing_locked = false  # Unlock manual bearing when switching to direct movement
 
 		# Normalize direction
 		var direction = motion.normalized()
@@ -1832,6 +1833,7 @@ func use_move_directly(delta) -> void:
 			velocity = Vector2.ZERO
 
 func use_bearing_input(delta: float) -> void:
+	if is_bearing_mode_blocked: return
 	if !Finder.select(Group.CAMERA).is_locked(): return
 	
 	# Block input if UI state machine says player input should be blocked
@@ -1846,7 +1848,6 @@ func use_bearing_input(delta: float) -> void:
 	# Check if bearing input is active
 	if bearing_input.length() > 0.01:  # Small deadzone for analog sticks
 		is_bearing_mode_active = true
-		is_manual_bearing_locked = true  # Lock bearing to manual control
 
 		# Normalize the input direction and calculate bearing
 		var direction = bearing_input.normalized()
@@ -1863,52 +1864,11 @@ func use_bearing_input(delta: float) -> void:
 
 		# Calculate and set the bearing
 		set_bearing(std.calculate_bearing(target_position, position))
+		look_at_point(target_position)
 	else:
 		# No bearing input - deactivate input mode but keep lock and bearing_vector
 		is_bearing_mode_active = false
 		# Don't clear bearing_vector - keep the last manual bearing direction
-		# Don't clear is_manual_bearing_locked - keep manual control until mode switch
-
-func use_mouse_bearing_for_pathing() -> void:
-	# Automatically lock bearing to mouse cursor position when using pathing
-	# This activates when:
-	# 1. NOT in direct movement mode (keyboard/joystick movement)
-	# 2. NOT manually controlling bearing with input
-	# Also syncs heading when actor is idle and stationary
-
-	# Skip if using direct movement (keyboard/joystick)
-	if is_direct_movement_active:
-		return
-
-	# Skip if manually controlling bearing (manual input takes priority)
-	if is_bearing_mode_active:
-		return
-
-	# Skip if manual bearing is locked (persists after input stops)
-	if is_manual_bearing_locked:
-		return
-
-	# Skip if UI is blocking input
-	if UIStateMachine.should_block_player_input():
-		return
-
-	# Get mouse position in world coordinates
-	var mouse_pos = get_global_mouse_position()
-
-	# Calculate direction from actor to mouse cursor
-	var direction = position.direction_to(mouse_pos)
-
-	# Get raw angle and apply isometric adjustment for bearing_vector
-	var raw_angle = direction.angle()
-	var isometric_adjustment = std.isometric_factor(raw_angle)
-
-	# Cache the bearing vector with isometric adjustment for movement
-	bearing_vector = direction
-	bearing_vector.y *= isometric_adjustment
-	bearing_vector = bearing_vector.normalized()
-
-	# Use centralized bearing calculation
-	set_bearing(std.calculate_bearing(mouse_pos, position))
 
 func use_visible_pathing() -> void:
 	# Only enable debug visualization when using pathfinding (not direct movement)
