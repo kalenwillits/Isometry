@@ -105,6 +105,8 @@ var bearing: int = 0  # Bearing in degrees (0-360)
 var is_bearing_mode_active: bool = false  # Whether bearing input is currently active
 var is_manual_bearing_locked: bool = false  # Locks bearing to manual control (persists after input stops)
 var bearing_vector: Vector2 = Vector2.ZERO  # Cached bearing direction vector
+# Heading state machine - manages heading based on movement and camera state (primary actor only)
+var heading_state_machine: HeadingStateMachine = null
 var measures: Dictionary = {
 	"charge": _built_in_measure__charge,
 	"distance_to_target": _built_in_measure__distance_to_target,
@@ -457,6 +459,8 @@ func _ready() -> void:
 	var actor_ent: Entity = Repo.select(actor)
 	if is_primary():
 		build_charging_indicator()
+		# Initialize heading state machine for primary actor
+		heading_state_machine = HeadingStateMachine.builder().build()
 		visible_groups = {}  # Initialize group tracking for primary actor
 
 		# Add primary actor's own group to visible groups
@@ -547,6 +551,7 @@ func _physics_process(delta) -> void:
 			use_pathing(delta)
 			click_to_move()
 			use_move_directly(delta)
+			update_heading_from_state_machine(delta)  # Update heading based on state machine
 			use_visible_pathing()
 		use_actions()
 		use_target()
@@ -1413,6 +1418,13 @@ func set_peer_id(value) -> void:
 func set_heading(value: String) -> void:
 	heading = value
 
+## Update heading using state machine (primary actor only)
+func update_heading_from_state_machine(delta: float) -> void:
+	if heading_state_machine != null:
+		var new_heading = heading_state_machine.update(self, delta)
+		if new_heading != heading:
+			set_heading(new_heading)
+
 func set_speed(value: float) -> void:
 	speed = value
 
@@ -1735,7 +1747,9 @@ func use_pathing(delta: float) -> void:
 
 	match substate:
 		SubState.IDLE, SubState.START, SubState.END:
-			look_at_point(next_position)
+			# Non-primary actors use look_at_point; primary actors use state machine
+			if !is_primary():
+				look_at_point(next_position)
 
 func look_at_target() -> void:
 	Optional.of_nullable(Finder.get_actor(target)).if_present(func(target_actor): look_at_point(target_actor.position))
@@ -1801,11 +1815,7 @@ func use_move_directly(delta) -> void:
 		# Keep NavigationAgent at current position to prevent pathfinding interference
 		$NavigationAgent.target_position = position
 
-		# Update heading to face movement direction (only when not performing actions)
-		match substate:
-			SubState.IDLE, SubState.START, SubState.END:
-				var target_point = position + direction
-				look_at_point(target_point)
+		# Heading is now managed by the state machine (see update_heading_from_state_machine)
 	else:
 		# Only reset destination if we were actively moving directly
 		# Don't interfere with pathing destinations
