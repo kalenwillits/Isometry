@@ -1807,18 +1807,6 @@ func use_move_directly(delta) -> void:
 		# This preserves analog stick sensitivity while ensuring equal diagonal speeds
 		velocity = direction * base_speed * isometric_adjustment * current_input_strength
 
-		# Verbose logging for debugging movement behavior
-		var angle_deg = rad_to_deg(direction.angle())
-		var velocity_length = velocity.length()
-		var speed_percent = (velocity_length / base_speed * 100) if base_speed > 0 else 0
-		Logger.debug("MOVEMENT [%s] motion=%s len=%.3f | dir=%s angle=%.2f° | input_str=%.3f iso=%.3f base=%.1f | velocity=%s len=%.1f (%.1f%%)" % [
-			name,
-			motion, motion.length(),
-			direction, angle_deg,
-			current_input_strength, isometric_adjustment, base_speed,
-			velocity, velocity_length, speed_percent
-		])
-
 		# Apply movement
 		move_and_slide()
 
