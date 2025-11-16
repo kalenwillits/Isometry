@@ -1782,7 +1782,6 @@ func use_move_directly(delta) -> void:
 
 	# Get input vector - this handles both keyboard and controller
 	var motion = Keybinds.get_vector(Keybinds.MOVE_LEFT, Keybinds.MOVE_RIGHT, Keybinds.MOVE_UP, Keybinds.MOVE_DOWN)
-
 	# Calculate input strength (0.0 to 1.0)
 	# For keyboard: motion will be normalized (length = 1.0)
 	# For controller: motion length varies based on stick deflection
@@ -1794,7 +1793,8 @@ func use_move_directly(delta) -> void:
 		if not is_direct_movement_active:
 			is_direct_movement_active = true
 
-		# Normalize direction
+		# Normalize motion to get consistent directional magnitude
+		# This ensures keyboard and gamepad have equal diagonal speeds
 		var direction = motion.normalized()
 
 		# Calculate base speed using actor's speed properties
@@ -1803,8 +1803,21 @@ func use_move_directly(delta) -> void:
 		# Apply isometric factor based on movement direction
 		var isometric_adjustment = std.isometric_factor(direction.angle())
 
-		# Set velocity with all factors applied
+		# Set velocity using normalized direction scaled by input strength
+		# This preserves analog stick sensitivity while ensuring equal diagonal speeds
 		velocity = direction * base_speed * isometric_adjustment * current_input_strength
+
+		# Verbose logging for debugging movement behavior
+		var angle_deg = rad_to_deg(direction.angle())
+		var velocity_length = velocity.length()
+		var speed_percent = (velocity_length / base_speed * 100) if base_speed > 0 else 0
+		Logger.debug("MOVEMENT [%s] motion=%s len=%.3f | dir=%s angle=%.2f° | input_str=%.3f iso=%.3f base=%.1f | velocity=%s len=%.1f (%.1f%%)" % [
+			name,
+			motion, motion.length(),
+			direction, angle_deg,
+			current_input_strength, isometric_adjustment, base_speed,
+			velocity, velocity_length, speed_percent
+		])
 
 		# Apply movement
 		move_and_slide()

@@ -30,9 +30,6 @@ var context_menu_opened_from: State = State.GAMEPLAY  # Track where CONTEXT_MENU
 
 signal state_changed(old_state: State, new_state: State)
 
-func _ready():
-	print("[UIStateMachine] Initialized in state: ", State.keys()[current_state])
-
 ## Main transition method
 func transition_to(new_state: State) -> void:
 	if current_state == new_state:
@@ -41,8 +38,6 @@ func transition_to(new_state: State) -> void:
 	var old_state = current_state
 	previous_state = current_state
 	current_state = new_state
-
-	print("[UIStateMachine] Transition: %s → %s" % [State.keys()[old_state], State.keys()[new_state]])
 	state_changed.emit(old_state, new_state)
 
 ## Query: Should player input be blocked?

@@ -256,7 +256,7 @@ func get_assignment_events(action_name: String) -> Array:
 	"""
 	return GenericInputManager.get_action_input_events(action_name)
 
-func get_vector(negative_x: String, positive_x: String, negative_y: String, positive_y: String, deadzone: float = 0.5) -> Vector2:
+func get_vector(negative_x: String, positive_x: String, negative_y: String, positive_y: String, deadzone: float = 0.25) -> Vector2:
 	"""
 	Gets a 2D vector from four actions (like Input.get_vector but works with generic system).
 	Supports both analog axis inputs and digital button inputs.
@@ -266,7 +266,7 @@ func get_vector(negative_x: String, positive_x: String, negative_y: String, posi
 		positive_x: Action for right movement
 		negative_y: Action for up movement
 		positive_y: Action for down movement
-		deadzone: Minimum value to register (default 0.5)
+		deadzone: Minimum value to register (default 0.25)
 
 	Returns:
 		Normalized Vector2 representing the input direction
@@ -326,7 +326,11 @@ func _get_generic_input_value(generic_id: String, deadzone: float) -> float:
 			var abs_value = abs(axis_value)
 			if abs_value >= deadzone:
 				# Remap from [deadzone, 1.0] to [0.0, 1.0]
-				return (abs_value - deadzone) / (1.0 - deadzone)
+				var remapped = (abs_value - deadzone) / (1.0 - deadzone)
+				# Snap near-full deflection to 1.0 to compensate for hardware tolerances
+				if remapped >= 0.75:
+					remapped = 1.0
+				return remapped
 
 		return 0.0
 
