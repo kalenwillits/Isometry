@@ -111,7 +111,7 @@ const DEFAULT_GAMEPAD: Dictionary = {
 	ZOOM_OUT: "left_shoulder",
 	CAMERA_LOCK: "left_stick",
 	CAMERA_RECENTER: "right_stick",
-	OPEN_MENU: "select",
+	OPEN_MENU: "start",
 	MOVE_UP: "left_stick_up",
 	MOVE_DOWN: "left_stick_down",
 	MOVE_LEFT: "left_stick_left",
@@ -120,8 +120,8 @@ const DEFAULT_GAMEPAD: Dictionary = {
 	BEARING_DOWN: "right_stick_down",
 	BEARING_LEFT: "right_stick_left",
 	BEARING_RIGHT: "right_stick_right",
-	INCREMENT_TARGET: "right_shoulder",
-	DECREMENT_TARGET: "left_shoulder",
+	INCREMENT_TARGET: "right_trigger",
+	DECREMENT_TARGET: "left_trigger",
 	INCREMENT_TARGET_GROUP: "dpad_right",
 	DECREMENT_TARGET_GROUP: "dpad_left",
 	FOCUS_TOP_LEFT: "dpad_up+left_shoulder",
@@ -620,12 +620,45 @@ func load_bindings() -> void:
 		GenericInputManager.unassign_action(action_name)
 		InputMap.action_erase_events(action_name)
 
-		# Apply loaded bindings using new system
-		if keybind != "":
-			set_keybind(action_name, keybind)
+		# Build combined event array without using preservation logic
+		# This avoids the duplicate event bug that occurs when set_gamepad_bind
+		# re-assigns keyboard events during its unassign_gamepad_events call
+		var all_events = []
 
+		# Parse and add keyboard events
+		if keybind != "":
+			var keyboard_events = _parse_keyboard_binding(keybind)
+			all_events.append_array(keyboard_events)
+
+		# Parse and add gamepad events
 		if gamepad_bind != "":
-			set_gamepad_bind(action_name, gamepad_bind)
+			# Ensure joy_ prefix
+			var joy_binding = gamepad_bind
+			if not joy_binding.begins_with("joy_"):
+				var parts = joy_binding.split("+")
+				var joy_parts: Array = []
+				for part in parts:
+					joy_parts.append("joy_" + part)
+				joy_binding = "+".join(joy_parts)
+
+			var gamepad_events = _parse_gamepad_binding(joy_binding)
+			all_events.append_array(gamepad_events)
+
+		# Assign all events at once
+		if all_events.size() > 0:
+			print("[Keybinds] Loading %s: kb='%s' gp='%s' -> %d events" % [action_name, keybind, gamepad_bind, all_events.size()])
+			# Skip rebuild during bulk loading for performance
+			if not GenericInputManager.assign_action(action_name, all_events, true):
+				push_error("Failed to assign bindings for %s" % action_name)
+			else:
+				print("[Keybinds] Successfully assigned %s" % action_name)
+		else:
+			push_warning("No events to assign for action '%s' (keyboard='%s', gamepad='%s')" % [action_name, keybind, gamepad_bind])
+
+	# Rebuild state machine once after all actions are loaded
+	print("[Keybinds] All actions loaded, rebuilding state machine...")
+	GenericInputManager.rebuild_state_machine()
+	print("[Keybinds] State machine rebuild complete")
 
 # ========================== Helper Methods ==========================
 

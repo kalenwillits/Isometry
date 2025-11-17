@@ -28,9 +28,72 @@ var initialized: bool = false
 # State machine for action button inputs (handles priority)
 var state_machine: InputStateMachine = null
 
+# Frame-based caching to prevent multiple state machine updates per frame
+var cached_frame: int = -1
+var cached_triggered_action: String = ""
+var cached_held_actions: Dictionary = {}  # action_name -> bool
+var cached_released_actions: Dictionary = {}  # action_name -> bool
+
 
 func _ready() -> void:
 	initialize()
+
+
+func _physics_process(_delta: float) -> void:
+	"""
+	Updates the state machine once per frame and caches results.
+	This prevents the multi-update bug where checking multiple actions
+	would cause the state machine to update 27+ times per frame.
+	"""
+	var current_frame = Engine.get_process_frames()
+
+	# Only update if we're on a new frame
+	if current_frame != cached_frame:
+		cached_frame = current_frame
+
+		# Debug logging on first frame only
+		if current_frame == 1:
+			print("[GenericInputManager] First frame - %d actions registered: %s" % [action_to_generics.size(), action_to_generics.keys()])
+
+		# Collect button events for this frame
+		var button_events = _collect_button_events_from_generic_ids()
+
+		# Update state machine ONCE per frame
+		state_machine.update(button_events)
+
+		# Cache the triggered action
+		cached_triggered_action = state_machine.get_triggered_action()
+
+		# Debug when an action triggers
+		if cached_triggered_action != "":
+			print("[GenericInputManager] Frame %d: Action triggered = %s" % [current_frame, cached_triggered_action])
+
+		# Cache which actions are currently held
+		cached_held_actions.clear()
+		for action_name in action_to_generics:
+			var generic_ids = action_to_generics[action_name]
+			var all_pressed = true
+			for generic_id in generic_ids:
+				if not Input.is_action_pressed(generic_id):
+					all_pressed = false
+					break
+			cached_held_actions[action_name] = all_pressed
+
+		# Cache which actions were just released
+		cached_released_actions.clear()
+		for action_name in action_to_generics:
+			var generic_ids = action_to_generics[action_name]
+			var just_released = false
+			if generic_ids.size() == 1:
+				# Single input: check if it was just released
+				just_released = Input.is_action_just_released(generic_ids[0])
+			else:
+				# Composite input: if any button was just released, the combo is broken
+				for generic_id in generic_ids:
+					if Input.is_action_just_released(generic_id):
+						just_released = true
+						break
+			cached_released_actions[action_name] = just_released
 
 
 func initialize() -> void:
@@ -91,11 +154,14 @@ func free_ids(ids: Array) -> void:
 			available_ids.append(generic_id)
 
 
-func assign_action(action_name: String, input_events: Array) -> bool:
+func assign_action(action_name: String, input_events: Array, skip_rebuild: bool = false) -> bool:
 	"""
 	Assigns an array of InputEvents to a logical action name.
 	For single inputs, allocates 1 generic ID.
 	For combos (A+B+C), allocates multiple IDs in order.
+
+	Set skip_rebuild=true when bulk-loading actions to avoid rebuilding the state machine multiple times.
+	Call rebuild_state_machine() manually after all actions are loaded.
 
 	Returns true on success, false on failure.
 	"""
@@ -125,15 +191,11 @@ func assign_action(action_name: String, input_events: Array) -> bool:
 	# Store the action -> generic IDs mapping
 	action_to_generics[action_name] = generic_ids
 
-	# Register with state machine for priority handling
-	var button_keys = []
-	for input_event in input_events:
-		var button_key = _event_to_button_key(input_event)
-		if button_key != "":
-			button_keys.append(button_key)
-
-	if button_keys.size() > 0:
-		state_machine.register_binding(button_keys, action_name)
+	# Rebuild state machine to clear any stale paths from previous bindings
+	# This ensures runtime binding changes work immediately
+	# Skip during bulk loading for performance
+	if not skip_rebuild:
+		rebuild_state_machine()
 
 	return true
 
@@ -253,11 +315,8 @@ func is_action_pressed(action_name: String) -> bool:
 	if generic_ids.is_empty():
 		return false
 
-	for generic_id in generic_ids:
-		if not Input.is_action_pressed(generic_id):
-			return false
-
-	return true
+	# Use cached result from _process()
+	return cached_held_actions.get(action_name, false)
 
 
 func is_action_just_pressed(action_name: String, check_priority: bool = true) -> bool:
@@ -270,23 +329,18 @@ func is_action_just_pressed(action_name: String, check_priority: bool = true) ->
 	"""
 	var generic_ids = get_action_generic_ids(action_name)
 	if generic_ids.is_empty():
+		print("[GenericInputManager] is_action_just_pressed('%s'): NOT in action_to_generics, returning false" % action_name)
 		return false
 
 	# If priority checking is disabled, use raw check
 	if not check_priority:
 		return _check_action_just_pressed_raw(action_name)
 
-	# Use state machine for priority checking
-	# Collect button events for this frame
-	var button_events = _collect_button_events_from_generic_ids()
-
-	# Update state machine
-	state_machine.update(button_events)
-
-	# Check if this action was triggered
-	var triggered = state_machine.get_triggered_action()
-
-	return triggered == action_name
+	# Use cached result from _process() to prevent multiple state machine updates per frame
+	var result = cached_triggered_action == action_name
+	if result:
+		print("[GenericInputManager] is_action_just_pressed('%s'): TRUE (cached_triggered_action='%s')" % [action_name, cached_triggered_action])
+	return result
 
 
 func is_action_just_released(action_name: String) -> bool:
@@ -299,15 +353,8 @@ func is_action_just_released(action_name: String) -> bool:
 	if generic_ids.is_empty():
 		return false
 
-	if generic_ids.size() == 1:
-		# Single input: check if it was just released
-		return Input.is_action_just_released(generic_ids[0])
-	else:
-		# Composite input: if any button was just released, the combo is broken
-		for generic_id in generic_ids:
-			if Input.is_action_just_released(generic_id):
-				return true
-		return false
+	# Use cached result from _process()
+	return cached_released_actions.get(action_name, false)
 
 
 func get_available_id_count() -> int:
@@ -456,3 +503,27 @@ func _collect_button_events_from_generic_ids() -> Array:
 			.build())
 
 	return events
+
+
+func rebuild_state_machine() -> void:
+	"""
+	Rebuilds the state machine from scratch with all current action bindings.
+	This is necessary when bindings are changed at runtime to clear stale paths.
+	"""
+	# Create a fresh state machine
+	state_machine = InputStateMachine.builder().build()
+
+	# Re-register all current action bindings
+	for action_name in action_to_generics:
+		var input_events = get_action_input_events(action_name)
+
+		# Build button keys for state machine registration
+		var button_keys = []
+		for input_event in input_events:
+			var button_key = _event_to_button_key(input_event)
+			if button_key != "":
+				button_keys.append(button_key)
+
+		# Register with the fresh state machine
+		if button_keys.size() > 0:
+			state_machine.register_binding(button_keys, action_name)

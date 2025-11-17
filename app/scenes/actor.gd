@@ -697,7 +697,7 @@ func use_strategy() -> void:
 func use_actions() -> void:
 	# Block input if UI state machine says player input should be blocked
 	# EXCEPT when in area targeting mode, allow input for that
-	if get_node("/root/UIStateMachine").should_block_player_input() and !is_area_targeting:
+	if UIStateMachine.should_block_player_input() and !is_area_targeting:
 		return
 
 	var actor_ent: Entity = Repo.select(actor)
@@ -831,7 +831,8 @@ func use_target() -> void:
 		return
 
 	# Block input if UI state machine says player input should be blocked
-	if get_node("/root/UIStateMachine").should_block_player_input():
+	if UIStateMachine.should_block_player_input():
+		print("[Actor] use_target() blocked by UI state machine")
 		return
 
 	# Handle cancel action for clearing target (only in GAMEPLAY state)
@@ -841,13 +842,23 @@ func use_target() -> void:
 		return
 
 	if Keybinds.is_action_just_pressed("increment_target"):
+		print("[Actor] increment_target pressed!")
 		var next = find_next_target()
+		print("[Actor] find_next_target() returned: '%s', current target: '%s'" % [next, target])
 		if next != target:  # Only set if different to avoid plate deletion bug
+			print("[Actor] Setting target to: '%s'" % next)
 			set_target(next)
+		else:
+			print("[Actor] Next target same as current, not changing")
 	if Keybinds.is_action_just_pressed("decrement_target"):
+		print("[Actor] decrement_target pressed!")
 		var prev = find_prev_target()
+		print("[Actor] find_prev_target() returned: '%s', current target: '%s'" % [prev, target])
 		if prev != target:  # Only set if different to avoid plate deletion bug
+			print("[Actor] Setting target to: '%s'" % prev)
 			set_target(prev)
+		else:
+			print("[Actor] Prev target same as current, not changing")
 	if Keybinds.is_action_just_pressed("clear_target"):
 		set_target("")
 		target_queue.clear()
@@ -1084,10 +1095,11 @@ func line_of_sight_to_point(point: Vector2) -> bool:
 
 func click_to_move() -> void:
 	# Block input if UI state machine says player input should be blocked
-	if get_node("/root/UIStateMachine").should_block_player_input():
+	if UIStateMachine.should_block_player_input():
 		return
 
-	if Keybinds.is_action_pressed(Keybinds.INTERACT):
+	# Hardcoded right-click for movement - always works regardless of keybind settings
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 		last_movement_mode = "pathing"
 		is_direct_movement_active = false  # Switch to pathfinding mode
 		current_input_strength = 0.0  # Reset input strength
@@ -2115,7 +2127,7 @@ func enter_area_targeting(action_key: String, skill_ent: Entity) -> void:
 		root(skill_ent.time + 60.0)  # Root for action time + large buffer
 
 	# Set UI state
-	get_node("/root/UIStateMachine").transition_to(UIStateMachine.State.AREA_TARGETING)
+	UIStateMachine.transition_to(UIStateMachine.State.AREA_TARGETING)
 
 func update_area_targeting(delta: float) -> void:
 	"""Update area targeting overlay position based on input"""
@@ -2321,7 +2333,7 @@ func cancel_area_targeting() -> void:
 		set_speed(speed_cache_value)
 
 	# Return to gameplay state
-	get_node("/root/UIStateMachine").transition_to(UIStateMachine.State.GAMEPLAY)
+	UIStateMachine.transition_to(UIStateMachine.State.GAMEPLAY)
 
 func is_npc() -> bool:
 	return is_in_group(Group.NPC)
