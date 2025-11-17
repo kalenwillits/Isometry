@@ -28,12 +28,6 @@ var initialized: bool = false
 # State machine for action button inputs (handles priority)
 var state_machine: InputStateMachine = null
 
-# Frame-based caching to prevent multiple state machine updates per frame
-var cached_frame: int = -1
-var cached_triggered_action: String = ""
-var cached_held_actions: Dictionary = {}  # action_name -> bool
-var cached_released_actions: Dictionary = {}  # action_name -> bool
-
 
 func _ready() -> void:
 	initialize()
@@ -41,66 +35,13 @@ func _ready() -> void:
 
 func _physics_process(_delta: float) -> void:
 	"""
-	Updates the state machine once per frame and caches results.
-	This prevents the multi-update bug where checking multiple actions
-	would cause the state machine to update 27+ times per frame.
+	Updates the state machine each frame with current button events.
 	"""
-	var current_frame = Engine.get_process_frames()
+	# Collect button events for this frame
+	var button_events = _collect_button_events_from_generic_ids()
 
-	# Only update if we're on a new frame
-	if current_frame != cached_frame:
-		cached_frame = current_frame
-
-		# Debug logging on first frame only
-		if current_frame == 1:
-			print("[GenericInputManager] First frame - %d actions registered: %s" % [action_to_generics.size(), action_to_generics.keys()])
-
-		# Collect button events for this frame
-		var button_events = _collect_button_events_from_generic_ids()
-
-		# Log button events if any are detected
-		if button_events.size() > 0:
-			var event_summaries = []
-			for event in button_events:
-				event_summaries.append("key=%s state=%s" % [event.button_key, event.state])
-			print("[GenericInputManager] Frame %d: %d button events: [%s]" % [current_frame, button_events.size(), ", ".join(event_summaries)])
-
-		# Update state machine ONCE per frame
-		state_machine.update(button_events)
-
-		# Cache the triggered action
-		cached_triggered_action = state_machine.get_triggered_action()
-
-		# Debug when an action triggers
-		if cached_triggered_action != "":
-			print("[GenericInputManager] Frame %d: Action triggered = %s" % [current_frame, cached_triggered_action])
-
-		# Cache which actions are currently held
-		cached_held_actions.clear()
-		for action_name in action_to_generics:
-			var generic_ids = action_to_generics[action_name]
-			var all_pressed = true
-			for generic_id in generic_ids:
-				if not Input.is_action_pressed(generic_id):
-					all_pressed = false
-					break
-			cached_held_actions[action_name] = all_pressed
-
-		# Cache which actions were just released
-		cached_released_actions.clear()
-		for action_name in action_to_generics:
-			var generic_ids = action_to_generics[action_name]
-			var just_released = false
-			if generic_ids.size() == 1:
-				# Single input: check if it was just released
-				just_released = Input.is_action_just_released(generic_ids[0])
-			else:
-				# Composite input: if any button was just released, the combo is broken
-				for generic_id in generic_ids:
-					if Input.is_action_just_released(generic_id):
-						just_released = true
-						break
-			cached_released_actions[action_name] = just_released
+	# Update state machine with current events
+	state_machine.update(button_events)
 
 
 func initialize() -> void:
@@ -331,8 +272,11 @@ func is_action_pressed(action_name: String) -> bool:
 	if generic_ids.is_empty():
 		return false
 
-	# Use cached result from _process()
-	return cached_held_actions.get(action_name, false)
+	# Check if all generic IDs for this action are pressed
+	for generic_id in generic_ids:
+		if not Input.is_action_pressed(generic_id):
+			return false
+	return true
 
 
 func is_action_just_pressed(action_name: String, check_priority: bool = true) -> bool:
@@ -351,8 +295,8 @@ func is_action_just_pressed(action_name: String, check_priority: bool = true) ->
 	if not check_priority:
 		return _check_action_just_pressed_raw(action_name)
 
-	# Use cached result from _physics_process() to prevent multiple state machine updates per frame
-	return cached_triggered_action == action_name
+	# Check if this action is in the list of triggered actions
+	return action_name in state_machine.get_triggered_actions()
 
 
 func is_action_just_released(action_name: String) -> bool:
@@ -365,8 +309,15 @@ func is_action_just_released(action_name: String) -> bool:
 	if generic_ids.is_empty():
 		return false
 
-	# Use cached result from _process()
-	return cached_released_actions.get(action_name, false)
+	# For single inputs, check if it was just released
+	if generic_ids.size() == 1:
+		return Input.is_action_just_released(generic_ids[0])
+
+	# For composite inputs, check if ANY button was just released
+	for generic_id in generic_ids:
+		if Input.is_action_just_released(generic_id):
+			return true
+	return false
 
 
 func get_available_id_count() -> int:

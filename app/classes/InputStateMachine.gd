@@ -3,7 +3,7 @@ class_name InputStateMachine
 
 var root: InputNode
 var held_buttons: Array = []  # Array of button_key strings
-var triggered_action: String = ""  # Action triggered this frame
+var triggered_actions: Array = []  # All actions triggered this frame
 
 # CACHED DATA - Rebuilt when bindings change
 var cached_paths: Dictionary = {}  # button_key -> Array of {path: Array, action: String}
@@ -106,7 +106,7 @@ func update(button_events: Array) -> void:
 
 	Uses CACHED PATHS for efficient lookup.
 	"""
-	triggered_action = ""
+	triggered_actions.clear()
 
 	# Update held buttons list
 	for event in button_events:
@@ -116,19 +116,18 @@ func update(button_events: Array) -> void:
 		elif event.is_released():
 			held_buttons.erase(event.get_button_key())
 
-	# Check for triggered action
+	# Check for ALL triggered actions (don't break after first)
 	for event in button_events:
 		if event.is_just_pressed():
 			var action = _check_action_for_button_cached(event.get_button_key())
 			if action != "":
-				triggered_action = action
-				break
+				triggered_actions.append(action)
 
-func get_triggered_action() -> String:
-	return triggered_action
+func get_triggered_actions() -> Array:
+	return triggered_actions
 
-func clear_triggered_action() -> void:
-	triggered_action = ""
+func clear_triggered_actions() -> void:
+	triggered_actions.clear()
 
 func _check_action_for_button_cached(just_pressed_button: String) -> String:
 	"""
