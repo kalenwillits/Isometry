@@ -28,6 +28,10 @@ var initialized: bool = false
 # State machine for action button inputs (handles priority)
 var state_machine: InputStateMachine = null
 
+# Frame caching to keep triggered actions available throughout the frame
+var cached_triggered_actions: Array = []
+var last_cached_frame: int = -1
+
 
 func _ready() -> void:
 	initialize()
@@ -42,6 +46,11 @@ func _physics_process(_delta: float) -> void:
 
 	# Update state machine with current events
 	state_machine.update(button_events)
+
+	# Cache the triggered actions for this frame so they remain available
+	# throughout the entire frame (not just after _physics_process)
+	cached_triggered_actions = state_machine.get_triggered_actions()
+	last_cached_frame = Engine.get_process_frames()
 
 
 func initialize() -> void:
@@ -295,8 +304,21 @@ func is_action_just_pressed(action_name: String, check_priority: bool = true) ->
 	if not check_priority:
 		return _check_action_just_pressed_raw(action_name)
 
+	# Use cached triggered actions if we're still on the same frame
+	# This ensures actions remain available throughout the entire frame,
+	# even if checked before _physics_process() has run
+	var current_frame = Engine.get_process_frames()
+	if current_frame == last_cached_frame:
+		return action_name in cached_triggered_actions
+
+	# If cache is stale, update it now
+	var button_events = _collect_button_events_from_generic_ids()
+	state_machine.update(button_events)
+	cached_triggered_actions = state_machine.get_triggered_actions()
+	last_cached_frame = current_frame
+
 	# Check if this action is in the list of triggered actions
-	return action_name in state_machine.get_triggered_actions()
+	return action_name in cached_triggered_actions
 
 
 func is_action_just_released(action_name: String) -> bool:
