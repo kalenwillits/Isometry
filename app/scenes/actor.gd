@@ -832,7 +832,6 @@ func use_target() -> void:
 
 	# Block input if UI state machine says player input should be blocked
 	if UIStateMachine.should_block_player_input():
-		print("[Actor] use_target() blocked by UI state machine")
 		return
 
 	# Handle cancel action for clearing target (only in GAMEPLAY state)
@@ -842,23 +841,13 @@ func use_target() -> void:
 		return
 
 	if Keybinds.is_action_just_pressed("increment_target"):
-		print("[Actor] increment_target pressed!")
 		var next = find_next_target()
-		print("[Actor] find_next_target() returned: '%s', current target: '%s'" % [next, target])
 		if next != target:  # Only set if different to avoid plate deletion bug
-			print("[Actor] Setting target to: '%s'" % next)
 			set_target(next)
-		else:
-			print("[Actor] Next target same as current, not changing")
 	if Keybinds.is_action_just_pressed("decrement_target"):
-		print("[Actor] decrement_target pressed!")
 		var prev = find_prev_target()
-		print("[Actor] find_prev_target() returned: '%s', current target: '%s'" % [prev, target])
 		if prev != target:  # Only set if different to avoid plate deletion bug
-			print("[Actor] Setting target to: '%s'" % prev)
 			set_target(prev)
-		else:
-			print("[Actor] Prev target same as current, not changing")
 	if Keybinds.is_action_just_pressed("clear_target"):
 		set_target("")
 		target_queue.clear()

@@ -58,6 +58,13 @@ func _physics_process(_delta: float) -> void:
 		# Collect button events for this frame
 		var button_events = _collect_button_events_from_generic_ids()
 
+		# Log button events if any are detected
+		if button_events.size() > 0:
+			var event_summaries = []
+			for event in button_events:
+				event_summaries.append("key=%s state=%s" % [event.button_key, event.state])
+			print("[GenericInputManager] Frame %d: %d button events: [%s]" % [current_frame, button_events.size(), ", ".join(event_summaries)])
+
 		# Update state machine ONCE per frame
 		state_machine.update(button_events)
 
@@ -154,7 +161,7 @@ func free_ids(ids: Array) -> void:
 			available_ids.append(generic_id)
 
 
-func assign_action(action_name: String, input_events: Array, skip_rebuild: bool = false) -> bool:
+func assign_action(action_name: String, input_events: Array, skip_rebuild: bool = false, append: bool = false) -> bool:
 	"""
 	Assigns an array of InputEvents to a logical action name.
 	For single inputs, allocates 1 generic ID.
@@ -163,10 +170,14 @@ func assign_action(action_name: String, input_events: Array, skip_rebuild: bool 
 	Set skip_rebuild=true when bulk-loading actions to avoid rebuilding the state machine multiple times.
 	Call rebuild_state_machine() manually after all actions are loaded.
 
+	Set append=true to ADD events to an existing action instead of replacing them.
+	This is useful for adding keyboard and gamepad events separately while keeping both.
+
 	Returns true on success, false on failure.
 	"""
-	# First, clear any existing assignment
-	unassign_action(action_name)
+	# Clear any existing assignment (unless appending)
+	if not append:
+		unassign_action(action_name)
 
 	# Allocate generic IDs
 	var generic_ids = allocate_ids(input_events.size())
@@ -188,8 +199,13 @@ func assign_action(action_name: String, input_events: Array, skip_rebuild: bool 
 		generic_to_input[generic_id] = input_event
 		generic_to_action[generic_id] = action_name
 
-	# Store the action -> generic IDs mapping
-	action_to_generics[action_name] = generic_ids
+	# Store or append to the action -> generic IDs mapping
+	if append and action_name in action_to_generics:
+		# Append new generic IDs to existing ones
+		action_to_generics[action_name].append_array(generic_ids)
+	else:
+		# Replace with new generic IDs
+		action_to_generics[action_name] = generic_ids
 
 	# Rebuild state machine to clear any stale paths from previous bindings
 	# This ensures runtime binding changes work immediately
@@ -213,13 +229,14 @@ func unassign_action(action_name: String) -> void:
 	action_to_generics.erase(action_name)
 
 
-func unassign_keyboard_events(action_name: String) -> void:
+func unassign_keyboard_events(action_name: String) -> Array:
 	"""
 	Removes only keyboard/mouse input events from an action.
-	Preserves gamepad events. Re-assigns remaining events if any exist.
+	Returns the gamepad events that were preserved (without re-assigning them).
+	Caller is responsible for re-combining and re-assigning if needed.
 	"""
 	if action_name not in action_to_generics:
-		return
+		return []
 
 	# Get current input events for this action
 	var current_events = get_action_input_events(action_name)
@@ -233,18 +250,18 @@ func unassign_keyboard_events(action_name: String) -> void:
 	# Unassign all events
 	unassign_action(action_name)
 
-	# Re-assign gamepad events if any remain
-	if gamepad_events.size() > 0:
-		assign_action(action_name, gamepad_events)
+	# Return gamepad events for caller to re-assign if needed
+	return gamepad_events
 
 
-func unassign_gamepad_events(action_name: String) -> void:
+func unassign_gamepad_events(action_name: String) -> Array:
 	"""
 	Removes only gamepad input events from an action.
-	Preserves keyboard/mouse events. Re-assigns remaining events if any exist.
+	Returns the keyboard/mouse events that were preserved (without re-assigning them).
+	Caller is responsible for re-combining and re-assigning if needed.
 	"""
 	if action_name not in action_to_generics:
-		return
+		return []
 
 	# Get current input events for this action
 	var current_events = get_action_input_events(action_name)
@@ -258,9 +275,8 @@ func unassign_gamepad_events(action_name: String) -> void:
 	# Unassign all events
 	unassign_action(action_name)
 
-	# Re-assign keyboard events if any remain
-	if keyboard_events.size() > 0:
-		assign_action(action_name, keyboard_events)
+	# Return keyboard events for caller to re-assign if needed
+	return keyboard_events
 
 
 func _is_gamepad_event(event: InputEvent) -> bool:
@@ -329,18 +345,14 @@ func is_action_just_pressed(action_name: String, check_priority: bool = true) ->
 	"""
 	var generic_ids = get_action_generic_ids(action_name)
 	if generic_ids.is_empty():
-		print("[GenericInputManager] is_action_just_pressed('%s'): NOT in action_to_generics, returning false" % action_name)
 		return false
 
 	# If priority checking is disabled, use raw check
 	if not check_priority:
 		return _check_action_just_pressed_raw(action_name)
 
-	# Use cached result from _process() to prevent multiple state machine updates per frame
-	var result = cached_triggered_action == action_name
-	if result:
-		print("[GenericInputManager] is_action_just_pressed('%s'): TRUE (cached_triggered_action='%s')" % [action_name, cached_triggered_action])
-	return result
+	# Use cached result from _physics_process() to prevent multiple state machine updates per frame
+	return cached_triggered_action == action_name
 
 
 func is_action_just_released(action_name: String) -> bool:
@@ -514,16 +526,26 @@ func rebuild_state_machine() -> void:
 	state_machine = InputStateMachine.builder().build()
 
 	# Re-register all current action bindings
+	# Register keyboard and gamepad SEPARATELY to avoid treating them as multi-button combos
 	for action_name in action_to_generics:
 		var input_events = get_action_input_events(action_name)
 
-		# Build button keys for state machine registration
-		var button_keys = []
+		# Separate keyboard/mouse events from gamepad events
+		var keyboard_button_keys = []
+		var gamepad_button_keys = []
+
 		for input_event in input_events:
 			var button_key = _event_to_button_key(input_event)
 			if button_key != "":
-				button_keys.append(button_key)
+				if _is_gamepad_event(input_event):
+					gamepad_button_keys.append(button_key)
+				else:
+					keyboard_button_keys.append(button_key)
 
-		# Register with the fresh state machine
-		if button_keys.size() > 0:
-			state_machine.register_binding(button_keys, action_name)
+		# Register keyboard events separately
+		if keyboard_button_keys.size() > 0:
+			state_machine.register_binding(keyboard_button_keys, action_name)
+
+		# Register gamepad events separately
+		if gamepad_button_keys.size() > 0:
+			state_machine.register_binding(gamepad_button_keys, action_name)

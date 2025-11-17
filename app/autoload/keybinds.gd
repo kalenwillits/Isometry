@@ -422,37 +422,45 @@ func get_gamepad_bind(action_name: String) -> String:
 
 func set_keybind(action_name: String, binding: String) -> void:
 	"""Sets the keyboard/mouse binding for an action"""
-	# Remove only keyboard/mouse events, preserve gamepad events
-	GenericInputManager.unassign_keyboard_events(action_name)
+	# Remove keyboard/mouse events and get preserved gamepad events
+	var gamepad_events = GenericInputManager.unassign_keyboard_events(action_name)
 
 	# Remove existing keyboard/mouse events from traditional system
 	_remove_keyboard_mouse_events(action_name)
 
-	# Add new binding
-	if binding != "":
-		# Parse binding string and create InputEvent array
-		var events = _parse_keyboard_binding(binding)
-		if events.size() > 0:
-			# Get existing gamepad events to preserve them
-			var existing_events = GenericInputManager.get_action_input_events(action_name)
-			var all_events = events + existing_events
+	# Build combined event array
+	var all_events = []
 
-			# Assign all events (new keyboard + existing gamepad)
-			if all_events.size() > 0:
-				if not GenericInputManager.assign_action(action_name, all_events):
-					push_error("Failed to assign keyboard binding for %s" % action_name)
+	# Add new keyboard binding
+	if binding != "":
+		var keyboard_events = _parse_keyboard_binding(binding)
+		all_events.append_array(keyboard_events)
+
+	# Add preserved gamepad events
+	all_events.append_array(gamepad_events)
+
+	# Assign combined events
+	if all_events.size() > 0:
+		if not GenericInputManager.assign_action(action_name, all_events):
+			push_error("Failed to assign keyboard binding for %s" % action_name)
 
 	binding_changed.emit(action_name, "keyboard")
 
 func set_gamepad_bind(action_name: String, binding: String) -> void:
 	"""Sets the gamepad binding for an action"""
-	# Remove only gamepad events, preserve keyboard/mouse events
-	GenericInputManager.unassign_gamepad_events(action_name)
+	# Remove gamepad events and get preserved keyboard/mouse events
+	var keyboard_events = GenericInputManager.unassign_gamepad_events(action_name)
 
 	# Remove existing gamepad events from traditional system
 	_remove_gamepad_events(action_name)
 
-	# Add new binding
+	# Build combined event array
+	var all_events = []
+
+	# Add preserved keyboard events first
+	all_events.append_array(keyboard_events)
+
+	# Add new gamepad binding
 	if binding != "":
 		# Ensure joy_ prefix
 		var joy_binding = binding
@@ -463,17 +471,13 @@ func set_gamepad_bind(action_name: String, binding: String) -> void:
 				joy_parts.append("joy_" + part)
 			joy_binding = "+".join(joy_parts)
 
-		# Parse binding string and create InputEvent array
-		var events = _parse_gamepad_binding(joy_binding)
-		if events.size() > 0:
-			# Get existing keyboard events to preserve them
-			var existing_events = GenericInputManager.get_action_input_events(action_name)
-			var all_events = existing_events + events
+		var gamepad_events = _parse_gamepad_binding(joy_binding)
+		all_events.append_array(gamepad_events)
 
-			# Assign all events (existing keyboard + new gamepad)
-			if all_events.size() > 0:
-				if not GenericInputManager.assign_action(action_name, all_events):
-					push_error("Failed to assign gamepad binding for %s" % action_name)
+	# Assign combined events
+	if all_events.size() > 0:
+		if not GenericInputManager.assign_action(action_name, all_events):
+			push_error("Failed to assign gamepad binding for %s" % action_name)
 
 	binding_changed.emit(action_name, "gamepad")
 
@@ -620,17 +624,21 @@ func load_bindings() -> void:
 		GenericInputManager.unassign_action(action_name)
 		InputMap.action_erase_events(action_name)
 
-		# Build combined event array without using preservation logic
-		# This avoids the duplicate event bug that occurs when set_gamepad_bind
-		# re-assigns keyboard events during its unassign_gamepad_events call
-		var all_events = []
+		# Register keyboard and gamepad bindings SEPARATELY to avoid treating
+		# them as multi-button combos in the InputStateMachine
+		var has_assignments = false
 
-		# Parse and add keyboard events
+		# Parse and assign keyboard events separately
 		if keybind != "":
 			var keyboard_events = _parse_keyboard_binding(keybind)
-			all_events.append_array(keyboard_events)
+			if keyboard_events.size() > 0:
+				# Skip rebuild during bulk loading for performance
+				if not GenericInputManager.assign_action(action_name, keyboard_events, true, false):
+					push_error("Failed to assign keyboard bindings for %s" % action_name)
+				else:
+					has_assignments = true
 
-		# Parse and add gamepad events
+		# Parse and assign gamepad events separately
 		if gamepad_bind != "":
 			# Ensure joy_ prefix
 			var joy_binding = gamepad_bind
@@ -642,23 +650,18 @@ func load_bindings() -> void:
 				joy_binding = "+".join(joy_parts)
 
 			var gamepad_events = _parse_gamepad_binding(joy_binding)
-			all_events.append_array(gamepad_events)
+			if gamepad_events.size() > 0:
+				# Skip rebuild during bulk loading for performance, APPEND to keyboard events
+				if not GenericInputManager.assign_action(action_name, gamepad_events, true, true):
+					push_error("Failed to assign gamepad bindings for %s" % action_name)
+				else:
+					has_assignments = true
 
-		# Assign all events at once
-		if all_events.size() > 0:
-			print("[Keybinds] Loading %s: kb='%s' gp='%s' -> %d events" % [action_name, keybind, gamepad_bind, all_events.size()])
-			# Skip rebuild during bulk loading for performance
-			if not GenericInputManager.assign_action(action_name, all_events, true):
-				push_error("Failed to assign bindings for %s" % action_name)
-			else:
-				print("[Keybinds] Successfully assigned %s" % action_name)
-		else:
+		if not has_assignments:
 			push_warning("No events to assign for action '%s' (keyboard='%s', gamepad='%s')" % [action_name, keybind, gamepad_bind])
 
 	# Rebuild state machine once after all actions are loaded
-	print("[Keybinds] All actions loaded, rebuilding state machine...")
 	GenericInputManager.rebuild_state_machine()
-	print("[Keybinds] State machine rebuild complete")
 
 # ========================== Helper Methods ==========================
 

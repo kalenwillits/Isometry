@@ -31,7 +31,7 @@ var context_menu_opened_from: State = State.GAMEPLAY  # Track where CONTEXT_MENU
 signal state_changed(old_state: State, new_state: State)
 
 func _ready() -> void:
-	print("[UIStateMachine] Initialized in state: %s" % State.keys()[current_state])
+	pass
 
 ## Main transition method
 func transition_to(new_state: State) -> void:
@@ -41,15 +41,11 @@ func transition_to(new_state: State) -> void:
 	var old_state = current_state
 	previous_state = current_state
 	current_state = new_state
-	print("[UIStateMachine] Transition: %s -> %s" % [State.keys()[old_state], State.keys()[new_state]])
 	state_changed.emit(old_state, new_state)
 
 ## Query: Should player input be blocked?
 func should_block_player_input() -> bool:
-	var blocked = current_state != State.GAMEPLAY and current_state != State.AREA_TARGETING
-	if blocked:
-		print("[UIStateMachine] Blocking input - current state: %s" % State.keys()[current_state])
-	return blocked
+	return current_state != State.GAMEPLAY and current_state != State.AREA_TARGETING
 
 ## Handle cancel action (context-aware)
 func handle_cancel() -> void:
@@ -128,7 +124,7 @@ func handle_open_menu() -> void:
 
 		_:
 			# Blocked in all other states
-			print("[UIStateMachine] open_menu action blocked in state: ", State.keys()[current_state])
+			pass
 
 ## Handle toggle_map_view action (only works from GAMEPLAY)
 func handle_toggle_map() -> void:
@@ -145,7 +141,7 @@ func handle_toggle_map() -> void:
 
 		_:
 			# Blocked in all other states
-			print("[UIStateMachine] toggle_map_view action blocked in state: ", State.keys()[current_state])
+			pass
 
 ## Transition to map from menu (not toggle)
 func open_map_from_menu() -> void:
@@ -167,7 +163,7 @@ func handle_toggle_resources() -> void:
 
 		_:
 			# Blocked in all other states
-			print("[UIStateMachine] toggle_resources_view action blocked in state: ", State.keys()[current_state])
+			pass
 
 ## Transition to resources from menu (not toggle)
 func open_resources_from_menu() -> void:
@@ -194,7 +190,7 @@ func handle_toggle_skills() -> void:
 
 		_:
 			# Blocked in all other states
-			print("[UIStateMachine] toggle_skills_view action blocked in state: ", State.keys()[current_state])
+			pass
 
 ## Open context menu from current state
 func open_context_menu() -> void:
