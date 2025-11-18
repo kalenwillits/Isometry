@@ -13,6 +13,16 @@ func authenticate_and_spawn_actor(peer_id: int, token: PackedByteArray) -> void:
 			.task(func():
 				var auth: Secret.Auth = Secret.Auth.builder().token(token).build()
 				Logger.debug("Validating auth token for peer_id=%s" % peer_id, self)
+
+				# Validate campaign checksum first
+				var server_checksum: String = Repo.get_campaign_checksum()
+				var client_checksum: String = auth.get_campaign_checksum()
+
+				if client_checksum != server_checksum:
+					Logger.warn("Campaign checksum mismatch for peer_id=%s - server: %s, client: %s" % [peer_id, server_checksum, client_checksum], self)
+					campaign_mismatch.rpc_id(peer_id, server_checksum)
+					return
+
 				if auth.is_valid():
 					Logger.info("Authentication successful for user=%s, peer_id=%s" % [auth.get_username(), peer_id], self)
 					var main_ent = Repo.select(Group.MAIN_ENTITY)
@@ -57,7 +67,11 @@ func request_token_from_peer() -> void:
 			.condition(func(): return Secret.public_key != null)
 			.task(
 				func():
-					var auth: Secret.Auth = Secret.Auth.builder().username(Cache.username).password(Cache.password).build()
+					var auth: Secret.Auth = Secret.Auth.builder()\
+						.username(Cache.username)\
+						.password(Cache.password)\
+						.campaign_checksum(Cache.campaign_checksum)\
+						.build()
 					if auth.is_valid(): Queue.enqueue(
 						Queue.Item.builder()
 						.comment("Authenticating with server")
@@ -83,6 +97,30 @@ func set_public_key(public_key: String) -> void:
 	Logger.debug("Received public key from server (length=%s)" % public_key.length(), self)
 	if Cache.network == Network.Mode.CLIENT:
 		Secret.set_public_key(public_key)
+
+@rpc("authority", "reliable")
+func campaign_mismatch(server_checksum: String) -> void:
+	Logger.error("Campaign version mismatch detected!", self)
+	Logger.error("Server campaign checksum: %s" % server_checksum, self)
+	Logger.error("Client campaign checksum: %s" % Cache.campaign_checksum, self)
+
+	var error_message: String = "Campaign version mismatch!\n\n"
+	error_message += "Server checksum: %s\n" % server_checksum
+	error_message += "Your checksum: %s\n\n" % Cache.campaign_checksum
+	error_message += "Please ensure you're using the same campaign file as the server."
+
+	LoadingModal.show_error(error_message)
+
+	# Disconnect from server
+	Queue.enqueue(
+		Queue.Item.builder()
+		.comment("Disconnect due to campaign mismatch")
+		.task(func():
+			if multiplayer.multiplayer_peer != null:
+				multiplayer.multiplayer_peer.close()
+			)
+		.build()
+	)
 
 @rpc("any_peer", "call_local", "reliable")
 func request_spawn_actor(peer_id: int) -> void:

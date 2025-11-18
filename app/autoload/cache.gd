@@ -13,6 +13,7 @@ var password: String
 # Runtime storage
 var network: Network.Mode = cliargs.get("network", "0").to_int()
 var campaign: String = ""
+var campaign_checksum: String = ""
 var dir: String = ""
 var textures: Dictionary  # Storage of already loaded textures
 var camera_zoom: int = 3

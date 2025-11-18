@@ -19,12 +19,15 @@ func _ready() -> void:
 			.build()
 		)
 
-	# Queue 3: Update modal when archive loaded
+	# Queue 3: Cache campaign checksum and update modal
 	Queue.enqueue(
 		Queue.Item.builder()
-		.comment("Modal: Archive loaded")
+		.comment("Cache campaign checksum")
 		.condition(func(): return Repo.get_child_count() != 0)
-		.task(func(): LoadingModal.show_status("Caching audio assets..."))
+		.task(func():
+			Cache.campaign_checksum = Repo.get_campaign_checksum()
+			Logger.info("Campaign checksum cached: %s" % Cache.campaign_checksum, self)
+			LoadingModal.show_status("Caching audio assets..."))
 		.build()
 	)
 

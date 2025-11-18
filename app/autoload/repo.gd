@@ -40,6 +40,8 @@ const _entities: Dictionary = {
 signal load_complete
 signal load_failure
 
+var campaign_checksum: String = ""
+
 func query(tags: Array) -> Array:
 	var query_tags: Array = [Group.ENTITY]
 	query_tags.append_array(tags)
@@ -80,6 +82,35 @@ func add_asset_as_entities_to_tree(asset: Dictionary):
 		else:
 			Logger.warn("Type [%s] is not recognized as a valid type and will be skipped, options are [%s]." % [objtype, _entities.keys()], self)
 
+func calculate_campaign_checksum() -> String:
+	var path: String = Path.builder()\
+		.root()\
+		.part(io.get_dir())\
+		.part(Cache.dir)\
+		.part(Cache.campaign)\
+		.extension(".zip")\
+		.build()\
+		.render()
+
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		Logger.warn("Failed to open campaign file for checksum calculation: %s" % path, self)
+		return ""
+
+	var file_bytes: PackedByteArray = file.get_buffer(file.get_length())
+	file.close()
+
+	var ctx: HashingContext = HashingContext.new()
+	ctx.start(HashingContext.HASH_SHA256)
+	ctx.update(file_bytes)
+	var hash: PackedByteArray = ctx.finish()
+	var checksum: String = hash.hex_encode()
+	Logger.info("Campaign checksum calculated: %s" % checksum, self)
+	return checksum
+
+func get_campaign_checksum() -> String:
+	return campaign_checksum
+
 func load_archive():
 	var archive: ZIPReader = ZIPReader.new()
 	var path: String = Path.builder()\
@@ -90,7 +121,7 @@ func load_archive():
 		.extension(".zip")\
 		.build()\
 		.render()
-	if archive.open(path) == OK:	
+	if archive.open(path) == OK:
 		var all_assets: Array = archive.get_files()
 		archive.close()
 		Logger.info("Loading [%s] assets from campaign [%s]..." % [all_assets.size(), path], self)
@@ -104,6 +135,7 @@ func load_archive():
 				.build()\
 				.pull()
 				add_asset_as_entities_to_tree(asset)
+		campaign_checksum = calculate_campaign_checksum()
 		load_complete.emit.call_deferred()
 		return OK
 	load_failure.emit()

@@ -11,6 +11,7 @@ class Auth extends Object:
 
 	var _username: String
 	var _password: String
+	var _campaign_checksum: String
 	var _token: PackedByteArray
 	var _hash: String
 	var _path: String = ""
@@ -28,6 +29,10 @@ class Auth extends Object:
 
 		func password(value: String) -> Auth.Builder:
 			this.set_password(value)
+			return self
+
+		func campaign_checksum(value: String) -> Auth.Builder:
+			this.set_campaign_checksum(value)
 			return self
 
 		func build() -> Auth:
@@ -56,6 +61,12 @@ class Auth extends Object:
 	func get_path() -> String:
 		return _path
 
+	func get_campaign_checksum() -> String:
+		return _campaign_checksum
+
+	func set_campaign_checksum(value: String) -> void:
+		_campaign_checksum = value
+
 	func _build_path():
 		_path = Path.builder().root().part(io.get_dir()).part("data").part(get_hash()).extension(".json").build().render()
 
@@ -70,15 +81,21 @@ class Auth extends Object:
 
 	func set_token(value: PackedByteArray) -> void:
 		_token = value
-		var raw = Secret.decrypt(_token).split(DELIM)
-		if raw.size() == 2:
+		var raw: PackedStringArray = Secret.decrypt(_token).split(DELIM)
+		if raw.size() == 3:
 			_username = raw[0]
 			_password = raw[1]
+			_campaign_checksum = raw[2]
+		elif raw.size() == 2:
+			# Fallback for old token format without checksum
+			_username = raw[0]
+			_password = raw[1]
+			_campaign_checksum = ""
 		_hash = create_hash("%s%s%s" % [_username.strip_edges(), DELIM, _password.strip_edges()])
 
 	func _build_token() -> void:
 		if _token.is_empty() and (_username != "" and _password != ""):
-			_token = Secret.encrypt("%s%s%s" % [_username.strip_edges(), DELIM, _password.strip_edges()])
+			_token = Secret.encrypt("%s%s%s%s%s" % [_username.strip_edges(), DELIM, _password.strip_edges(), DELIM, _campaign_checksum])
 			_hash = create_hash("%s%s%s" % [_username.strip_edges(), DELIM, _password.strip_edges()])
 
 	func _is_valid_username(value: String) -> bool:
