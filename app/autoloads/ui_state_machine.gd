@@ -17,8 +17,7 @@ enum State {
 	MENU_MAP,
 	CONTEXT_MENU,
 	PLATE_VIEW,
-	CONFIRMATION_MODAL,
-	AREA_TARGETING
+	CONFIRMATION_MODAL
 }
 
 var current_state: State = State.GAMEPLAY
@@ -45,7 +44,7 @@ func transition_to(new_state: State) -> void:
 
 ## Query: Should player input be blocked?
 func should_block_player_input() -> bool:
-	return current_state != State.GAMEPLAY and current_state != State.AREA_TARGETING
+	return current_state != State.GAMEPLAY
 
 ## Handle cancel action (context-aware)
 func handle_cancel() -> void:

@@ -60,7 +60,6 @@ const NAV_PATH_MAX_DISTANCE: float = 64.0  # Increased recalculation distance
 var charge: float = 0.0
 var charging_skill_index: int = -1  # Which skill (1-9) is currently charging, -1 if none
 var charging_skill_max_charge: float = 0.0  # Max charge from skill entity
-var charging_indicator: Node2D = null  # Visual indicator for skill charging
 var resources: Dictionary = {}
 var fader: Fader
 var peer_id: int = 0
@@ -91,15 +90,6 @@ const MAX_PATH_ATTEMPTS: int = 10
 var is_direct_movement_active: bool = false
 var current_input_strength: float = 0.0
 var last_movement_mode: String = "pathing"  # Track last intentional movement mode: "pathing" or "direct"
-# Area targeting mode tracking
-var is_area_targeting: bool = false
-var area_targeting_action: String = ""
-var area_targeting_skill: Entity = null
-var area_targeting_overlay: Node2D = null
-var area_targeting_start_pos: Vector2 = Vector2.ZERO
-var area_targeting_was_pathing: bool = false  # Track if pathing was active when entering targeting
-var area_targeting_direct_control: bool = false  # Track if direct control is active during targeting
-var area_targeting_highlighted_actors: Array = []  # Track actors highlighted by area targeting
 # Bearing system - independent direction control
 var bearing: int = 0  # Bearing in degrees (0-360)
 var is_bearing_mode_active: bool = false  # Whether bearing input is currently active
@@ -458,7 +448,6 @@ func _ready() -> void:
 	$NavigationAgent.path_max_distance = NAV_PATH_MAX_DISTANCE
 	var actor_ent: Entity = Repo.select(actor)
 	if is_primary():
-		build_charging_indicator()
 		# Initialize heading state machine for primary actor
 		heading_state_machine = HeadingStateMachine.builder().build()
 		visible_groups = {}  # Initialize group tracking for primary actor
@@ -544,14 +533,11 @@ func _physics_process(delta) -> void:
 	use_move_view(delta)  # Camera look-ahead (uses bearing if active)
 	if is_primary():
 		use_move_discovery()
-		if is_area_targeting:
-			update_area_targeting(delta)
-		else:
-			use_pathing(delta)
-			click_to_move()
-			use_move_directly(delta)
-			update_heading_from_state_machine(delta)  # Update heading based on state machine
-			use_visible_pathing()
+		use_pathing(delta)
+		click_to_move()
+		use_move_directly(delta)
+		update_heading_from_state_machine(delta)  # Update heading based on state machine
+		use_visible_pathing()
 		use_actions()
 		use_target()
 		#use_line_of_sight() # Temp disabled save incase we need this later
@@ -578,10 +564,6 @@ func _built_in_measure__charge() -> int:
 	# Reset charging state when charge is consumed
 	charging_skill_index = -1
 	charging_skill_max_charge = 0.0
-
-	# Reset charging indicator visual
-	if charging_indicator:
-		charging_indicator.set_charge_progress(0.0, 0.0)
 
 	return charge_hundredths
 
@@ -697,7 +679,7 @@ func use_strategy() -> void:
 func use_actions() -> void:
 	# Block input if UI state machine says player input should be blocked
 	# EXCEPT when in area targeting mode, allow input for that
-	if UIStateMachine.should_block_player_input() and !is_area_targeting:
+	if UIStateMachine.should_block_player_input():
 		return
 
 	var actor_ent: Entity = Repo.select(actor)
@@ -728,20 +710,10 @@ func use_actions() -> void:
 				charging_skill_index = -1
 				charging_skill_max_charge = 0.0
 
-				# Reset charging indicator visual
-				if charging_indicator:
-					charging_indicator.set_charge_progress(0.0, 0.0)
-
-			# Check if this is an area skill (using radius for ellipse system)
-			if ("radius" in skill_ent) and skill_ent.radius > 0:
-				# Enter area targeting mode
-				enter_area_targeting(skill_ent.start.key(), skill_ent)
-				Finder.select(ui_action_block).press_button()
-			else:
-				# Normal action
-				var start_signal = "action_%d_start" % (i + 1)
-				Finder.select(ui_action_block).press_button()
-				emit_skill_signal(start_signal, resolve_target())
+			# Normal action
+			var start_signal = "action_%d_start" % (i + 1)
+			Finder.select(ui_action_block).press_button()
+			emit_skill_signal(start_signal, resolve_target())
 
 		# Handle charging while button is held
 		if Keybinds.is_action_pressed(action_name):
@@ -752,17 +724,10 @@ func use_actions() -> void:
 					charging_skill_index = skill_index
 					charging_skill_max_charge = float(skill_ent.charge)
 
-					# Update charging indicator color from skill
-					if charging_indicator and ("color" in skill_ent):
-						var skill_color_str: String = skill_ent.color
-						charging_indicator.set_color(Color.from_string(skill_color_str, Color.WHITE))
 
 				# Accumulate charge, clamped to max
 				charge = min(charge + get_physics_process_delta_time(), charging_skill_max_charge)
 
-				# Update charging indicator visual
-				if charging_indicator:
-					charging_indicator.set_charge_progress(charge, charging_skill_max_charge)
 
 		# Handle skill end (button release)
 		if Keybinds.is_action_just_released(action_name):
@@ -771,15 +736,8 @@ func use_actions() -> void:
 				charging_skill_index = -1
 				charging_skill_max_charge = 0.0
 
-				# Reset charging indicator visual
-				if charging_indicator:
-					charging_indicator.set_charge_progress(0.0, 0.0)
 
-			# Check if we're in area targeting mode for this action
-			if is_area_targeting and area_targeting_action == (skill_ent.start.key() if skill_ent.start else ""):
-				execute_area_action()
-				Finder.select(ui_action_block).release_button()
-			elif skill_ent.end:
+			if skill_ent.end:
 				var end_signal = "action_%d_end" % (i + 1)
 				emit_skill_signal(end_signal, resolve_target())
 				Finder.select(ui_action_block).release_button()
@@ -826,9 +784,6 @@ func emit_skill_signal(skill_event: String, target_actor: Actor) -> void:
 
 func use_target() -> void:
 	# Handle cancel during area targeting mode
-	if is_area_targeting and Keybinds.is_action_just_pressed("cancel"):
-		cancel_area_targeting()
-		return
 
 	# Block input if UI state machine says player input should be blocked
 	if UIStateMachine.should_block_player_input():
@@ -1383,22 +1338,7 @@ func build_base() -> void:
 	collision_shape.set_name(base_name)
 	add_child(collision_shape)
 
-	# Update charging indicator size when base changes
-	if charging_indicator:
-		charging_indicator.set_size(base)
 
-func build_charging_indicator() -> void:
-	var actor_ent: Entity = Repo.select(actor)
-	var base_size: int = actor_ent.base if actor_ent else 0
-
-	charging_indicator = (
-		ChargingIndicator.builder()
-		.size(base_size)
-		.color(Color.WHITE)
-		.build()
-	)
-	charging_indicator.deploy(self)
-	
 func build_hitbox() -> void:
 	if !hitbox: return
 	var polygon_ent = Repo.select(hitbox)
@@ -2064,270 +2004,6 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 			)
 	)
 	other.fader.appear()
-
-## Area Targeting Functions
-
-func enter_area_targeting(action_key: String, skill_ent: Entity) -> void:
-	"""Enter area targeting mode for an AOE skill"""
-	Logger.debug("enter_area_targeting: action_key=%s, skill_ent=%s" % [action_key, skill_ent != null])
-
-	if !skill_ent:
-		return
-
-	# Require radius attribute for ellipse-based targeting
-	if !("radius" in skill_ent) or skill_ent.radius <= 0:
-		Logger.error("Skill missing or invalid radius attribute for area targeting" % action_key)
-		return
-
-	# Store skill entity reference
-	area_targeting_skill = skill_ent
-
-	# Build the overlay using builder pattern
-	var range_limit = skill_ent.range_ if "range_" in skill_ent else 10000.0
-	var builder = AreaTargetingOverlay.builder()\
-		.ellipse_radius(skill_ent.radius)\
-		.range_limit(range_limit)\
-		.caster_position(global_position)
-
-	# Add color if specified
-	if "color" in skill_ent and skill_ent.color and skill_ent.color != "":
-		builder = builder.color(skill_ent.color)
-
-	area_targeting_overlay = builder.build()
-
-	# Add overlay to scene and set position
-	get_parent().add_child(area_targeting_overlay)
-	area_targeting_overlay.global_position = global_position
-
-	# Force the overlay to update its visuals now that it's in the scene tree
-	area_targeting_overlay.caster_position = global_position
-	area_targeting_overlay.queue_redraw()
-
-	# Track movement mode at time of entering targeting
-	area_targeting_was_pathing = (last_movement_mode == "pathing")
-	area_targeting_direct_control = (last_movement_mode == "direct")  # Start in direct control if using direct movement
-
-	# Set state
-	is_area_targeting = true
-	area_targeting_action = action_key
-	area_targeting_start_pos = global_position
-
-	# Play casting animation if specified
-	if "casting" in skill_ent and skill_ent.casting and skill_ent.casting != "":
-		set_state(skill_ent.casting)
-
-	# Root the player
-	if "time" in skill_ent and skill_ent.time:
-		root(skill_ent.time + 60.0)  # Root for action time + large buffer
-
-	# Set UI state
-	UIStateMachine.transition_to(UIStateMachine.State.AREA_TARGETING)
-
-func update_area_targeting(delta: float) -> void:
-	"""Update area targeting overlay position based on input"""
-	if !is_area_targeting or !area_targeting_overlay:
-		return
-
-	if !area_targeting_skill:
-		Logger.error("update_area_targeting: skill entity not found")
-		cancel_area_targeting()
-		return
-
-	# Get directional input - use MOVE inputs for overlay control
-	var motion = Keybinds.get_vector(Keybinds.MOVE_LEFT, Keybinds.MOVE_RIGHT, Keybinds.MOVE_UP, Keybinds.MOVE_DOWN)
-
-	# Update caster position in overlay for line drawing
-	area_targeting_overlay.caster_position = area_targeting_start_pos
-
-	# Check if player is providing movement input - switch to direct control mode
-	if motion.length() > 0 and area_targeting_was_pathing and !area_targeting_direct_control:
-		area_targeting_direct_control = true
-
-	# Two movement modes: trailing (pathing mode) or direct control
-	if area_targeting_was_pathing and !area_targeting_direct_control:
-		# TRAILING MODE: Ellipse lerps toward cursor position
-		var mouse_pos = get_global_mouse_position()
-		var target_position = mouse_pos
-
-		# Lerp ellipse toward target at constant speed
-		var lerp_speed = area_targeting_skill.speed
-		var current_pos = area_targeting_overlay.global_position
-		var direction_to_target = (target_position - current_pos).normalized()
-		var distance_to_target = current_pos.distance_to(target_position)
-
-		var move_distance = lerp_speed * delta
-		var new_position: Vector2
-		if move_distance < distance_to_target:
-			new_position = current_pos + direction_to_target * move_distance
-		else:
-			new_position = target_position
-
-		# Clamp center to max range (simple circular boundary)
-		var range_limit = area_targeting_skill.range_ if "range_" in area_targeting_skill else 10000.0
-		var center_distance = area_targeting_start_pos.distance_to(new_position)
-
-		if center_distance > range_limit:
-			var direction = (new_position - area_targeting_start_pos).normalized()
-			new_position = area_targeting_start_pos + direction * range_limit
-			center_distance = range_limit
-
-		# Apply final position
-		area_targeting_overlay.global_position = new_position
-
-		# Update range indicator
-		area_targeting_overlay.update_range_indicator(center_distance)
-		area_targeting_overlay.queue_redraw()
-
-		# Make actor face the ellipse center
-		if position.distance_squared_to(area_targeting_overlay.global_position) > DESTINATION_PRECISION * DESTINATION_PRECISION:
-			look_at_point(area_targeting_overlay.global_position)
-
-		# Update highlighted actors in ellipse
-		_update_area_targeting_highlights()
-
-	else:
-		# DIRECT CONTROL MODE: Input vectors move the ellipse directly
-		if motion.length() > 0:
-			# Get speed from skill or use default
-			var targeting_speed = area_targeting_skill.speed if "speed" in area_targeting_skill else 300.0
-
-			# Apply isometric factor to speed based on motion angle
-			var isometric_adjustment = std.isometric_factor(motion.angle())
-			var adjusted_speed = targeting_speed * isometric_adjustment
-
-			# Move the overlay
-			var new_position = area_targeting_overlay.global_position + motion * adjusted_speed * delta
-
-			# Clamp center to max range (simple circular boundary)
-			var range_limit = area_targeting_skill.range_ if "range_" in area_targeting_skill else 10000.0
-			var center_distance = area_targeting_start_pos.distance_to(new_position)
-
-			if center_distance > range_limit:
-				var direction = (new_position - area_targeting_start_pos).normalized()
-				new_position = area_targeting_start_pos + direction * range_limit
-				center_distance = range_limit
-
-			# Apply final position
-			area_targeting_overlay.global_position = new_position
-
-			# Update range indicator
-			area_targeting_overlay.update_range_indicator(center_distance)
-			area_targeting_overlay.queue_redraw()
-
-			# Make actor face the ellipse center
-			if position.distance_squared_to(area_targeting_overlay.global_position) > DESTINATION_PRECISION * DESTINATION_PRECISION:
-				look_at_point(area_targeting_overlay.global_position)
-
-			# Update highlighted actors in ellipse
-			_update_area_targeting_highlights()
-
-func _update_area_targeting_highlights() -> void:
-	"""Update outline highlights for actors in the area targeting ellipse"""
-	if !is_area_targeting or !area_targeting_overlay:
-		return
-
-	# Build a set of actors currently in the ellipse
-	var actors_in_ellipse: Array = []
-
-	# Check self (primary actor) - not in in_view
-	if area_targeting_overlay.is_point_in_ellipse(global_position):
-		actors_in_ellipse.append(self)
-
-	# Check other actors in view
-	for actor_name in in_view.keys():
-		var actor = Finder.get_actor(actor_name)
-		if actor and area_targeting_overlay.is_point_in_ellipse(actor.global_position):
-			actors_in_ellipse.append(actor)
-
-	# Remove highlights from actors no longer in ellipse
-	for actor in area_targeting_highlighted_actors:
-		if actor not in actors_in_ellipse:
-			# Preserve direct target outline if this actor is currently targeted
-			if target and actor.name == target:
-				actor.set_outline_opacity(0.666)  # Direct target opacity
-			else:
-				actor.set_outline_opacity(0.0)
-
-	# Add highlights to new actors in ellipse
-	for actor in actors_in_ellipse:
-		if actor not in area_targeting_highlighted_actors:
-			actor.set_outline_opacity(0.333)
-
-	# Update tracked list
-	area_targeting_highlighted_actors = actors_in_ellipse
-
-func execute_area_action() -> void:
-	"""Execute the area action on all targets within the ellipse"""
-	if !is_area_targeting or !area_targeting_overlay:
-		return
-
-	var action_ent = Repo.select(area_targeting_action)
-	if !action_ent:
-		cancel_area_targeting()
-		return
-
-	# Get all actors in the scene
-	var all_actors = get_tree().get_nodes_in_group(Group.ACTOR)
-
-	# Find all actors within the ellipse using the overlay's detection method
-	var targets_in_area: Array = []
-	Logger.debug("Area action: checking %d actors against ellipse" % all_actors.size())
-	Logger.debug("Area action: ellipse center = %s, radius = %d" % [area_targeting_overlay.global_position, area_targeting_overlay.radius])
-	Logger.debug("Area action: caster position = %s" % global_position)
-
-	for actor_node in all_actors:
-		# Check if actor's position is inside the ellipse
-		var is_in_ellipse = area_targeting_overlay.is_point_in_ellipse(actor_node.global_position)
-		Logger.debug("Area action: actor %s at %s - in ellipse: %s" % [actor_node.name, actor_node.global_position, is_in_ellipse])
-		if is_in_ellipse:
-			targets_in_area.append(actor_node)
-
-	Logger.debug("Area action: found %d targets in area" % targets_in_area.size())
-
-	# Invoke the action on each target
-	for target_actor in targets_in_area:
-		Logger.debug("Area action: invoking on self=%s, target=%s" % [name, target_actor.name])
-		get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(
-			1,
-			area_targeting_action,
-			name,
-			target_actor.name
-		)
-
-	# Exit targeting mode
-	cancel_area_targeting()
-
-func cancel_area_targeting() -> void:
-	"""Cancel area targeting and clean up"""
-	if area_targeting_overlay:
-		area_targeting_overlay.queue_free()
-		area_targeting_overlay = null
-
-	# Clear highlights from all tracked actors
-	for actor in area_targeting_highlighted_actors:
-		if actor:
-			actor.set_outline_opacity(0.0)
-	area_targeting_highlighted_actors.clear()
-
-	is_area_targeting = false
-	area_targeting_action = ""
-	area_targeting_skill = null
-	area_targeting_start_pos = Vector2.ZERO
-	area_targeting_was_pathing = false
-	area_targeting_direct_control = false
-
-	# Return to idle animation state
-	set_state(KeyFrames.IDLE)
-
-	# Stop the ActionTimer to prevent conflict with timer-based unroot
-	$ActionTimer.stop()
-
-	# Unroot the player by resetting speed
-	if speed_cache_value > 0:
-		set_speed(speed_cache_value)
-
-	# Return to gameplay state
-	UIStateMachine.transition_to(UIStateMachine.State.GAMEPLAY)
 
 func is_npc() -> bool:
 	return is_in_group(Group.NPC)
