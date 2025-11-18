@@ -38,10 +38,12 @@ func _ready() -> void:
 	
 func spawn_primary_actor(peer_id: int) -> void:
 	var auth = Secret.get_auth()
+	var main_ent = Repo.select(Group.MAIN_ENTITY)
 	var data := {
-		"peer_id": peer_id, 
+		"peer_id": peer_id,
 		"token": auth.get_token(),
-		"name": auth.get_username()
+		"name": auth.get_username(),
+		"speed": main_ent.actor.lookup().speed
 		}
 	if FileAccess.file_exists(auth.get_path()): 
 		var result = io.load_json(auth.get_path())
