@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://ddxleut4aa677"]
+
+[ext_resource type="Script" path="res://scenes/isometric_parallax_layer.gd" id="1_wmfaj"]
+
+[node name="Parallax" type="CanvasLayer"]
+layer = -1
+script = ExtResource("1_wmfaj")

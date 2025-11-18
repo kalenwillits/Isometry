@@ -178,32 +178,53 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func clone_parallax_backgrounds(map_node: Map, center_position: Vector2) -> void:
-	# Get all ParallaxBackground children from the map
-	var parallax_bgs = map_node.get_children().filter(func(child): return child is ParallaxBackground)
+	# Get all parallax children from the map (both legacy ParallaxBackground and new CanvasLayer-based)
+	var parallax_nodes = map_node.get_children().filter(func(child):
+		return child is ParallaxBackground or (child is CanvasLayer and child.is_in_group(Group.PARALLAX))
+	)
 
-	for original_parallax_bg in parallax_bgs:
-		# Clone the entire ParallaxBackground node structure
-		var cloned_parallax_bg = original_parallax_bg.duplicate()
-		cloned_parallax_bg.name = original_parallax_bg.name + "_Clone"
+	for original_parallax in parallax_nodes:
+		# Handle new IsometricParallaxLayer (CanvasLayer-based)
+		if original_parallax is CanvasLayer:
+			var cloned_parallax = original_parallax.duplicate()
+			cloned_parallax.name = original_parallax.name + "_Clone"
 
-		# Set scroll offset to 0 for static view
-		cloned_parallax_bg.scroll_offset = Vector2.ZERO
-		cloned_parallax_bg.scroll_base_offset = Vector2.ZERO
+			# Configure for static view
+			cloned_parallax.is_static_view = true
+			cloned_parallax.set_camera(viewport_camera)
 
-		# Set texture filter to NEAREST on all ParallaxLayer children and their sprite children
-		for parallax_layer in cloned_parallax_bg.get_children():
-			if parallax_layer is ParallaxLayer:
-				# Set on the ParallaxLayer itself
-				parallax_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-				# Also set on all sprite/texture children within the layer
-				for sprite in parallax_layer.get_children():
-					if sprite is CanvasItem:
-						sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			# Add to viewport first so it can access viewport size
+			viewport.add_child(cloned_parallax)
 
-		viewport.add_child(cloned_parallax_bg)
+			# Initialize static view with all tiles
+			cloned_parallax.initialize_static_view(viewport.size)
 
-		# Move to back
-		viewport.move_child(cloned_parallax_bg, 0)
+			# Move to back so it renders behind tilemaps
+			viewport.move_child(cloned_parallax, 0)
+
+		# Handle legacy ParallaxBackground
+		elif original_parallax is ParallaxBackground:
+			var cloned_parallax_bg = original_parallax.duplicate()
+			cloned_parallax_bg.name = original_parallax.name + "_Clone"
+
+			# Set scroll offset to 0 for static view
+			cloned_parallax_bg.scroll_offset = Vector2.ZERO
+			cloned_parallax_bg.scroll_base_offset = Vector2.ZERO
+
+			# Set texture filter to NEAREST on all ParallaxLayer children and their sprite children
+			for parallax_layer in cloned_parallax_bg.get_children():
+				if parallax_layer is ParallaxLayer:
+					# Set on the ParallaxLayer itself
+					parallax_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+					# Also set on all sprite/texture children within the layer
+					for sprite in parallax_layer.get_children():
+						if sprite is CanvasItem:
+							sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+			viewport.add_child(cloned_parallax_bg)
+
+			# Move to back
+			viewport.move_child(cloned_parallax_bg, 0)
 
 func clone_map_layers(map_node: Map, primary_actor: Actor) -> void:
 	# Get all TileMapLayer children from the map
