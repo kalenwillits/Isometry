@@ -38,19 +38,19 @@ func _on_visibility_changed() -> void:
 			theme_mgr._apply_theme_recursive(self)
 
 func open_view() -> void:
-	Logger.info("Opening map view", self)
+	Logger.info("Opening map view")
 
 	var primary_actor: Actor = Finder.get_primary_actor()
 	if not primary_actor:
-		Logger.warn("Cannot open map view: primary actor not found", self)
+		Logger.warn("Cannot open map view: primary actor not found")
 		return
 
 	# Get the primary actor's current map
 	var map_key: String = primary_actor.map
-	Logger.debug("Primary actor map key: %s" % map_key, self)
+	Logger.debug("Primary actor map key: %s" % map_key)
 
 	if map_key.is_empty():
-		Logger.warn("Cannot open map view: primary actor has no map", self)
+		Logger.warn("Cannot open map view: primary actor has no map")
 		return
 
 	# Try multiple methods to find the map node
@@ -60,19 +60,19 @@ func open_view() -> void:
 		var world = Finder.select(Group.WORLD)
 		if world:
 			map_node = world.get_node_or_null(map_key) as Map
-			Logger.debug("Tried getting map from World node", self)
+			Logger.debug("Tried getting map from World node")
 
 	if not map_node:
 		# Try using get_tree to find it in the group
 		map_node = get_tree().get_first_node_in_group(map_key) as Map
-		Logger.debug("Tried getting map from tree group", self)
+		Logger.debug("Tried getting map from tree group")
 
 	if not map_node:
-		Logger.warn("Cannot open map view: map node not found: %s" % map_key, self)
-		Logger.warn("Available groups: %s" % str(get_tree().get_nodes_in_group(Group.MAP)), self)
+		Logger.warn("Cannot open map view: map node not found: %s" % map_key)
+		Logger.warn("Available groups: %s" % str(get_tree().get_nodes_in_group(Group.MAP)))
 		return
 
-	Logger.debug("Found map node: %s" % map_node.name, self)
+	Logger.debug("Found map node: %s" % map_node.name)
 
 	# Set title from map entity name
 	var map_entity = Repo.select(map_key)
@@ -111,7 +111,7 @@ func open_view() -> void:
 	# Render waypoint markers
 	render_waypoint_markers(primary_actor)
 
-	Logger.info("Map view opened successfully", self)
+	Logger.info("Map view opened successfully")
 	visible = true
 
 func close_view() -> void:
@@ -154,7 +154,7 @@ func cycle_waypoint_selection(direction: int) -> void:
 		selected_waypoint_index = discovered_waypoint_keys.size() - 1
 
 	update_waypoint_selection()
-	Logger.info("Selected waypoint: %s (%d/%d)" % [discovered_waypoint_keys[selected_waypoint_index], selected_waypoint_index + 1, discovered_waypoint_keys.size()], self)
+	Logger.info("Selected waypoint: %s (%d/%d)" % [discovered_waypoint_keys[selected_waypoint_index], selected_waypoint_index + 1, discovered_waypoint_keys.size()])
 
 func activate_selected_waypoint() -> void:
 	if selected_waypoint_index >= 0 and selected_waypoint_index < discovered_waypoint_keys.size():
@@ -309,19 +309,19 @@ func render_waypoint_markers(primary_actor: Actor) -> void:
 	var all_waypoints = Repo.query([Group.WAYPOINT_ENTITY])
 	discovered_waypoint_keys.clear()
 
-	Logger.info("Rendering waypoints: found %d total waypoints" % all_waypoints.size(), self)
+	Logger.info("Rendering waypoints: found %d total waypoints" % all_waypoints.size())
 
 	for waypoint_ent in all_waypoints:
 		# Only show waypoints on the same map
 		if waypoint_ent.map and waypoint_ent.map.key() != primary_actor.map:
-			Logger.info("Waypoint %s skipped: wrong map (waypoint=%s, actor=%s)" % [waypoint_ent.key(), waypoint_ent.map.key(), primary_actor.map], self)
+			Logger.info("Waypoint %s skipped: wrong map (waypoint=%s, actor=%s)" % [waypoint_ent.key(), waypoint_ent.map.key(), primary_actor.map])
 			continue
 
-		Logger.info("Rendering waypoint %s at location %s" % [waypoint_ent.key(), waypoint_ent.location], self)
+		Logger.info("Rendering waypoint %s at location %s" % [waypoint_ent.key(), waypoint_ent.location])
 
 		# Check if waypoint location is discovered
 		if not is_waypoint_discovered(waypoint_ent, primary_actor):
-			Logger.info("Waypoint %s NOT discovered, skipping render", self)
+			Logger.info("Waypoint %s NOT discovered, skipping render")
 			continue
 
 		# Add to discovered list
@@ -371,17 +371,17 @@ func is_waypoint_discovered(waypoint_ent: Entity, primary_actor: Actor) -> bool:
 	# First check if waypoint already discovered (persisted)
 	var waypoint_key = waypoint_ent.get_name()
 	if primary_actor.discovered_waypoints.has(waypoint_key):
-		Logger.info("Waypoint %s already discovered (persisted)" % waypoint_key, self)
+		Logger.info("Waypoint %s already discovered (persisted)" % waypoint_key)
 		return true
 
 	# Get waypoint's vertex location
 	if not waypoint_ent.location:
-		Logger.warn("Waypoint %s has no location" % waypoint_key, self)
+		Logger.warn("Waypoint %s has no location" % waypoint_key)
 		return false
 
 	var vertex_ent = waypoint_ent.location.lookup()
 	if not vertex_ent:
-		Logger.warn("Waypoint %s vertex lookup failed" % waypoint_key, self)
+		Logger.warn("Waypoint %s vertex lookup failed" % waypoint_key)
 		return false
 
 	# Get waypoint world position (vertices are already in world coordinates)
@@ -402,13 +402,13 @@ func is_waypoint_discovered(waypoint_ent: Entity, primary_actor: Actor) -> bool:
 
 	Logger.info("Waypoint %s: pos=%s, actor_pos=%s, distance=%.1f, perception_range=%.1f, discovered=%s" % [
 		waypoint_key, waypoint_world_pos, actor_world_pos, distance, perception_range, distance <= perception_range
-	], self)
+	])
 
 	if distance <= perception_range:
 		# Mark as discovered for persistence
 		if not primary_actor.discovered_waypoints.has(waypoint_key):
 			primary_actor.discovered_waypoints.append(waypoint_key)
-			Logger.info("Waypoint %s newly discovered!" % waypoint_key, self)
+			Logger.info("Waypoint %s newly discovered!" % waypoint_key)
 		return true
 
 	return false

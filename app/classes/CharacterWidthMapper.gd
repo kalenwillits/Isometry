@@ -35,26 +35,26 @@ var default_char_width: float = 10.0
 func initialize(rich_text_label: RichTextLabel) -> void:
 	# Try to load from res:// first (committed version)
 	if ResourceLoader.exists(CACHE_PATH_RES):
-		Logger.info("Loading character width mapping from %s" % CACHE_PATH_RES, self)
+		Logger.info("Loading character width mapping from %s" % CACHE_PATH_RES)
 		var loaded_data = ResourceLoader.load(CACHE_PATH_RES)
 		if loaded_data and loaded_data is Resource:
 			char_widths = loaded_data.get("data") if loaded_data.get("data") else {}
 		if char_widths.size() > 0:
-			Logger.info("Loaded %d character widths from cache" % char_widths.size(), self)
+			Logger.info("Loaded %d character widths from cache" % char_widths.size())
 			return
 
 	# Try to load from user:// (runtime generated)
 	if FileAccess.file_exists(CACHE_PATH_USER):
-		Logger.info("Loading character width mapping from %s" % CACHE_PATH_USER, self)
+		Logger.info("Loading character width mapping from %s" % CACHE_PATH_USER)
 		var loaded_data = ResourceLoader.load(CACHE_PATH_USER)
 		if loaded_data and loaded_data is Resource:
 			char_widths = loaded_data.get("data") if loaded_data.get("data") else {}
 		if char_widths.size() > 0:
-			Logger.info("Loaded %d character widths from cache" % char_widths.size(), self)
+			Logger.info("Loaded %d character widths from cache" % char_widths.size())
 			return
 
 	# Generate new mapping if not found
-	Logger.info("Generating new character width mapping...", self)
+	Logger.info("Generating new character width mapping...")
 	generate_character_widths(rich_text_label)
 	save_to_cache()
 
@@ -76,7 +76,7 @@ func generate_character_widths(rich_text_label: RichTextLabel) -> void:
 		font = temp_label.get_theme_font("font", "Label")
 		font_size = temp_label.get_theme_font_size("font_size", "Label")
 
-	Logger.debug("Using font size: %d" % font_size, self)
+	Logger.debug("Using font size: %d" % font_size)
 
 	# Measure ASCII printable characters (32-126)
 	for ascii_code in range(32, 127):
@@ -91,7 +91,7 @@ func generate_character_widths(rich_text_label: RichTextLabel) -> void:
 	default_char_width = total_width / char_widths.size()
 
 	temp_label.queue_free()
-	Logger.info("Generated %d character widths, average: %.2f px" % [char_widths.size(), default_char_width], self)
+	Logger.info("Generated %d character widths, average: %.2f px" % [char_widths.size(), default_char_width])
 
 ## Save the character width mapping to cache
 func save_to_cache() -> void:
@@ -106,10 +106,10 @@ func save_to_cache() -> void:
 
 	var err = ResourceSaver.save(data_resource, CACHE_PATH_USER)
 	if err == OK:
-		Logger.info("Saved character width mapping to %s" % CACHE_PATH_USER, self)
-		Logger.info("To commit this mapping: copy from executable directory to res://assets/", self)
+		Logger.info("Saved character width mapping to %s" % CACHE_PATH_USER)
+		Logger.info("To commit this mapping: copy from executable directory to res://assets/")
 	else:
-		Logger.warn("Failed to save character width mapping: %d" % err, self)
+		Logger.warn("Failed to save character width mapping: %d" % err)
 
 ## Get the pixel width of a single character
 func get_char_width(character: String) -> float:

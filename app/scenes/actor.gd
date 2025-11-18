@@ -376,11 +376,11 @@ func promote_substate() -> void:
 func set_substate(value: SubState) -> void:
 	var can_change = is_primary() or (is_npc() and (Cache.network == Network.Mode.SERVER or Cache.network == Network.Mode.HOST))
 	if is_primary():
-		Logger.debug("set_substate: %s -> %s, can_change=%s, is_auth=%s, peer_id=%s" % [substate, value, can_change, is_multiplayer_authority(), peer_id], self)
+		Logger.debug("set_substate: %s -> %s, can_change=%s, is_auth=%s, peer_id=%s" % [substate, value, can_change, is_multiplayer_authority(), peer_id])
 	if can_change:
 		substate = value
 	elif is_primary():
-		Logger.debug("set_substate: BLOCKED - cannot change substate!", self)
+		Logger.debug("set_substate: BLOCKED - cannot change substate!")
 
 func _enter_tree():
 	set_name(str(peer_id))
@@ -864,7 +864,7 @@ func use_target() -> void:
 		if target and target != "":
 			Finder.select(Group.INTERFACE).open_selection_menu_for_actor(target)
 		else:
-			Logger.warn("No target selected, cannot open menu", self)
+			Logger.warn("No target selected, cannot open menu")
 
 	# Focus slot handling - top left
 	if Keybinds.is_action_just_pressed(Keybinds.CLEAR_FOCUS_TOP_LEFT):
@@ -1097,7 +1097,7 @@ func click_to_move() -> void:
 		current_input_strength = 0.0  # Reset input strength
 		var mouse_pos = get_global_mouse_position()
 		if is_primary():
-			Logger.debug("click_to_move: setting dest to %s" % mouse_pos, self)
+			Logger.debug("click_to_move: setting dest to %s" % mouse_pos)
 		set_destination(mouse_pos)
 
 func despawn() -> void:
@@ -1298,13 +1298,13 @@ func _local_action_handler_cleanup() -> void:
 		
 func _local_action_handler(target_actor: Actor, function: Callable, action_ent: Entity) -> void:
 	if is_primary():
-		Logger.debug("_local_action_handler: substate=%s, ActionTimer.stopped=%s" % [substate, $ActionTimer.is_stopped()], self)
+		Logger.debug("_local_action_handler: substate=%s, ActionTimer.stopped=%s" % [substate, $ActionTimer.is_stopped()])
 	match substate:
 		SubState.IDLE, SubState.START:  # Cooldowns mechanic
 			# Prevent concurrent skill actions by checking if we're already processing one
 			if $ActionTimer.is_stopped():  # Only allow if no action timer is running
 				if is_primary():
-					Logger.debug("_local_action_handler: executing action", self)
+					Logger.debug("_local_action_handler: executing action")
 				look_at_target()
 				is_bearing_mode_blocked = true
 				function.call(target_actor)
@@ -1312,10 +1312,10 @@ func _local_action_handler(target_actor: Actor, function: Callable, action_ent: 
 				var timer = get_tree().create_timer(action_ent.time)
 				timer.timeout.connect(_local_action_handler_cleanup, CONNECT_ONE_SHOT)
 			elif is_primary():
-				Logger.debug("_local_action_handler: blocked by running ActionTimer", self)
+				Logger.debug("_local_action_handler: blocked by running ActionTimer")
 		_:
 			if is_primary():
-				Logger.debug("_local_action_handler: blocked by substate %s" % substate, self)
+				Logger.debug("_local_action_handler: blocked by substate %s" % substate)
 
 func _local_primary_handler(target_actor: Actor, function: Callable) -> void:
 	# Because only one client should allow the trigger, this acts as a filter
@@ -1456,7 +1456,7 @@ func root(time: float) -> void:
 		$ActionTimer.timeout.disconnect(dict.callable)
 	if time <= 0.0: return
 	if is_primary():
-		Logger.debug("root: caching speed %s and setting to 0 for time %s" % [speed, time], self)
+		Logger.debug("root: caching speed %s and setting to 0 for time %s" % [speed, time])
 	speed_cache_value = speed
 	set_speed(0)
 	$ActionTimer.wait_time = time
@@ -1468,7 +1468,7 @@ func unroot() -> void:
 	# Defensive check to prevent speed corruption from overlapping calls
 	if speed_cache_value > 0:
 		if is_primary():
-			Logger.debug("unroot: restoring speed from %s to %s" % [speed, speed_cache_value], self)
+			Logger.debug("unroot: restoring speed from %s to %s" % [speed, speed_cache_value])
 		set_speed(speed_cache_value)
 		speed_cache_value = 0
 
@@ -1526,7 +1526,7 @@ func handle_resource_change(resource_key: String) -> void:
 		return  # Only log for this client's actor
 
 	# Resource UI updates automatically via ResourceBlock polling
-	Logger.debug("Resource changed: %s = %d" % [resource_key, resources.get(resource_key, 0)], self)
+	Logger.debug("Resource changed: %s = %d" % [resource_key, resources.get(resource_key, 0)])
 
 func build_fader() -> void:
 	Fader.builder().target(self).build().deploy(self)
@@ -1709,7 +1709,7 @@ func use_pathing(delta: float) -> void:
 
 	# DEBUG: Log movement state
 	if is_primary():
-		Logger.debug("use_pathing: pos=%s, dest=%s, dist=%.2f, substate=%s" % [position, destination, position.distance_to(destination), substate], self)
+		Logger.debug("use_pathing: pos=%s, dest=%s, dist=%.2f, substate=%s" % [position, destination, position.distance_to(destination), substate])
 	
 	# Set navigation target when destination changes
 	if position.distance_to(destination) > DESTINATION_PRECISION:
@@ -1903,7 +1903,7 @@ func is_point_on_navigation_region(point: Vector2) -> bool:
 func set_destination(point: Vector2) -> void:
 	## Where the actor is headed to.
 	if is_inside_tree() and is_primary():
-		Logger.debug("set_destination: from %s to %s, speed=%s, substate=%s" % [position, point, speed, substate], self)
+		Logger.debug("set_destination: from %s to %s, speed=%s, substate=%s" % [position, point, speed, substate])
 	set_origin(position)
 	destination = point
 	fix = point  # Set fix to destination, will be updated by NavigationAgent2D in use_pathing()
@@ -1984,9 +1984,9 @@ func _on_state_change() -> void:
 	set_substate(SubState.START)
 
 func _on_hit_box_body_entered(other):
-	Logger.trace("Actor %s: hitbox collision with %s" % [name, other.name if other != self else "self"], self)
+	Logger.trace("Actor %s: hitbox collision with %s" % [name, other.name if other != self else "self"])
 	if other != self and $HitboxTriggerCooldownTimer.is_stopped():
-		Logger.debug("Actor %s: triggering on_touch event for %s" % [name, other.name], self)
+		Logger.debug("Actor %s: triggering on_touch event for %s" % [name, other.name])
 		$HitboxTriggerCooldownTimer.start()
 		other.get_parent().on_touch.emit(self)
 		
@@ -2014,10 +2014,10 @@ func _on_line_of_sight_exited(_other: Actor) -> void:
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
-	Logger.trace("Actor %s: view box area entered by %s" % [name, other.name if other != self else "self"], self)
+	Logger.trace("Actor %s: view box area entered by %s" % [name, other.name if other != self else "self"])
 	if other == self: return
 	in_view[other.get_name()] = in_view.size()
-	Logger.debug("Actor %s: added %s to view (total in view: %d)" % [name, other.name, in_view.size()], self)
+	Logger.debug("Actor %s: added %s to view (total in view: %d)" % [name, other.name, in_view.size()])
 	if is_primary():
 		other.fader.fade()
 		other.visible_to_primary(true)
@@ -2033,10 +2033,10 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 
 func _on_view_box_area_exited(area: Area2D) -> void:
 	var other = area.get_parent()
-	Logger.trace("Actor %s: view box area exited by %s" % [name, other.name if other != self else "self"], self)
+	Logger.trace("Actor %s: view box area exited by %s" % [name, other.name if other != self else "self"])
 	if other == self: return
 	in_view.erase(other.get_name())
-	Logger.debug("Actor %s: removed %s from view (remaining in view: %d)" % [name, other.name, in_view.size()], self)
+	Logger.debug("Actor %s: removed %s from view (remaining in view: %d)" % [name, other.name, in_view.size()])
 	var other_name: String = other.get_name()
 	var this_actor_name: String = get_name()
 	other.remove_from_group(Group.LINE_OF_SIGHT)
@@ -2048,6 +2048,8 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 			.if_present(
 				func(this_actor):
 					# Decrement group visibility tracking
+					if other == null: 
+						return
 					if this_actor.is_primary() and other.target_group != "":
 						if this_actor.visible_groups.has(other.target_group):
 							this_actor.visible_groups[other.target_group] -= 1
@@ -2067,14 +2069,14 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 
 func enter_area_targeting(action_key: String, skill_ent: Entity) -> void:
 	"""Enter area targeting mode for an AOE skill"""
-	Logger.debug("enter_area_targeting: action_key=%s, skill_ent=%s" % [action_key, skill_ent != null], self)
+	Logger.debug("enter_area_targeting: action_key=%s, skill_ent=%s" % [action_key, skill_ent != null])
 
 	if !skill_ent:
 		return
 
 	# Require radius attribute for ellipse-based targeting
 	if !("radius" in skill_ent) or skill_ent.radius <= 0:
-		Logger.error("Skill missing or invalid radius attribute for area targeting" % action_key, self)
+		Logger.error("Skill missing or invalid radius attribute for area targeting" % action_key)
 		return
 
 	# Store skill entity reference
@@ -2127,7 +2129,7 @@ func update_area_targeting(delta: float) -> void:
 		return
 
 	if !area_targeting_skill:
-		Logger.error("update_area_targeting: skill entity not found", self)
+		Logger.error("update_area_targeting: skill entity not found")
 		cancel_area_targeting()
 		return
 
@@ -2269,22 +2271,22 @@ func execute_area_action() -> void:
 
 	# Find all actors within the ellipse using the overlay's detection method
 	var targets_in_area: Array = []
-	Logger.debug("Area action: checking %d actors against ellipse" % all_actors.size(), self)
-	Logger.debug("Area action: ellipse center = %s, radius = %d" % [area_targeting_overlay.global_position, area_targeting_overlay.radius], self)
-	Logger.debug("Area action: caster position = %s" % global_position, self)
+	Logger.debug("Area action: checking %d actors against ellipse" % all_actors.size())
+	Logger.debug("Area action: ellipse center = %s, radius = %d" % [area_targeting_overlay.global_position, area_targeting_overlay.radius])
+	Logger.debug("Area action: caster position = %s" % global_position)
 
 	for actor_node in all_actors:
 		# Check if actor's position is inside the ellipse
 		var is_in_ellipse = area_targeting_overlay.is_point_in_ellipse(actor_node.global_position)
-		Logger.debug("Area action: actor %s at %s - in ellipse: %s" % [actor_node.name, actor_node.global_position, is_in_ellipse], self)
+		Logger.debug("Area action: actor %s at %s - in ellipse: %s" % [actor_node.name, actor_node.global_position, is_in_ellipse])
 		if is_in_ellipse:
 			targets_in_area.append(actor_node)
 
-	Logger.debug("Area action: found %d targets in area" % targets_in_area.size(), self)
+	Logger.debug("Area action: found %d targets in area" % targets_in_area.size())
 
 	# Invoke the action on each target
 	for target_actor in targets_in_area:
-		Logger.debug("Area action: invoking on self=%s, target=%s" % [name, target_actor.name], self)
+		Logger.debug("Area action: invoking on self=%s, target=%s" % [name, target_actor.name])
 		get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(
 			1,
 			area_targeting_action,
@@ -2339,7 +2341,7 @@ func _on_tree_exiting() -> void:
 	Controller.broadcast_actor_is_despawning.rpc_id(1, peer_id, map)
 
 func _on_discovery_box_body_entered(tileMapLayer: FadingTileMapLayer) -> void:
-	Logger.trace("Actor %s: discovery box collision with tilemap layer %s" % [name, tileMapLayer.name if tileMapLayer else "unknown"], self)
+	Logger.trace("Actor %s: discovery box collision with tilemap layer %s" % [name, tileMapLayer.name if tileMapLayer else "unknown"])
 	if tileMapLayer is FadingTileMapLayer:
-		Logger.debug("Actor %s: setting discovery source for tilemap layer %s" % [name, tileMapLayer.name], self)
+		Logger.debug("Actor %s: setting discovery source for tilemap layer %s" % [name, tileMapLayer.name])
 		tileMapLayer.set_discovery_source(self)

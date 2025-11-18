@@ -102,7 +102,7 @@ func activate_waypoint() -> void:
 	if waypoint_ent and waypoint_ent.menu:
 		var primary_actor = Finder.get_primary_actor()
 		if primary_actor:
-			Logger.info("Activating waypoint: %s" % waypoint_key, self)
+			Logger.info("Activating waypoint: %s" % waypoint_key)
 			Finder.select(Group.INTERFACE).open_selection_menu_for_entity(
 				waypoint_key,
 				primary_actor.name

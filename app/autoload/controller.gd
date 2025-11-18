@@ -5,26 +5,26 @@ func _ready():
 	
 @rpc("any_peer", "reliable")
 func authenticate_and_spawn_actor(peer_id: int, token: PackedByteArray) -> void:
-	Logger.info("Authentication request received for peer_id=%s" % peer_id, self)
+	Logger.info("Authentication request received for peer_id=%s" % peer_id)
 	Queue.enqueue(
 			Queue.Item.builder()
 			.comment("Spawn actor for new authenticated login %s" % peer_id)
 			.condition(func(): return Secret.public_key != null)
 			.task(func():
 				var auth: Secret.Auth = Secret.Auth.builder().token(token).build()
-				Logger.debug("Validating auth token for peer_id=%s" % peer_id, self)
+				Logger.debug("Validating auth token for peer_id=%s" % peer_id)
 
 				# Validate campaign checksum first
 				var server_checksum: String = Repo.get_campaign_checksum()
 				var client_checksum: String = auth.get_campaign_checksum()
 
 				if client_checksum != server_checksum:
-					Logger.warn("Campaign checksum mismatch for peer_id=%s - server: %s, client: %s" % [peer_id, server_checksum, client_checksum], self)
+					Logger.warn("Campaign checksum mismatch for peer_id=%s - server: %s, client: %s" % [peer_id, server_checksum, client_checksum])
 					campaign_mismatch.rpc_id(peer_id)
 					return
 
 				if auth.is_valid():
-					Logger.info("Authentication successful for user=%s, peer_id=%s" % [auth.get_username(), peer_id], self)
+					Logger.info("Authentication successful for user=%s, peer_id=%s" % [auth.get_username(), peer_id])
 					var main_ent = Repo.select(Group.MAIN_ENTITY)
 					var data: Dictionary = {
 						"peer_id": peer_id,
@@ -33,12 +33,12 @@ func authenticate_and_spawn_actor(peer_id: int, token: PackedByteArray) -> void:
 						"speed": main_ent.actor.lookup().speed
 					}
 					if FileAccess.file_exists(auth.get_path()):
-						Logger.debug("Loading existing player data from %s" % auth.get_path(), self)
+						Logger.debug("Loading existing player data from %s" % auth.get_path())
 						var result = io.load_json(auth.get_path())
 						if result:
 							data.merge(result, false) # False because we do not want to overwrite the new peer id
-							Logger.trace("Merged player data: %s" % data, self)
-					Logger.debug("Spawning actor with data: peer_id=%s, name=%s, speed=%s" % [data.peer_id, data.name, data.speed], self)
+							Logger.trace("Merged player data: %s" % data)
+					Logger.debug("Spawning actor with data: peer_id=%s, name=%s, speed=%s" % [data.peer_id, data.name, data.speed])
 					Finder.select(Group.SPAWNER).spawn(data)
 					# Sync initial resources after spawn completes
 					Queue.enqueue(
@@ -52,7 +52,7 @@ func authenticate_and_spawn_actor(peer_id: int, token: PackedByteArray) -> void:
 						.build()
 					)
 				else:
-					Logger.warn("Authentication failed for peer_id=%s - invalid token" % peer_id, self)
+					Logger.warn("Authentication failed for peer_id=%s - invalid token" % peer_id)
 				)
 			.build()
 		)
@@ -60,7 +60,7 @@ func authenticate_and_spawn_actor(peer_id: int, token: PackedByteArray) -> void:
 
 @rpc("authority", "reliable")
 func request_token_from_peer() -> void:
-	Logger.info("Token request received from server", self)
+	Logger.info("Token request received from server")
 	Queue.enqueue(
 			Queue.Item.builder()
 			.comment("Authenticating with server")
@@ -82,7 +82,7 @@ func request_token_from_peer() -> void:
 
 @rpc("any_peer", "reliable")
 func get_public_key(peer_id: int) -> void:
-	Logger.debug("Public key request from peer_id=%s" % peer_id, self)
+	Logger.debug("Public key request from peer_id=%s" % peer_id)
 	if Cache.network == Network.Mode.HOST or Cache.network == Network.Mode.SERVER:
 		Queue.enqueue(
 			Queue.Item.builder()
@@ -94,13 +94,13 @@ func get_public_key(peer_id: int) -> void:
 
 @rpc("any_peer", "reliable")
 func set_public_key(public_key: String) -> void:
-	Logger.debug("Received public key from server (length=%s)" % public_key.length(), self)
+	Logger.debug("Received public key from server (length=%s)" % public_key.length())
 	if Cache.network == Network.Mode.CLIENT:
 		Secret.set_public_key(public_key)
 
 @rpc("authority", "reliable")
 func campaign_mismatch() -> void:
-	Logger.error("Campaign version mismatch detected!", self)
+	Logger.error("Campaign version mismatch detected!")
 
 	# Set flag to prevent "Lost connection" message from overwriting this error
 	Cache.campaign_mismatch_error = true
@@ -109,7 +109,7 @@ func campaign_mismatch() -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func request_spawn_actor(peer_id: int) -> void:
-	Logger.debug("Spawn actor request for peer_id=%s" % peer_id, self)
+	Logger.debug("Spawn actor request for peer_id=%s" % peer_id)
 	Queue.enqueue(
 		Queue.Item.builder()
 		.comment("request_spawn_actor")
@@ -120,7 +120,7 @@ func request_spawn_actor(peer_id: int) -> void:
 	
 @rpc("authority", "call_local", "reliable")
 func render_map(map: String) -> void:
-	Logger.info("Rendering map: %s" % map, self)
+	Logger.info("Rendering map: %s" % map)
 	for map_node in Finder.query([Group.MAP]):
 		Queue.enqueue(
 		Queue.Item.builder()
@@ -152,14 +152,14 @@ func render_map(map: String) -> void:
 
 @rpc("authority", "call_local", "reliable")
 func fade_and_render_map(peer_id: int, map: String) -> void:
-	Logger.info("Initiating map transition to %s for peer_id=%s" % [map, peer_id], self)
+	Logger.info("Initiating map transition to %s for peer_id=%s" % [map, peer_id])
 	Transition.at_next_fade(func(): Controller.render_map(map))
 	Transition.at_next_fade(func(): Controller.request_spawn_actor.rpc_id(1, peer_id))
 	Transition.fade()
 
 @rpc("any_peer", "call_local", "reliable")
 func broadcast_actor_is_despawning(peer_id: int, _map: String) -> void:
-	Logger.info("Broadcasting actor despawn for peer_id=%s" % peer_id, self)
+	Logger.info("Broadcasting actor despawn for peer_id=%s" % peer_id)
 	for targeted_by_actor: Actor in Finder.query([Group.ACTOR, str(peer_id)]):
 		targeted_by_actor.set_target("") # Clear ANY other actor from being able to target_this one
 
@@ -183,13 +183,13 @@ func sync_resource(actor_name: String, resource_key: String, new_value: int) -> 
 	"""
 	var actor = Finder.get_actor(actor_name)
 	if actor == null:
-		Logger.warn("sync_resource: actor %s not found" % actor_name, self)
+		Logger.warn("sync_resource: actor %s not found" % actor_name)
 		return
 
 	var old_value = actor.resources.get(resource_key, 0)
 	actor.resources[resource_key] = new_value
 
-	Logger.debug("sync_resource: %s.%s: %d -> %d" % [actor_name, resource_key, old_value, new_value], self)
+	Logger.debug("sync_resource: %s.%s: %d -> %d" % [actor_name, resource_key, old_value, new_value])
 
 	# TODO -- use a finder query to locate the correct resource UI elements and update them that wy
 	# Trigger UI update if this is the primary actor
@@ -204,11 +204,11 @@ func sync_all_resources(actor_name: String, resources: Dictionary) -> void:
 	"""
 	var actor = Finder.get_actor(actor_name)
 	if actor == null:
-		Logger.warn("sync_all_resources: actor %s not found" % actor_name, self)
+		Logger.warn("sync_all_resources: actor %s not found" % actor_name)
 		return
 
 	actor.resources = resources.duplicate()
-	Logger.debug("sync_all_resources: %s synced %d resources" % [actor_name, resources.size()], self)
+	Logger.debug("sync_all_resources: %s synced %d resources" % [actor_name, resources.size()])
 
 	# Trigger full UI refresh if primary
 	if actor.is_primary():

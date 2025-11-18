@@ -26,7 +26,7 @@ func _ready() -> void:
 		.condition(func(): return Repo.get_child_count() != 0)
 		.task(func():
 			Cache.campaign_checksum = Repo.get_campaign_checksum()
-			Logger.info("Campaign checksum cached: %s" % Cache.campaign_checksum, self)
+			Logger.info("Campaign checksum cached: %s" % Cache.campaign_checksum)
 			LoadingModal.show_status("Caching audio assets..."))
 		.build()
 	)

@@ -3,11 +3,11 @@ extends ParallaxBackground
 const SCALAR: float = 100.0
 
 func _ready() -> void:
-	Logger.debug("Parallax layer initialized: %s" % name, self)
+	Logger.debug("Parallax layer initialized: %s" % name)
 	add_to_group(Group.PARALLAX)
 
 func load_texture(path_to_asset: String) -> void:
-	Logger.debug("Loading texture for parallax layer %s: %s" % [name, path_to_asset], self)
+	Logger.debug("Loading texture for parallax layer %s: %s" % [name, path_to_asset])
 	var texture = AssetLoader.builder()\
 		.key(path_to_asset)\
 		.type(AssetLoader.Type.IMAGE)\
@@ -22,9 +22,9 @@ func _format_effect(value: float) -> float:
 	return value / SCALAR
 
 func set_effect(value: float) -> void:
-	Logger.trace("Setting parallax effect for %s: %s" % [name, value], self)
+	Logger.trace("Setting parallax effect for %s: %s" % [name, value])
 	$Layer.motion_scale = Vector2(_format_effect(value), _format_effect(value))
 	
 func set_visibility(effect: bool) -> void:
-	Logger.debug("Setting parallax visibility for %s: %s" % [name, effect], self)
+	Logger.debug("Setting parallax visibility for %s: %s" % [name, effect])
 	visible = effect

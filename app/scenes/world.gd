@@ -6,7 +6,7 @@ func build_world_complete() -> bool:
 	return _build_world_complete
 
 func _on_peer_connected(peer_id) -> void:
-	Logger.info("Peer %s connected..." % peer_id, self )
+	Logger.info("Peer %s connected..." % peer_id)
 	Queue.enqueue(
 		Queue.Item.builder()
 		.comment("Request Token from peer %s" % peer_id)
@@ -15,12 +15,12 @@ func _on_peer_connected(peer_id) -> void:
 	)
 
 func _on_peer_disconnected(peer_id) -> void:
-	Logger.info("Peer %s disconnected..." % peer_id, self)
+	Logger.info("Peer %s disconnected..." % peer_id)
 	Optional.of_nullable(Finder.get_actor(str(peer_id)))\
 	.if_present(func(actor): actor.save_and_exit())
 	
 func _on_peer_failed_to_connect() -> void:
-	Logger.error("Failed to connect", self)
+	Logger.error("Failed to connect")
 	LoadingModal.show_error("Failed to connect to server")
 	
 func _on_server_disconnected() -> void:

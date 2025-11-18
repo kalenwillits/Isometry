@@ -29,7 +29,7 @@ func handle_move_actor(actor_name: String, map: String) -> void:
 	var actor = Finder.get_actor(actor_name)
 	if actor: 
 		if actor.map == map:
-			Logger.warn("Attempting to move actor to the same map...", self)
+			Logger.warn("Attempting to move actor to the same map...")
 		else:
 			actor.queue_free()
 
@@ -59,7 +59,7 @@ func invoke_action(action_key: String, self_name: String, target_name: String) -
 
 func echo(_self_name: String, _target_name: String, params: Dictionary) -> void:
 	## message: String
-	Logger.info(params["message"], self)
+	Logger.info(params["message"])
 	
 func set_destination_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## destination: Vertex Key
@@ -307,16 +307,16 @@ func temp_speed_self(self_name: String, _target_name: String, params: Dictionary
 	, CONNECT_ONE_SHOT)
 
 func open_options(_self_name: String, _target_name: String, _params: Dictionary) -> void:
-	Logger.info("Options menu - Placeholder", self)
+	Logger.info("Options menu - Placeholder")
 
 func close_game(_self_name: String, _target_name: String, _params: Dictionary) -> void:
-	Logger.info("Close game - Placeholder", self)
+	Logger.info("Close game - Placeholder")
 
 func show_connection_info(_self_name: String, _target_name: String, _params: Dictionary) -> void:
-	Logger.info("Connection info - Placeholder", self)
+	Logger.info("Connection info - Placeholder")
 
 func open_chat(_self_name: String, _target_name: String, _params: Dictionary) -> void:
-	Logger.info("Open chat - Placeholder", self)
+	Logger.info("Open chat - Placeholder")
 
 func open_plate(self_name: String, target_name: String, params: Dictionary) -> void:
 	## plate: KeyRef to Plate entity
@@ -324,7 +324,7 @@ func open_plate(self_name: String, target_name: String, params: Dictionary) -> v
 	if self_actor == null: return
 	var plate_key: String = params.get("plate", "")
 	if plate_key.is_empty():
-		Logger.warn("open_plate called without plate parameter", self)
+		Logger.warn("open_plate called without plate parameter")
 		return
 
 	Queue.enqueue(

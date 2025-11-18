@@ -34,7 +34,7 @@ func _on_visibility_changed() -> void:
 
 func open_menu(title: String, menu_ent: Entity, caller: String, target: String) -> void:
 	if menu_ent == null or menu_ent.actions == null:
-		Logger.warn("Cannot open menu: invalid menu entity", self)
+		Logger.warn("Cannot open menu: invalid menu entity")
 		return
 
 	caller_name = caller
@@ -43,7 +43,7 @@ func open_menu(title: String, menu_ent: Entity, caller: String, target: String) 
 
 	# Check if actions array is empty
 	if actions.size() == 0:
-		Logger.warn("Cannot open menu: no actions available", self)
+		Logger.warn("Cannot open menu: no actions available")
 		return
 
 	current_page = 0

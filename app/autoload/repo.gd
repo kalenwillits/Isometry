@@ -46,13 +46,13 @@ func query(tags: Array) -> Array:
 	var query_tags: Array = [Group.ENTITY]
 	query_tags.append_array(tags)
 	var results = Finder.query(query_tags)
-	Logger.trace("Repo query for tags %s returned %s results" % [tags, results.size()], self)
+	Logger.trace("Repo query for tags %s returned %s results" % [tags, results.size()])
 	return results
 	
 func select(key: String) -> Entity:
 	var results = query([key])
 	if results.size() != 1:
-		Logger.warn("Repo select tag: [%s] yielded %s results..." % [key, results.size()], self)
+		Logger.warn("Repo select tag: [%s] yielded %s results..." % [key, results.size()])
 	return results.pop_front()
 	
 func extract_single_key_from_dict(dict: Dictionary, key_to_keep: String) -> Dictionary:
@@ -75,12 +75,12 @@ func add_asset_as_entities_to_tree(asset: Dictionary):
 				params.data = extract_single_key_from_dict(objdata, objkey)
 				entity.fit(params)
 				if !has_node(entity.unique_node_name()):
-					Logger.info("Successfully created Entity: %s" % entity.unique_node_name(), self)
+					Logger.info("Successfully created Entity: %s" % entity.unique_node_name())
 					add_child(entity)
 				else:
-					Logger.warn("Naming conflict detected in archive: [%s], resolve this or the map will contain missing data on load." % entity.unique_node_name(), self)
+					Logger.warn("Naming conflict detected in archive: [%s], resolve this or the map will contain missing data on load." % entity.unique_node_name())
 		else:
-			Logger.warn("Type [%s] is not recognized as a valid type and will be skipped, options are [%s]." % [objtype, _entities.keys()], self)
+			Logger.warn("Type [%s] is not recognized as a valid type and will be skipped, options are [%s]." % [objtype, _entities.keys()])
 
 func calculate_campaign_checksum() -> String:
 	var path: String = Path.builder()\
@@ -94,7 +94,7 @@ func calculate_campaign_checksum() -> String:
 
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		Logger.warn("Failed to open campaign file for checksum calculation: %s" % path, self)
+		Logger.warn("Failed to open campaign file for checksum calculation: %s" % path)
 		return ""
 
 	var file_bytes: PackedByteArray = file.get_buffer(file.get_length())
@@ -105,7 +105,7 @@ func calculate_campaign_checksum() -> String:
 	ctx.update(file_bytes)
 	var hash: PackedByteArray = ctx.finish()
 	var checksum: String = hash.hex_encode()
-	Logger.info("Campaign checksum calculated: %s" % checksum, self)
+	Logger.info("Campaign checksum calculated: %s" % checksum)
 	return checksum
 
 func get_campaign_checksum() -> String:
@@ -124,7 +124,7 @@ func load_archive():
 	if archive.open(path) == OK:
 		var all_assets: Array = archive.get_files()
 		archive.close()
-		Logger.info("Loading [%s] assets from campaign [%s]..." % [all_assets.size(), path], self)
+		Logger.info("Loading [%s] assets from campaign [%s]..." % [all_assets.size(), path])
 		for asset_filename in all_assets:
 			if asset_filename.ends_with(".json"):
 				var asset_key: String = asset_filename.split("/", true, 1)[-1]

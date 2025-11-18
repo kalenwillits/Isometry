@@ -67,7 +67,7 @@ func set_target(value: String) -> void:
 func open_selection_menu_for_actor(target_actor_name: String) -> void:
 	var target_actor = Finder.get_actor(target_actor_name)
 	if not target_actor:
-		Logger.warn("Target actor not found: %s" % target_actor_name, self)
+		Logger.warn("Target actor not found: %s" % target_actor_name)
 		return
 
 	var actor_ent: Entity = Repo.select(target_actor.actor)
@@ -79,11 +79,11 @@ func open_selection_menu_for_actor(target_actor_name: String) -> void:
 				ui_state_machine.open_context_menu()
 				$ContextMenu.open_menu(target_actor.display_name, menu_ent, primary_actor.name, target_actor_name)
 			else:
-				Logger.warn("Primary actor not found", self)
+				Logger.warn("Primary actor not found")
 		else:
-			Logger.warn("Menu entity not found in Repo", self)
+			Logger.warn("Menu entity not found in Repo")
 	else:
-		Logger.warn("Actor entity has no menu or entity not found", self)
+		Logger.warn("Actor entity has no menu or entity not found")
 
 func open_selection_menu_for_entity(entity_key: String, actor_name: String) -> void:
 	var entity: Entity = Repo.select(entity_key)
@@ -98,7 +98,7 @@ func open_selection_menu_for_entity(entity_key: String, actor_name: String) -> v
 func open_plate_for_actor(plate_key: String, caller: String, target: String) -> void:
 	var plate_ent: Entity = Repo.select(plate_key)
 	if plate_ent == null:
-		Logger.warn("Plate entity not found: %s" % plate_key, self)
+		Logger.warn("Plate entity not found: %s" % plate_key)
 		return
 	ui_state_machine.transition_to(ui_state_machine.State.PLATE_VIEW)
 	$PlateView.open_plate(plate_ent, caller, target)
@@ -134,11 +134,11 @@ func close_gamepad_view() -> void:
 	UIStateMachine.transition_to(UIStateMachine.State.MENU_SYSTEM)
 
 func open_map_view() -> void:
-	Logger.info("Interface: Opening map view", self)
+	Logger.info("Interface: Opening map view")
 	$MapView.open_view()
 
 func toggle_map_view() -> void:
-	Logger.info("Interface: Toggling map view (current visible: %s)" % $MapView.visible, self)
+	Logger.info("Interface: Toggling map view (current visible: %s)" % $MapView.visible)
 	if $MapView.visible:
 		$MapView.close_view()
 	else:
@@ -195,7 +195,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## State machine callback - show/hide views based on state transitions
 func _on_ui_state_changed(old_state: int, new_state: int) -> void:
 	var state_enum = ui_state_machine.State
-	Logger.info("Interface: State changed %s -> %s" % [state_enum.keys()[old_state], state_enum.keys()[new_state]], self)
+	Logger.info("Interface: State changed %s -> %s" % [state_enum.keys()[old_state], state_enum.keys()[new_state]])
 
 	# Hide views based on old state
 	var State = ui_state_machine.State

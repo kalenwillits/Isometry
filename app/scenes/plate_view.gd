@@ -74,7 +74,7 @@ func reset() -> void:
 func open_plate(plate_ent: Entity, caller: String, target: String) -> void:
 	reset()
 	if plate_ent == null:
-		Logger.warn("Cannot open plate: invalid plate entity", self)
+		Logger.warn("Cannot open plate: invalid plate entity")
 		return
 
 	plate_entity = plate_ent
@@ -147,18 +147,18 @@ func find_best_page_break(calculated_break_index: int, line_breaks: Array[int]) 
 	# Search backward through actual text for newline characters
 	for i in range(calculated_break_index - 1, search_start, -1):
 		if i < processed_text.length() and processed_text[i] == "\n":
-			Logger.trace("Page break: Found newline at index %d, calculated was %d (searched back %d chars)" % [i, calculated_break_index, calculated_break_index - i], self)
+			Logger.trace("Page break: Found newline at index %d, calculated was %d (searched back %d chars)" % [i, calculated_break_index, calculated_break_index - i])
 			return i
 
 	# Priority 2: Look for last space before calculated break
 	var space_search_start = max(0, calculated_break_index - 200)
 	for i in range(calculated_break_index - 1, space_search_start, -1):
 		if i < processed_text.length() and processed_text[i] == " ":
-			Logger.trace("Page break: Found space at index %d, calculated was %d" % [i, calculated_break_index], self)
+			Logger.trace("Page break: Found space at index %d, calculated was %d" % [i, calculated_break_index])
 			return i
 
 	# Priority 3: Use calculated break as-is
-	Logger.trace("Page break: Using hard break at index %d" % calculated_break_index, self)
+	Logger.trace("Page break: Using hard break at index %d" % calculated_break_index)
 	return calculated_break_index
 
 func calculate_page_breaks() -> void:
@@ -175,7 +175,7 @@ func calculate_page_breaks() -> void:
 	var line_height = font_size * 1.5  # Account for line spacing
 	var lines_per_page = int(container_height / line_height)
 
-	Logger.debug("Text length: %d, Line breaks: %d, Lines per page: %d" % [processed_text.length(), line_breaks.size(), lines_per_page], self)
+	Logger.debug("Text length: %d, Line breaks: %d, Lines per page: %d" % [processed_text.length(), line_breaks.size(), lines_per_page])
 
 	# Calculate page breaks based on line count
 	page_breaks.clear()
@@ -196,7 +196,7 @@ func calculate_page_breaks() -> void:
 		page_breaks.append(processed_text.length())
 
 	total_pages = max(1, page_breaks.size())
-	Logger.debug("Calculated %d pages for plate text, page breaks at: %s" % [total_pages, str(page_breaks)], self)
+	Logger.debug("Calculated %d pages for plate text, page breaks at: %s" % [total_pages, str(page_breaks)])
 
 func render_page() -> void:
 	# Get the text slice for this page
