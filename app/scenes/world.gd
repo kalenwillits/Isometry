@@ -26,6 +26,8 @@ func _on_peer_failed_to_connect() -> void:
 func _on_server_disconnected() -> void:
 	Network.connection_failed.disconnect(_on_peer_failed_to_connect)
 	Network.server_disconnected.disconnect(_on_server_disconnected)
+	LoadingModal.show_error("Lost connection to server")
+	await get_tree().create_timer(3.0).timeout
 	get_tree().quit() # Temporarily closing client
 	#Route.to(Scene.splash) # TODO - route to error
 
