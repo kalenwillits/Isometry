@@ -21,6 +21,7 @@ func _on_peer_disconnected(peer_id) -> void:
 	
 func _on_peer_failed_to_connect() -> void:
 	Logger.error("Failed to connect", self)
+	LoadingModal.show_error("Failed to connect to server")
 	
 func _on_server_disconnected() -> void:
 	Network.connection_failed.disconnect(_on_peer_failed_to_connect)
@@ -51,23 +52,56 @@ func _handle_network_mode() -> void:
 		Network.Mode.HOST, Network.Mode.SERVER:
 			Network.peer_connected.connect(_on_peer_connected)
 			Network.peer_disconnected.connect(_on_peer_disconnected)
+
+			# Queue 1: Update modal when world scene initialized
 			Queue.enqueue(
 				Queue.Item.builder()
-				.comment("Building world for host or server")
+				.comment("Modal: World scene initialized")
+				.condition(func(): return Finder.select(Group.WORLD) != null)
+				.task(func(): LoadingModal.show_status("Building world..."))
+				.build()
+			)
+
+			# Queue 2: Build world
+			Queue.enqueue(
+				Queue.Item.builder()
+				.comment("Build world for host or server")
 				.task(build_world)
 				.condition(func(): return Repo.get_child_count() != 0)
 				.build()
 			)
+
+			# Queue 3: Update modal when world built
 			Queue.enqueue(
 				Queue.Item.builder()
-				.comment("Spawning host or server actor")
+				.comment("Modal: World built")
+				.condition(func(): return build_world_complete())
+				.task(func(): LoadingModal.show_status("Spawning actor..."))
+				.build()
+			)
+
+			# Queue 4: Spawn primary actor
+			Queue.enqueue(
+				Queue.Item.builder()
+				.comment("Spawn host or server actor")
 				.task(func(): spawn_primary_actor(1))
 				.condition(func(): return build_world_complete() and Secret.public_key != null)
 				.build()
 			)
+
+			# Queue 5: Hide modal when actor is ready
 			Queue.enqueue(
 				Queue.Item.builder()
-				.comment("Deploying all other actors for host or server")
+				.comment("Modal: Hide when actor ready")
+				.condition(func(): return Finder.get_primary_actor() != null)
+				.task(func(): LoadingModal.hide_modal())
+				.build()
+			)
+
+			# Queue 6: Deploy NPCs
+			Queue.enqueue(
+				Queue.Item.builder()
+				.comment("Deploy all other actors for host or server")
 				.task(build_deployments)
 				.condition(func(): return build_world_complete())
 				.build()
@@ -76,6 +110,17 @@ func _handle_network_mode() -> void:
 			Network.connected_to_server.connect(_on_connected_to_server)
 			Network.connection_failed.connect(_on_peer_failed_to_connect)
 			Network.server_disconnected.connect(_on_server_disconnected)
+
+			# Queue 1: Update modal when world scene initialized
+			Queue.enqueue(
+				Queue.Item.builder()
+				.comment("Modal: World scene initialized")
+				.condition(func(): return Finder.select(Group.WORLD) != null)
+				.task(func(): LoadingModal.show_status("Building world..."))
+				.build()
+			)
+
+			# Queue 2: Build world
 			Queue.enqueue(
 				Queue.Item.builder()
 				.comment("Build world for client")
@@ -83,6 +128,26 @@ func _handle_network_mode() -> void:
 				.condition(func(): return Repo.get_child_count() != 0)
 				.build()
 			)
+
+			# Queue 3: Update modal when world built
+			Queue.enqueue(
+				Queue.Item.builder()
+				.comment("Modal: Connecting to server")
+				.condition(func(): return build_world_complete())
+				.task(func(): LoadingModal.show_status("Connecting to server..."))
+				.build()
+			)
+
+			# Queue 4: Hide modal when actor spawned
+			Queue.enqueue(
+				Queue.Item.builder()
+				.comment("Modal: Hide when actor ready")
+				.condition(func(): return Finder.get_primary_actor() != null)
+				.task(func(): LoadingModal.hide_modal())
+				.build()
+			)
+
+			# Start client connection
 			Network.start_client()
 	
 func build_world() -> void:
@@ -162,4 +227,11 @@ func spawn_actor(data: Dictionary) -> Actor:
 	return builder.build()
 
 func _on_connected_to_server() -> void:
+	# Queue modal update for authentication
+	Queue.enqueue(
+		Queue.Item.builder()
+		.comment("Modal: Authenticating")
+		.task(func(): LoadingModal.show_status("Authenticating..."))
+		.build()
+	)
 	Controller.get_public_key.rpc_id(1, multiplayer.get_unique_id())

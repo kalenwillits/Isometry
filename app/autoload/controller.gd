@@ -17,12 +17,12 @@ func authenticate_and_spawn_actor(peer_id: int, token: PackedByteArray) -> void:
 					Logger.info("Authentication successful for user=%s, peer_id=%s" % [auth.get_username(), peer_id], self)
 					var main_ent = Repo.select(Group.MAIN_ENTITY)
 					var data: Dictionary = {
-						"peer_id": peer_id, 
-						"token": token, 
+						"peer_id": peer_id,
+						"token": token,
 						"name": auth.get_username(),
 						"speed": main_ent.actor.lookup().speed
 					}
-					if FileAccess.file_exists(auth.get_path()): 
+					if FileAccess.file_exists(auth.get_path()):
 						Logger.debug("Loading existing player data from %s" % auth.get_path(), self)
 						var result = io.load_json(auth.get_path())
 						if result:

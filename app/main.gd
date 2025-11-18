@@ -21,11 +21,15 @@ func get_window_title() -> String:
 func start() -> void:
 		match Cache.network:
 			Network.Mode.HOST:
+				LoadingModal.show_status("Initializing encryption keys...")
 				Secret.load_or_create_rsa()
+				LoadingModal.show_status("Starting server...")
 				Network.start_server()
 				Network.server_established.connect(func(): Route.to(Scene.loading))
 			Network.Mode.SERVER:
+				LoadingModal.show_status("Initializing encryption keys...")
 				Secret.load_or_create_rsa()
+				LoadingModal.show_status("Starting server...")
 				Network.start_server()
 				Network.server_established.connect(func(): Route.to(Scene.loading))
 			Network.Mode.CLIENT:

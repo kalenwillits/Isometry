@@ -1,0 +1,44 @@
+[gd_scene load_steps=4 format=3 uid="uid://bbto4x0n16kd3"]
+
+[ext_resource type="Script" uid="uid://bo34wjdpo6bxe" path="res://scenes/loading_modal.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="2_theme"]
+[ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_panel"]
+
+[node name="LoadingModal" type="CanvasLayer"]
+layer = 16
+visible = false
+script = ExtResource("1_script")
+
+[node name="Overlay" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Overlay/CenterContainer"]
+custom_minimum_size = Vector2(300, 80)
+layout_mode = 2
+theme = ExtResource("2_theme")
+theme_override_styles/panel = ExtResource("3_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Overlay/CenterContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+theme_override_font_sizes/font_size = 14
+text = "Loading..."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2

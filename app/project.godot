@@ -38,6 +38,7 @@ GenericInputManager="*res://autoload/generic_input_manager.gd"
 Keybinds="*res://autoload/keybinds.gd"
 ThemeManager="*res://autoload/theme_manager.gd"
 UIStateMachine="*res://autoloads/ui_state_machine.gd"
+LoadingModal="*res://scenes/loading_modal.tscn"
 
 [debug]
 
