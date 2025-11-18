@@ -32,6 +32,8 @@ const INCREMENT_TARGET: String = "increment_target"
 const DECREMENT_TARGET: String = "decrement_target"
 const INCREMENT_TARGET_GROUP: String = "increment_target_group"
 const DECREMENT_TARGET_GROUP: String = "decrement_target_group"
+const CLEAR_TARGET: String = "clear_target"
+const TARGET_SELF: String = "target_self"
 const FOCUS_TOP_LEFT: String = "focus_top_left"
 const FOCUS_TOP_RIGHT: String = "focus_top_right"
 const FOCUS_BOT_LEFT: String = "focus_bot_left"
@@ -80,6 +82,8 @@ const DEFAULT_KEYBINDS: Dictionary = {
 	DECREMENT_TARGET: "shift+tab",
 	INCREMENT_TARGET_GROUP: "equal",
 	DECREMENT_TARGET_GROUP: "minus",
+	CLEAR_TARGET: "escape",
+	TARGET_SELF: "f",
 	FOCUS_TOP_LEFT: "f1",
 	FOCUS_TOP_RIGHT: "f2",
 	FOCUS_BOT_LEFT: "f3",
@@ -124,6 +128,8 @@ const DEFAULT_GAMEPAD: Dictionary = {
 	DECREMENT_TARGET: "left_trigger",
 	INCREMENT_TARGET_GROUP: "dpad_right",
 	DECREMENT_TARGET_GROUP: "dpad_left",
+	CLEAR_TARGET: "dpad_up",
+	TARGET_SELF: "dpad_down",
 	FOCUS_TOP_LEFT: "dpad_up+left_shoulder",
 	FOCUS_TOP_RIGHT: "dpad_up+right_shoulder",
 	FOCUS_BOT_LEFT: "dpad_down+left_shoulder",
@@ -168,6 +174,8 @@ const ACTION_LABELS: Dictionary = {
 	DECREMENT_TARGET: "Previous Target",
 	INCREMENT_TARGET_GROUP: "Next Target Group",
 	DECREMENT_TARGET_GROUP: "Previous Target Group",
+	CLEAR_TARGET: "Clear Target",
+	TARGET_SELF: "Target Self",
 	FOCUS_TOP_LEFT: "Focus North West",
 	FOCUS_TOP_RIGHT: "Focus North East",
 	FOCUS_BOT_LEFT: "Focus South West",

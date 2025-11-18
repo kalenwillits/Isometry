@@ -851,6 +851,9 @@ func use_target() -> void:
 	if Keybinds.is_action_just_pressed("clear_target"):
 		set_target("")
 		target_queue.clear()
+	if Keybinds.is_action_just_pressed("target_self"):
+		set_target(self.name)
+		target_queue.clear()
 	if Keybinds.is_action_just_pressed("increment_target_group"):
 		target_group_index = increment_target_group()
 		target_group_changed.emit(get_target_group())
