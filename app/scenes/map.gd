@@ -183,8 +183,9 @@ func build_isometric_tilemap() -> void:
 		if tile_ent.obstacle:
 			# Use elliptical shape for smooth corner navigation (8 points for good balance of smoothness vs performance)
 			atlas_tile.set("physics_layer_0/polygon_0/points", std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, +TILEMAP_TILESIZE.y/2)))
-		var discovery_vectors = std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, +TILEMAP_TILESIZE.y/2))
-		atlas_tile.set("physics_layer_1/polygon_0/points", discovery_vectors)
+		if not tile_ent.ghost:
+			var discovery_vectors = std.generate_isometric_shape(TILEMAP_TILESIZE.x, Vector2i(0, +TILEMAP_TILESIZE.y/2))
+			atlas_tile.set("physics_layer_1/polygon_0/points", discovery_vectors)
 	var layers_ent_array = tilemap_ent.layers.lookup()
 	for layer_index in range(layers_ent_array.size()):
 		var layer_ent = layers_ent_array[layer_index]
@@ -205,13 +206,14 @@ func build_isometric_tilemap() -> void:
 		for row in layer_string.split("\n"):
 			coords.y = 0
 			for tile_symbol in row:
-				if !(tile_symbol in INVALID_TILE_SYMBOLS): 
+				if !(tile_symbol in INVALID_TILE_SYMBOLS):
 					var tile_ent = Repo.query([Group.TILE_ENTITY]).filter(func(ent): return ent.symbol == tile_symbol).front()
-					var atlas_coords: Vector2i = Vector2i( 
+					var atlas_coords: Vector2i = Vector2i(
 							tile_ent.index % tileset_ent.columns,
 							tile_ent.index / tileset_ent.columns,
 						)
-					tilemap_layer.set_cell(coords, 0, atlas_coords)
+					if not tile_ent.ghost:
+						tilemap_layer.set_cell(coords, 0, atlas_coords)
 				coords.y -= 1
 			coords.x += 1
 		add_child(tilemap_layer)
