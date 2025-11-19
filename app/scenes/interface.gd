@@ -14,56 +14,6 @@ func _ready() -> void:
 	ui_state_machine = get_node("/root/UIStateMachine")
 	ui_state_machine.state_changed.connect(_on_ui_state_changed)
 
-func _process(_delta: float) -> void:
-	update_primary_actor_info()
-		
-func update_primary_actor_info() -> void:
-	if $DebugView.visible:
-		var primary_actor: Actor = Finder.get_primary_actor()
-		if primary_actor:
-			var actor_ent: Entity = Repo.query([primary_actor.actor]).pop_front()
-			set_display_name(primary_actor.display_name)
-			set_position(str(primary_actor.position))
-			set_origin(str(primary_actor.origin))
-			set_destination(str(primary_actor.destination))
-			set_speed(str(primary_actor.speed))
-			set_heading(primary_actor.heading)
-			set_state(primary_actor.state)
-			set_target(primary_actor.target)
-			if actor_ent.skills:
-				var skills_list = actor_ent.skills.lookup()
-				if skills_list:
-					var max_skills = min(skills_list.size(), 9)
-					for i in range(max_skills):
-						var skill_ent = skills_list[i]
-						if skill_ent and skill_ent.key():
-							var slot_number = i + 1
-							$DebugView/VBox/HBox/VBoxLeft/VBoxBot.get_node("ActionLabel%s" % slot_number).set_text("%s: %s" % [slot_number, skill_ent.key()])	
-
-func set_display_name(value: String) -> void:
-	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/DisplayNameLabel.set_text("DISPLAY NAME: %s" % value)
-	
-func set_position(value: String) -> void:
-	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/LocationLabel.set_text("POSITION: %s" % value)
-	
-func set_origin(value: String) -> void:
-	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/OriginLabel.set_text("ORIGIN: %s" % value)
-	
-func set_destination(value: String) -> void:
-	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/DestinationLabel.set_text("DESTINATION: %s" % value)
-	
-func set_speed(value: String) -> void:
-	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/SpeedLabel.set_text("SPEED: %s" % value)
-
-func set_heading(value: String) -> void:
-	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/HeadingLabel.set_text("HEADING: %s" % value)
-	
-func set_state(value: String) -> void:
-	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/StateLabel.set_text("STATE: %s" % value)
-	
-func set_target(value: String) -> void:
-	$DebugView/VBox/HBox/VBoxLeft/VBoxTop/TargetLabel.set_text("TARGET: %s" % value)
-
 func open_selection_menu_for_actor(target_actor_name: String) -> void:
 	var target_actor = Finder.get_actor(target_actor_name)
 	if not target_actor:

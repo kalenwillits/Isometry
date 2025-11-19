@@ -457,6 +457,15 @@ func _ready() -> void:
 			visible_groups[target_group] = 1
 			visible_groups_changed.emit(visible_groups)
 
+		# Clear all action blocks first
+		for i in range(1, 10):
+			Queue.enqueue(
+				Queue.Item.builder()
+				.comment("Clear action block %s" % i)
+				.task(func(slot = i): Finder.select(Group.UI_ACTION_BLOCK_N % slot).clear())
+				.build()
+			)
+
 		if actor_ent and actor_ent.skills:
 			var skills_list = actor_ent.skills.lookup()
 			if skills_list:

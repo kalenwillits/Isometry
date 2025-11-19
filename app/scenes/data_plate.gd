@@ -6,7 +6,7 @@ func _ready() -> void:
 	add_to_group(Group.UI_DATA_PLATE)
 
 func load_actor_data() -> void:
-	for resource_block: Widget in $Grid.get_children():
+	for resource_block: Widget in $HBox.get_children():
 		resource_block.queue_free()
 	var actor: Actor = Finder.get_primary_actor()
 	var actor_ent: Entity = Repo.select(actor.actor)
@@ -26,7 +26,7 @@ func add_private_resource(resource_key: String) -> void:
 	var resource_block: Widget = resource_block_packed_scene.instantiate()
 	resource_block.set_actor(Finder.get_primary_actor().get_name())
 	resource_block.set_key(resource_key)
-	$Grid.add_child(resource_block)
+	$HBox.add_child(resource_block)
 	
 func update_resource() -> void:
 	pass

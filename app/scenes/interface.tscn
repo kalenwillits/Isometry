@@ -17,111 +17,14 @@
 [ext_resource type="PackedScene" uid="uid://b0vk5n8h1ydji" path="res://scenes/confirmation_modal.tscn" id="14_confirmation"]
 [ext_resource type="PackedScene" uid="uid://bw6j5yh8k2m3n" path="res://scenes/system_menu_view.tscn" id="15_system_menu"]
 [ext_resource type="PackedScene" uid="uid://cq8v3k5n2p4ym" path="res://scenes/resources_menu_view.tscn" id="16_resources_menu"]
-[ext_resource type="PackedScene" uid="uid://b7wm8x2n5qk3p" path="res://scenes/skills_menu_view.tscn" id="17_skills_menu"]
 [ext_resource type="PackedScene" uid="uid://c8k5nan2p3q4r" path="res://scenes/options_view.tscn" id="17_options_view"]
+[ext_resource type="PackedScene" uid="uid://b7wm8x2n5qk3p" path="res://scenes/skills_menu_view.tscn" id="17_skills_menu"]
 [ext_resource type="PackedScene" uid="uid://c3kma4g21xb5e" path="res://scenes/keybinds_view.tscn" id="18_keybinds_view"]
 [ext_resource type="PackedScene" uid="uid://cyv07p46q0gp3" path="res://scenes/gamepad_view.tscn" id="19_gamepad_view"]
 [ext_resource type="PackedScene" uid="uid://dq7v4k6n3r50p" path="res://scenes/map_view.tscn" id="20_map_view"]
 
 [node name="Interface" type="Node"]
 script = ExtResource("1_7q01f")
-
-[node name="DebugView" type="CanvasLayer" parent="."]
-visible = false
-
-[node name="VBox" type="VBoxContainer" parent="DebugView"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="HBox" type="HBoxContainer" parent="DebugView/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="VBoxLeft" type="VBoxContainer" parent="DebugView/VBox/HBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="VBoxTop" type="VBoxContainer" parent="DebugView/VBox/HBox/VBoxLeft"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="DisplayNameLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
-layout_mode = 2
-
-[node name="HeadingLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
-layout_mode = 2
-
-[node name="LocationLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
-layout_mode = 2
-
-[node name="OriginLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
-layout_mode = 2
-
-[node name="DestinationLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
-layout_mode = 2
-
-[node name="SpeedLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
-layout_mode = 2
-
-[node name="StateLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
-layout_mode = 2
-
-[node name="TargetLabel" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxTop"]
-layout_mode = 2
-
-[node name="VBoxBot" type="VBoxContainer" parent="DebugView/VBox/HBox/VBoxLeft"]
-layout_mode = 2
-size_flags_vertical = 3
-alignment = 2
-
-[node name="ActionLabel1" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
-layout_mode = 2
-
-[node name="ActionLabel2" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
-layout_mode = 2
-
-[node name="ActionLabel3" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
-layout_mode = 2
-
-[node name="ActionLabel4" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
-layout_mode = 2
-
-[node name="ActionLabel5" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
-layout_mode = 2
-
-[node name="ActionLabel6" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
-layout_mode = 2
-
-[node name="ActionLabel7" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
-layout_mode = 2
-
-[node name="ActionLabel8" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
-layout_mode = 2
-
-[node name="ActionLabel9" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
-layout_mode = 2
-
-[node name="ActionLabel10" type="Label" parent="DebugView/VBox/HBox/VBoxLeft/VBoxBot"]
-layout_mode = 2
-
-[node name="VBoxRight" type="VBoxContainer" parent="DebugView/VBox/HBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-alignment = 2
-
-[node name="VBoxTop" type="VBoxContainer" parent="DebugView/VBox/HBox/VBoxRight"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="VBoxBot" type="VBoxContainer" parent="DebugView/VBox/HBox/VBoxRight"]
-layout_mode = 2
-size_flags_vertical = 3
-alignment = 2
 
 [node name="DisplayView" type="CanvasLayer" parent="."]
 
@@ -140,6 +43,10 @@ alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 alignment = 1
+
+[node name="MarginTop" type="MarginContainer" parent="DisplayView/HBox/VBox"]
+custom_minimum_size = Vector2(0, 3)
+layout_mode = 2
 
 [node name="HBoxTop" type="HBoxContainer" parent="DisplayView/HBox/VBox"]
 layout_mode = 2
@@ -245,6 +152,10 @@ check_in_view = true
 
 [node name="Margin" type="MarginContainer" parent="DisplayView/HBox/VBox/HBoxBot/HBoxBotRight/VBoxBotRight"]
 custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+
+[node name="MarginBottom" type="MarginContainer" parent="DisplayView/HBox/VBox"]
+custom_minimum_size = Vector2(0, 3)
 layout_mode = 2
 
 [node name="ContextMenu" parent="." instance=ExtResource("7_context")]

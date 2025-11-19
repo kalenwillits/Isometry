@@ -25,6 +25,11 @@ func render(key: String) -> void:
 
 	if entity.icon:
 		load_texture(entity.icon)
+		visible = true
+
+func clear() -> void:
+	visible = false
+	$Button/VBox/HBox/Button.icon = null
 
 func load_texture(path_to_asset: String) -> void:
 	var texture: ImageTexture = AssetLoader.builder()\

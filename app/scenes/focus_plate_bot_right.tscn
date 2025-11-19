@@ -28,17 +28,13 @@ offset_right = 192.0
 offset_bottom = 14.0
 theme_override_styles/panel = ExtResource("3_hrv8t")
 
-[node name="Grid" type="GridContainer" parent="."]
+[node name="HBox" type="HBoxContainer" parent="."]
 layout_mode = 0
 offset_left = 0.0
-offset_top = -22.0
+offset_top = -30.0
 offset_right = 192.0
-offset_bottom = -22.0
-theme_override_constants/h_separation = -2
-theme_override_constants/v_separation = -1
-columns = 6
-script = ExtResource("1_botup")
-rtl = true
+offset_bottom = -30.0
+alignment = 1
 
 [node name="VBox" type="VBoxContainer" parent="."]
 layout_mode = 1

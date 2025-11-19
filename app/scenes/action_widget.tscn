@@ -16,7 +16,7 @@ grow_horizontal = 2
 grow_vertical = 0
 script = ExtResource("1_wmx76")
 
-[node name="GridContainer" type="GridContainer" parent="."]
+[node name="HBox" type="HBoxContainer" parent="."]
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 1
 anchors_preset = 7
@@ -29,40 +29,40 @@ offset_top = -28.0
 offset_right = 142.0
 grow_horizontal = 2
 grow_vertical = 0
-columns = 9
+alignment = 1
 
-[node name="ActionBlock1" parent="GridContainer" instance=ExtResource("2_8t3br")]
+[node name="ActionBlock1" parent="HBox" instance=ExtResource("2_8t3br")]
 layout_mode = 2
 action_id = 1
 
-[node name="ActionBlock2" parent="GridContainer" instance=ExtResource("2_8t3br")]
+[node name="ActionBlock2" parent="HBox" instance=ExtResource("2_8t3br")]
 layout_mode = 2
 action_id = 2
 
-[node name="ActionBlock3" parent="GridContainer" instance=ExtResource("2_8t3br")]
+[node name="ActionBlock3" parent="HBox" instance=ExtResource("2_8t3br")]
 layout_mode = 2
 action_id = 3
 
-[node name="ActionBlock4" parent="GridContainer" instance=ExtResource("2_8t3br")]
+[node name="ActionBlock4" parent="HBox" instance=ExtResource("2_8t3br")]
 layout_mode = 2
 action_id = 4
 
-[node name="ActionBlock5" parent="GridContainer" instance=ExtResource("2_8t3br")]
+[node name="ActionBlock5" parent="HBox" instance=ExtResource("2_8t3br")]
 layout_mode = 2
 action_id = 5
 
-[node name="ActionBlock6" parent="GridContainer" instance=ExtResource("2_8t3br")]
+[node name="ActionBlock6" parent="HBox" instance=ExtResource("2_8t3br")]
 layout_mode = 2
 action_id = 6
 
-[node name="ActionBlock7" parent="GridContainer" instance=ExtResource("2_8t3br")]
+[node name="ActionBlock7" parent="HBox" instance=ExtResource("2_8t3br")]
 layout_mode = 2
 action_id = 7
 
-[node name="ActionBlock8" parent="GridContainer" instance=ExtResource("2_8t3br")]
+[node name="ActionBlock8" parent="HBox" instance=ExtResource("2_8t3br")]
 layout_mode = 2
 action_id = 8
 
-[node name="ActionBlock9" parent="GridContainer" instance=ExtResource("2_8t3br")]
+[node name="ActionBlock9" parent="HBox" instance=ExtResource("2_8t3br")]
 layout_mode = 2
 action_id = 9

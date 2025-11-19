@@ -102,7 +102,7 @@ func _refresh_display() -> void:
 		_add_optional_label()
 		return
 
-	# Filter events based on icon mode preference
+	# Filter events based on icon mode preferences
 	var is_gamepad_mode = current_icon_mode != InputIconMapper.IconMode.KEYBOARD and current_icon_mode != InputIconMapper.IconMode.NONE
 
 	# If gamepad mode is selected, prioritize joypad button events

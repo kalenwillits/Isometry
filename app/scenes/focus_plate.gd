@@ -77,11 +77,11 @@ func add_public_resource(resource_key: String) -> void:
 	resource_block.set_actor(actor)
 	resource_block.set_key(resource_key)
 	resource_block.set_check_in_view(check_in_view)
-	$Grid.add_child(resource_block)
+	$HBox.add_child(resource_block)
 
 func set_check_in_view(value: bool) -> void:
 	check_in_view = value
-	for child in $Grid.get_children():
+	for child in $HBox.get_children():
 		if child.has_method("set_check_in_view"):
 			child.set_check_in_view(value)
 
