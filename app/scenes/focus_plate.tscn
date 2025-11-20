@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://duj0l87bk5lja"]
+[gd_scene load_steps=7 format=3 uid="uid://duj0l87bk5lja"]
 
 [ext_resource type="Script" uid="uid://dxb34tty7suhs" path="res://scenes/focus_plate.gd" id="1_gefpo"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="1_r4mos"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_hrv8t"]
 [ext_resource type="FontFile" uid="uid://c3xo3ufx5d7hs" path="res://themes/UbuntuMono-Italic.ttf" id="3_o28qo"]
 [ext_resource type="FontFile" uid="uid://c4qo7v7qabayy" path="res://themes/UbuntuMono-Bold.ttf" id="5_j31la"]
+[ext_resource type="FontFile" uid="uid://cdixc1av271fh" path="res://themes/UbuntuMono-Regular.ttf" id="6_j31la"]
 
 [node name="FocusPlate" type="Control"]
 custom_minimum_size = Vector2(192, 16)
@@ -46,21 +47,26 @@ alignment = 1
 custom_minimum_size = Vector2(4, 0)
 layout_mode = 2
 
-[node name="CompassIcon" type="TextureRect" parent="VBox/HBox"]
+[node name="VisionStateIcons" type="HBoxContainer" parent="VBox/HBox"]
+custom_minimum_size = Vector2(40, 12)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="CompassIcon" type="TextureRect" parent="VBox/HBox/VisionStateIcons"]
 visible = false
 custom_minimum_size = Vector2(12, 12)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="EyeIcon" type="TextureRect" parent="VBox/HBox"]
+[node name="EyeIcon" type="TextureRect" parent="VBox/HBox/VisionStateIcons"]
 visible = false
 custom_minimum_size = Vector2(12, 12)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="CrosshairsIcon" type="TextureRect" parent="VBox/HBox"]
+[node name="CrosshairsIcon" type="TextureRect" parent="VBox/HBox/VisionStateIcons"]
 visible = false
 custom_minimum_size = Vector2(12, 12)
 layout_mode = 2
@@ -69,7 +75,7 @@ stretch_mode = 5
 
 [node name="ActorLabel" type="Label" parent="VBox/HBox"]
 clip_contents = true
-custom_minimum_size = Vector2(124, 0)
+custom_minimum_size = Vector2(104, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
@@ -82,6 +88,7 @@ clip_text = true
 text_overrun_behavior = 3
 
 [node name="CardinalLabel" type="Label" parent="VBox/HBox"]
+custom_minimum_size = Vector2(40, 12)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("3_o28qo")
@@ -102,7 +109,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 1
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("3_o28qo")
+theme_override_fonts/font = ExtResource("6_j31la")
 theme_override_font_sizes/font_size = 10
 text = "Target Group"
 horizontal_alignment = 1

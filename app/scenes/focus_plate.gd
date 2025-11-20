@@ -136,23 +136,23 @@ func get_direction_display(direction: String) -> String:
 	# Return symbol + text for each direction
 	match direction:
 		"N":
-			return "↑ N"
+			return "↑ N "
 		"NE":
-			return "↗ NE"
+			return "↗ NE "
 		"E":
-			return "→ E "
+			return "→ E  "
 		"SE":
-			return "↘ SE"
+			return "↘ SE "
 		"S":
-			return "↓ S "
+			return "↓ S  "
 		"SW":
-			return "↙ SW"
+			return "↙ SW "
 		"W":
-			return "← W "
+			return "← W  "
 		"NW":
-			return "↖ NW"
+			return "↖ NW "
 		_:
-			return " ---"
+			return "   ? "
 
 func check_line_of_sight(from_actor: Actor, to_actor: Actor) -> bool:
 	# Check if there's a clear line of sight (no walls blocking)
@@ -175,41 +175,41 @@ func check_mutual_targeting(target_actor: Actor, primary_actor: Actor) -> bool:
 func update_vision_state_icons() -> void:
 	var primary_actor: Actor = Finder.get_primary_actor()
 	if primary_actor == null:
-		$VBox/HBox/CompassIcon.visible = false
-		$VBox/HBox/EyeIcon.visible = false
-		$VBox/HBox/CrosshairsIcon.visible = false
+		$VBox/HBox/VisionStateIcons/CompassIcon.visible = false
+		$VBox/HBox/VisionStateIcons/EyeIcon.visible = false
+		$VBox/HBox/VisionStateIcons/CrosshairsIcon.visible = false
 		return
 
 	# Don't show vision state for self
 	if actor == primary_actor.name:
-		$VBox/HBox/CompassIcon.visible = false
-		$VBox/HBox/EyeIcon.visible = false
-		$VBox/HBox/CrosshairsIcon.visible = false
+		$VBox/HBox/VisionStateIcons/CompassIcon.visible = false
+		$VBox/HBox/VisionStateIcons/EyeIcon.visible = false
+		$VBox/HBox/VisionStateIcons/CrosshairsIcon.visible = false
 		return
 
 	var target_actor: Actor = Finder.get_actor(actor)
 	if target_actor == null:
-		$VBox/HBox/CompassIcon.visible = false
-		$VBox/HBox/EyeIcon.visible = false
-		$VBox/HBox/CrosshairsIcon.visible = false
+		$VBox/HBox/VisionStateIcons/CompassIcon.visible = false
+		$VBox/HBox/VisionStateIcons/EyeIcon.visible = false
+		$VBox/HBox/VisionStateIcons/CrosshairsIcon.visible = false
 		return
 
 	# Hide vision state if actor is out of view
 	if actor not in primary_actor.in_view:
-		$VBox/HBox/CompassIcon.visible = false
-		$VBox/HBox/EyeIcon.visible = false
-		$VBox/HBox/CrosshairsIcon.visible = false
+		$VBox/HBox/VisionStateIcons/CompassIcon.visible = false
+		$VBox/HBox/VisionStateIcons/EyeIcon.visible = false
+		$VBox/HBox/VisionStateIcons/CrosshairsIcon.visible = false
 		return
 
 	# Show/hide icons based on vision checks
 	# Compass = Target has primary actor in view (reverse vision)
-	$VBox/HBox/CompassIcon.visible = check_reverse_vision(target_actor, primary_actor)
+	$VBox/HBox/VisionStateIcons/CompassIcon.visible = check_reverse_vision(target_actor, primary_actor)
 
 	# Eye = Line of sight from primary to target
-	$VBox/HBox/EyeIcon.visible = check_line_of_sight(primary_actor, target_actor)
+	$VBox/HBox/VisionStateIcons/EyeIcon.visible = check_line_of_sight(primary_actor, target_actor)
 
 	# Crosshairs = Target is targeting primary actor
-	$VBox/HBox/CrosshairsIcon.visible = check_mutual_targeting(target_actor, primary_actor)
+	$VBox/HBox/VisionStateIcons/CrosshairsIcon.visible = check_mutual_targeting(target_actor, primary_actor)
 
 func update_cardinal_label() -> void:
 	var primary_actor: Actor = Finder.get_primary_actor()
@@ -278,9 +278,9 @@ func _load_themed_icons(theme_name: String) -> void:
 	var crosshairs_path = "res://assets/generic-icons/crosshairs-solid-full-%s.svg" % theme_suffix
 
 	# Set textures on icon nodes
-	$VBox/HBox/CompassIcon.texture = load(compass_path)
-	$VBox/HBox/EyeIcon.texture = load(eye_path)
-	$VBox/HBox/CrosshairsIcon.texture = load(crosshairs_path)
+	$VBox/HBox/VisionStateIcons/CompassIcon.texture = load(compass_path)
+	$VBox/HBox/VisionStateIcons/EyeIcon.texture = load(eye_path)
+	$VBox/HBox/VisionStateIcons/CrosshairsIcon.texture = load(crosshairs_path)
 
 func _process(delta: float) -> void:
 	update_timer += delta
