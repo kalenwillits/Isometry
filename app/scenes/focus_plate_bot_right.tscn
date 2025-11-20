@@ -4,8 +4,8 @@
 [ext_resource type="Script" uid="uid://c5dle11if3w6l" path="res://classes/BottomUpGrid.gd" id="1_botup"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="1_r4mos"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_hrv8t"]
-[ext_resource type="FontFile" uid="uid://c3xo3ufx5d7hs" path="res://themes/UbuntuMono-Italic.ttf" id="3_o28qo"]
-[ext_resource type="FontFile" uid="uid://c4qo7v7qabayy" path="res://themes/UbuntuMono-Bold.ttf" id="5_j31la"]
+[ext_resource type="FontFile" uid="uid://c3xo3ufx5d7hs" path="res://fonts/Ubuntu/UbuntuMono-Italic.ttf" id="3_o28qo"]
+[ext_resource type="FontFile" uid="uid://c4qo7v7qabayy" path="res://fonts/Ubuntu/UbuntuMono-Bold.ttf" id="5_j31la"]
 
 [node name="FocusPlate" type="Control"]
 custom_minimum_size = Vector2(192, 16)
@@ -47,19 +47,6 @@ offset_right = 96.0
 offset_bottom = 0.0
 grow_horizontal = 2
 
-[node name="GroupLabel" type="Label" parent="VBox"]
-clip_contents = true
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 1
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("3_o28qo")
-theme_override_font_sizes/font_size = 10
-text = "BAD LIZARDS"
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [node name="HBox" type="VBoxContainer" parent="VBox"]
 custom_minimum_size = Vector2(192, 0)
 layout_mode = 2
@@ -91,5 +78,18 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("3_o28qo")
 theme_override_font_sizes/font_size = 10
 text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GroupLabel" type="Label" parent="VBox"]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("3_o28qo")
+theme_override_font_sizes/font_size = 10
+text = "BAD LIZARDS"
 horizontal_alignment = 1
 vertical_alignment = 1
