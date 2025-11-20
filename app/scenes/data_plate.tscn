@@ -35,4 +35,3 @@ alignment = 1
 
 [node name="ResourceBlock" parent="HBox" instance=ExtResource("3_xp0or")]
 layout_mode = 2
-size_flags_horizontal = 1

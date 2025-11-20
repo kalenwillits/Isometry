@@ -369,7 +369,7 @@ func _create_button_stylebox(state: String) -> StyleBoxFlat:
 
 	stylebox.set_border_width_all(1)
 	stylebox.set_corner_radius_all(4)
-	stylebox.set_content_margin_all(8)
+	stylebox.set_content_margin_all(1)
 
 	return stylebox
 
