@@ -3,8 +3,8 @@
 [ext_resource type="Script" uid="uid://dxb34tty7suhs" path="res://scenes/focus_plate.gd" id="1_gefpo"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="1_r4mos"]
 [ext_resource type="StyleBox" uid="uid://rroywssaded8" path="res://materials/panel_style_box_flat.tres" id="3_hrv8t"]
-[ext_resource type="FontFile" uid="uid://c3xo3ufx5d7hs" path="res://fonts/Ubuntu/UbuntuMono-Italic.ttf" id="3_o28qo"]
-[ext_resource type="FontFile" uid="uid://c4qo7v7qabayy" path="res://fonts/Ubuntu/UbuntuMono-Bold.ttf" id="5_j31la"]
+[ext_resource type="FontFile" uid="uid://c3xo3ufx5d7hs" path="res://themes/UbuntuMono-Italic.ttf" id="3_o28qo"]
+[ext_resource type="FontFile" uid="uid://c4qo7v7qabayy" path="res://themes/UbuntuMono-Bold.ttf" id="5_j31la"]
 
 [node name="FocusPlate" type="Control"]
 custom_minimum_size = Vector2(192, 16)
@@ -46,12 +46,26 @@ alignment = 1
 custom_minimum_size = Vector2(4, 0)
 layout_mode = 2
 
-[node name="VisionStateLabel" type="Label" parent="VBox/HBox"]
+[node name="CompassIcon" type="TextureRect" parent="VBox/HBox"]
+visible = false
+custom_minimum_size = Vector2(12, 12)
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_fonts/font = ExtResource("3_o28qo")
-theme_override_font_sizes/font_size = 10
-vertical_alignment = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EyeIcon" type="TextureRect" parent="VBox/HBox"]
+visible = false
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CrosshairsIcon" type="TextureRect" parent="VBox/HBox"]
+visible = false
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ActorLabel" type="Label" parent="VBox/HBox"]
 clip_contents = true

@@ -20,6 +20,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("1a6ecf"),  # Pressed accent - darker blue
 		"border": Color("2a2a2a"),          # Borders - very dark gray
 		"selection": Color("2a7edf40"),     # Selection highlight - translucent blue
+		"icon_color": Color("e0e0e0"),      # Icon color - slightly dimmed white
 	},
 
 	"Light": {
@@ -35,6 +36,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("1976d2"),
 		"border": Color("d0d0d0"),
 		"selection": Color("2196f340"),
+		"icon_color": Color("2a2a2a"),      # Icon color - slightly lighter than text
 	},
 
 	"Monokai": {
@@ -50,6 +52,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("4dc9df"),
 		"border": Color("49483e"),
 		"selection": Color("66d9ef40"),
+		"icon_color": Color("f8f8f2"),      # Icon color - matches text_primary
 	},
 
 	"Dracula": {
@@ -65,6 +68,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("ad83e9"),
 		"border": Color("44475a"),
 		"selection": Color("bd93f940"),
+		"icon_color": Color("f8f8f2"),      # Icon color - matches text_primary
 	},
 
 	"Solarized Dark": {
@@ -80,6 +84,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("167bc2"),
 		"border": Color("073642"),
 		"selection": Color("268bd240"),
+		"icon_color": Color("93a1a1"),      # Icon color - between primary and secondary
 	},
 
 	"Nord": {
@@ -95,6 +100,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("78b0c0"),
 		"border": Color("4c566a"),
 		"selection": Color("88c0d040"),
+		"icon_color": Color("d8dee9"),      # Icon color - matches text_secondary
 	},
 
 	"Gruvbox": {
@@ -110,6 +116,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("ee7009"),
 		"border": Color("504945"),
 		"selection": Color("fe801940"),
+		"icon_color": Color("d5c4a1"),      # Icon color - matches text_secondary
 	},
 
 	"One Dark": {
@@ -125,6 +132,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("519fdf"),
 		"border": Color("3e4451"),
 		"selection": Color("61afef40"),
+		"icon_color": Color("abb2bf"),      # Icon color - matches text_primary
 	},
 
 	"Tokyo Night": {
@@ -140,6 +148,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("6a92e7"),
 		"border": Color("414868"),
 		"selection": Color("7aa2f740"),
+		"icon_color": Color("a9b1d6"),      # Icon color - matches text_primary
 	},
 
 	"Cobalt": {
@@ -155,6 +164,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("0078ef"),
 		"border": Color("004060"),
 		"selection": Color("0088ff40"),
+		"icon_color": Color("c0c0c0"),      # Icon color - matches text_secondary
 	},
 
 	"Material": {
@@ -170,6 +180,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("00acc4"),
 		"border": Color("455a64"),
 		"selection": Color("00bcd440"),
+		"icon_color": Color("eceff1"),      # Icon color - matches text_primary
 	},
 
 	"Atom One Light": {
@@ -185,6 +196,7 @@ var theme_palettes: Dictionary = {
 		"accent_pressed": Color("3068e2"),
 		"border": Color("e0e0e0"),
 		"selection": Color("4078f240"),
+		"icon_color": Color("383a42"),      # Icon color - matches text_primary
 	},
 }
 

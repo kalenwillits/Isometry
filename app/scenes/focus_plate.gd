@@ -8,10 +8,28 @@ const resource_block_packed_scene: PackedScene = preload("res://scenes/resource_
 var update_timer: float = 0.0
 const UPDATE_INTERVAL: float = 0.1
 
+# Theme name to file suffix mapping
+const THEME_FILE_NAMES: Dictionary = {
+	"Dark": "dark",
+	"Light": "light",
+	"Monokai": "monokai",
+	"Dracula": "dracula",
+	"Solarized Dark": "solarized-dark",
+	"Nord": "nord",
+	"Gruvbox": "gruvbox",
+	"One Dark": "one-dark",
+	"Tokyo Night": "tokyo-night",
+	"Cobalt": "cobalt",
+	"Material": "material",
+	"Atom One Light": "atom-one-light",
+}
+
 func _ready() -> void:
-	# Apply current theme to this widget
+	# Load themed icons FIRST (before any theme processing)
 	var theme_mgr = get_node_or_null("/root/ThemeManager")
 	if theme_mgr:
+		_load_themed_icons(theme_mgr.current_theme)
+		# THEN apply current theme to this widget
 		theme_mgr._apply_theme_recursive(self)
 
 	if actor == null: return
@@ -154,43 +172,44 @@ func check_mutual_targeting(target_actor: Actor, primary_actor: Actor) -> bool:
 		return false
 	return target_actor.target == primary_actor.name
 
-func update_vision_state_label() -> void:
+func update_vision_state_icons() -> void:
 	var primary_actor: Actor = Finder.get_primary_actor()
 	if primary_actor == null:
-		$VBox/HBox/VisionStateLabel.text = ""
+		$VBox/HBox/CompassIcon.visible = false
+		$VBox/HBox/EyeIcon.visible = false
+		$VBox/HBox/CrosshairsIcon.visible = false
 		return
 
 	# Don't show vision state for self
 	if actor == primary_actor.name:
-		$VBox/HBox/VisionStateLabel.text = "    "
+		$VBox/HBox/CompassIcon.visible = false
+		$VBox/HBox/EyeIcon.visible = false
+		$VBox/HBox/CrosshairsIcon.visible = false
 		return
 
 	var target_actor: Actor = Finder.get_actor(actor)
 	if target_actor == null:
-		$VBox/HBox/VisionStateLabel.text = "    "
+		$VBox/HBox/CompassIcon.visible = false
+		$VBox/HBox/EyeIcon.visible = false
+		$VBox/HBox/CrosshairsIcon.visible = false
 		return
 
 	# Hide vision state if actor is out of view
 	if actor not in primary_actor.in_view:
-		$VBox/HBox/VisionStateLabel.text = "    "
+		$VBox/HBox/CompassIcon.visible = false
+		$VBox/HBox/EyeIcon.visible = false
+		$VBox/HBox/CrosshairsIcon.visible = false
 		return
 
-	# Build symbol string in fixed order: vision, los, targeted
-	var symbols: String = ""
+	# Show/hide icons based on vision checks
+	# Compass = Target has primary actor in view (reverse vision)
+	$VBox/HBox/CompassIcon.visible = check_reverse_vision(target_actor, primary_actor)
 
-	# ◉ = Target has primary actor in view
-	if check_reverse_vision(target_actor, primary_actor):
-		symbols += "◉ "
+	# Eye = Line of sight from primary to target
+	$VBox/HBox/EyeIcon.visible = check_line_of_sight(primary_actor, target_actor)
 
-	# ▲ = Line of sight
-	if check_line_of_sight(primary_actor, target_actor):
-		symbols += "▲ "
-
-	# ⌖ = Target is targeting primary actor
-	if check_mutual_targeting(target_actor, primary_actor):
-		symbols += "⌖ "
-
-	$VBox/HBox/VisionStateLabel.text = symbols
+	# Crosshairs = Target is targeting primary actor
+	$VBox/HBox/CrosshairsIcon.visible = check_mutual_targeting(target_actor, primary_actor)
 
 func update_cardinal_label() -> void:
 	var primary_actor: Actor = Finder.get_primary_actor()
@@ -249,12 +268,26 @@ func _parse_hex_color(hex_string: String) -> Color:
 
 	return Color(r / 255.0, g / 255.0, b / 255.0, 1.0)
 
+func _load_themed_icons(theme_name: String) -> void:
+	# Get theme file suffix
+	var theme_suffix = THEME_FILE_NAMES.get(theme_name, "dark")
+
+	# Load themed icon textures
+	var compass_path = "res://assets/generic-icons/compass-solid-full-%s.svg" % theme_suffix
+	var eye_path = "res://assets/generic-icons/eye-solid-full-%s.svg" % theme_suffix
+	var crosshairs_path = "res://assets/generic-icons/crosshairs-solid-full-%s.svg" % theme_suffix
+
+	# Set textures on icon nodes
+	$VBox/HBox/CompassIcon.texture = load(compass_path)
+	$VBox/HBox/EyeIcon.texture = load(eye_path)
+	$VBox/HBox/CrosshairsIcon.texture = load(crosshairs_path)
+
 func _process(delta: float) -> void:
 	update_timer += delta
 	if update_timer >= UPDATE_INTERVAL:
 		update_timer = 0.0
-		# Update vision state label
-		update_vision_state_label()
+		# Update vision state icons
+		update_vision_state_icons()
 		# Update cardinal direction label
 		update_cardinal_label()
 		# Update visibility alpha for out-of-view actors

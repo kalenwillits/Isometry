@@ -1043,7 +1043,7 @@ func isometric_distance_to_point(point: Vector2) -> float:
 func line_of_sight_to_point(point: Vector2) -> bool:
 	var space_state = get_world_2d().direct_space_state
 	var query: LineOfSightQueryParameters = LineOfSightQueryParameters.builder()\
-	.from(position)\
+	.from(global_position)\
 	.to(point)\
 	.build()
 	var result: Dictionary = space_state.intersect_ray(query)
@@ -1942,7 +1942,6 @@ func _on_hit_box_body_entered(other):
 func use_collisions(effect: bool) -> void:
 	set_collision_layer_value(Layer.BASE, effect)
 	set_collision_mask_value(Layer.BASE, effect)
-	set_collision_layer_value(Layer.WALL, effect)
 	set_collision_mask_value(Layer.WALL, effect)
 	$HitBox.set_collision_layer_value(Layer.HITBOX, effect)
 	$HitBox.set_collision_mask_value(Layer.HITBOX, effect)
