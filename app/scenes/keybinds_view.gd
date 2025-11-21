@@ -280,10 +280,10 @@ func _input(event: InputEvent) -> void:
 
 	# Cancel action is handled by UIStateMachine via interface.gd
 	# We only handle pagination here
-	if event.is_action_pressed("menu_previous_page"):
+	if event.is_action_pressed("menu_previous_page") or Keybinds.is_action_just_pressed(Keybinds.DECREMENT_TARGET):
 		_on_prev_page()
 		get_viewport().set_input_as_handled()
 
-	elif event.is_action_pressed("menu_next_page"):
+	elif event.is_action_pressed("menu_next_page") or Keybinds.is_action_just_pressed(Keybinds.INCREMENT_TARGET):
 		_on_next_page()
 		get_viewport().set_input_as_handled()

@@ -242,9 +242,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("menu_accept"):
 		close_plate()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_down"):
+	elif event.is_action_pressed("ui_down") or Keybinds.is_action_just_pressed(Keybinds.INCREMENT_TARGET):
 		next_page()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up"):
+	elif event.is_action_pressed("ui_up") or Keybinds.is_action_just_pressed(Keybinds.DECREMENT_TARGET):
 		previous_page()
 		get_viewport().set_input_as_handled()

@@ -201,9 +201,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_right"):
 		move_selection_right()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("menu_next_page"):
+	elif event.is_action_pressed("menu_next_page") or Keybinds.is_action_just_pressed(Keybinds.INCREMENT_TARGET):
 		next_page()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("menu_previous_page"):
+	elif event.is_action_pressed("menu_previous_page") or Keybinds.is_action_just_pressed(Keybinds.DECREMENT_TARGET):
 		previous_page()
 		get_viewport().set_input_as_handled()
