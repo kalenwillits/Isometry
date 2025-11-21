@@ -304,13 +304,22 @@ func _apply_theme_to_node(control: Control) -> void:
 	# Apply button colors
 	if control is Button:
 		control.add_theme_stylebox_override("normal", _create_button_stylebox("normal"))
-		control.add_theme_stylebox_override("hover", _create_button_stylebox("hover"))
+		control.add_theme_stylebox_override("hover", _create_button_stylebox("normal"))
+		control.add_theme_stylebox_override("focus", _create_button_stylebox("normal"))
 		control.add_theme_stylebox_override("pressed", _create_button_stylebox("pressed"))
+		control.add_theme_stylebox_override("hover_pressed", _create_button_stylebox("normal"))
 		control.add_theme_stylebox_override("disabled", _create_button_stylebox("disabled"))
 		control.add_theme_color_override("font_color", current_palette["text_primary"])
-		control.add_theme_color_override("font_hover_color", current_palette["text_primary"])
 		control.add_theme_color_override("font_pressed_color", current_palette["text_primary"])
 		control.add_theme_color_override("font_disabled_color", current_palette["text_disabled"])
+		# Override icon colors to prevent default blue tint
+		control.add_theme_color_override("icon_normal_color", current_palette["icon_color"])
+		control.add_theme_color_override("icon_pressed_color", current_palette["icon_color"])
+		control.add_theme_color_override("icon_hover_color", current_palette["icon_color"])
+		control.add_theme_color_override("icon_disabled_color", current_palette["text_disabled"])
+		control.add_theme_color_override("icon_focus_color", current_palette["icon_color"])
+		# Disable focus for all buttons
+		control.focus_mode = Control.FOCUS_NONE
 
 	# Apply label colors - BUT preserve group colors and other custom overrides
 	if control is Label:
@@ -369,12 +378,9 @@ func _create_button_stylebox(state: String) -> StyleBoxFlat:
 		"normal":
 			stylebox.bg_color = current_palette["bg_tertiary"]
 			stylebox.border_color = current_palette["border"]
-		"hover":
-			stylebox.bg_color = current_palette["accent_hover"]
-			stylebox.border_color = current_palette["accent"]
 		"pressed":
-			stylebox.bg_color = current_palette["accent_pressed"]
-			stylebox.border_color = current_palette["accent"]
+			stylebox.bg_color = current_palette["bg_tertiary"]
+			stylebox.border_color = current_palette["border"]
 		"disabled":
 			stylebox.bg_color = current_palette["bg_tertiary"]
 			stylebox.border_color = current_palette["border"]
