@@ -3,6 +3,7 @@ extends Widget
 @export var actor: String
 @export var key: String
 @export var check_in_view: bool = false  ## If true, show "---" when out of view
+@export var clickable: bool = true  ## If true, button can be clicked to open menu
 
 var update_timer: float = 0.0
 const UPDATE_INTERVAL: float = 0.1
@@ -18,11 +19,12 @@ func _ready() -> void:
 		.build()\
 		.pull()
 	$Button/Icon.set_texture(icon_texture)
-	$Button.pressed.connect(_on_button_pressed)
 
-	# Set tooltip from entity
-	if entity.get("tooltip"):
-		$Button.tooltip_text = entity.tooltip
+	# Only connect button press if clickable is true
+	if clickable:
+		$Button.pressed.connect(_on_button_pressed)
+	else:
+		$Button.disabled = true
 
 func _on_button_pressed() -> void:
 	var entity: Entity = Repo.select(key)
@@ -90,6 +92,18 @@ func set_key(value: String) -> void:
 
 func set_check_in_view(value: bool) -> void:
 	check_in_view = value
+
+func set_clickable(value: bool) -> void:
+	clickable = value
+	if has_node("Button"):
+		if clickable:
+			$Button.disabled = false
+			if not $Button.pressed.is_connected(_on_button_pressed):
+				$Button.pressed.connect(_on_button_pressed)
+		else:
+			$Button.disabled = true
+			if $Button.pressed.is_connected(_on_button_pressed):
+				$Button.pressed.disconnect(_on_button_pressed)
 
 func is_actor_in_view() -> bool:
 	if actor == null or actor.is_empty():

@@ -50,6 +50,16 @@ columns = 12
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
+[node name="DescriptionLabel" type="RichTextLabel" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme = ExtResource("2_theme")
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+text = ""
+
 [node name="BottomBar" type="HBoxContainer" parent="Overlay/CenterContainer/PanelContainer/VBox"]
 layout_mode = 2
 

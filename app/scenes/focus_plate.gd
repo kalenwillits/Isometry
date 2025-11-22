@@ -95,6 +95,7 @@ func add_public_resource(resource_key: String) -> void:
 	resource_block.set_actor(actor)
 	resource_block.set_key(resource_key)
 	resource_block.set_check_in_view(check_in_view)
+	resource_block.set_clickable(false)  # Public resources on other actors are not clickable
 	$HBox.add_child(resource_block)
 
 func set_check_in_view(value: bool) -> void:

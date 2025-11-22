@@ -69,11 +69,6 @@ func render_page() -> void:
 		resource_block.set_actor(primary_actor.name)
 		resource_block.set_key(resource_key)
 
-		# Add tooltip from Resource entity
-		var entity: Entity = Repo.select(resource_key)
-		if entity and entity.get("tooltip"):
-			resource_block.get_node("Button").tooltip_text = entity.tooltip
-
 		$Overlay/CenterContainer/PanelContainer/VBox/ResourceGrid.add_child(resource_block)
 
 	# Fill remaining slots with empty widgets to complete the grid
@@ -108,6 +103,26 @@ func update_selection_highlight() -> void:
 			item.modulate = Color(1.5, 1.5, 1.5, 1.0)  # Highlight
 		else:
 			item.modulate = Color(1.0, 1.0, 1.0, 1.0)  # Normal
+
+	# Update description label with selected resource's name and description
+	var description_label = $Overlay/CenterContainer/PanelContainer/VBox/DescriptionLabel
+	if selected_index < resource_keys.size():
+		var start_index = current_page * items_per_page
+		var resource_index = start_index + selected_index
+		if resource_index < resource_keys.size():
+			var resource_key = resource_keys[resource_index]
+			var entity: Entity = Repo.select(resource_key)
+			if entity:
+				var resource_name = entity.get("name_") if entity.get("name_") else resource_key
+				var description = entity.get("description") if entity.get("description") else ""
+				if description:
+					description_label.text = "[b]" + resource_name + "[/b] - " + description
+				else:
+					description_label.text = "[b]" + resource_name + "[/b]"
+			else:
+				description_label.text = ""
+	else:
+		description_label.text = ""
 
 func move_selection_up() -> void:
 	var items_on_page = $Overlay/CenterContainer/PanelContainer/VBox/ResourceGrid.get_child_count()
