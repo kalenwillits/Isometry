@@ -445,7 +445,14 @@ func _event_to_button_key(event: InputEvent) -> String:
 	elif event is InputEventJoypadMotion:
 		return "joy_axis_%d_%d" % [event.axis, sign(event.axis_value)]
 	elif event is InputEventKey:
-		return "key_%d" % event.physical_keycode
+		var modifiers = ""
+		if event.ctrl_pressed:
+			modifiers += "ctrl+"
+		if event.shift_pressed:
+			modifiers += "shift+"
+		if event.alt_pressed:
+			modifiers += "alt+"
+		return "key_%s%d" % [modifiers, event.physical_keycode]
 	elif event is InputEventMouseButton:
 		return "mouse_%d" % event.button_index
 	return ""

@@ -10,6 +10,7 @@ signal reset_requested(action_name: String, binding_type: String)
 
 var is_listening: bool = false
 var pressed_keys: Array = []
+var key_combo_to_bind: Array = []  # Tracks the full keyboard combo even after keys are released
 var pressed_joy_buttons: Array = []
 var joy_combo_to_bind: Array = []  # Tracks the full combo even after buttons are released
 
@@ -72,6 +73,7 @@ func _start_listening() -> void:
 	"""Enters listening mode to capture new binding"""
 	is_listening = true
 	pressed_keys.clear()
+	key_combo_to_bind.clear()
 	pressed_joy_buttons.clear()
 	joy_combo_to_bind.clear()
 
@@ -94,7 +96,7 @@ func _input(event: InputEvent) -> void:
 
 	# Handle keyboard/mouse inputs
 	if binding_type == "keyboard":
-		if event is InputEventKey and event.pressed:
+		if event is InputEventKey:
 			_handle_key_binding(event)
 			get_viewport().set_input_as_handled()
 		elif event is InputEventMouseButton and event.pressed:
@@ -111,34 +113,78 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 func _handle_key_binding(event: InputEventKey) -> void:
-	"""Handles keyboard key binding"""
+	"""Handles keyboard key binding using state machine approach (like gamepad)"""
+
 	# Skip modifier keys themselves - only capture regular keys with modifiers
-	if event.keycode in [KEY_CTRL, KEY_SHIFT, KEY_ALT, KEY_META]:
+	if event.physical_keycode in [KEY_CTRL, KEY_SHIFT, KEY_ALT, KEY_META]:
 		return  # Don't bind modifier keys, wait for actual key
 
-	var binding_str: String = ""
+	if event.pressed:
+		# KEY PRESS: Add to tracking arrays
 
-	# Build modifier string for binding
-	if event.ctrl_pressed:
-		binding_str += "ctrl+"
-	if event.shift_pressed:
-		binding_str += "shift+"
-	if event.alt_pressed:
-		binding_str += "alt+"
+		# Find key name using physical_keycode
+		var key_name: String = ""
+		for name in Keybinds.KEY_MAP.keys():
+			if Keybinds.KEY_MAP[name] == event.physical_keycode:
+				key_name = name
+				break
 
-	# Find key name using keycode (not physical_keycode)
-	var key_name: String = ""
-	for name in Keybinds.KEY_MAP.keys():
-		if Keybinds.KEY_MAP[name] == event.keycode:
-			key_name = name
-			break
+		if key_name == "":
+			_stop_listening()
+			return
 
-	if key_name == "":
-		_stop_listening()
-		return
+		# Build the key string with modifiers
+		var key_with_modifiers: String = ""
+		if event.ctrl_pressed:
+			key_with_modifiers += "ctrl+"
+		if event.shift_pressed:
+			key_with_modifiers += "shift+"
+		if event.alt_pressed:
+			key_with_modifiers += "alt+"
+		key_with_modifiers += key_name
 
-	binding_str += key_name
-	_apply_binding(binding_str)
+		# Add to pressed list (current physical keys held)
+		if key_with_modifiers not in pressed_keys:
+			pressed_keys.append(key_with_modifiers)
+
+		# Add to combo list (all keys pressed in this session)
+		if key_with_modifiers not in key_combo_to_bind:
+			key_combo_to_bind.append(key_with_modifiers)
+
+		# Update display to show current combo
+		binding_button.text = "+".join(key_combo_to_bind)
+
+	else:
+		# KEY RELEASE: Remove from pressed list
+
+		# Find the key that was released
+		var key_name: String = ""
+		for name in Keybinds.KEY_MAP.keys():
+			if Keybinds.KEY_MAP[name] == event.physical_keycode:
+				key_name = name
+				break
+
+		if key_name == "":
+			return
+
+		# Build the key string with modifiers (same logic as press)
+		var key_with_modifiers: String = ""
+		if event.ctrl_pressed:
+			key_with_modifiers += "ctrl+"
+		if event.shift_pressed:
+			key_with_modifiers += "shift+"
+		if event.alt_pressed:
+			key_with_modifiers += "alt+"
+		key_with_modifiers += key_name
+
+		# Remove from currently pressed keys
+		if key_with_modifiers in pressed_keys:
+			pressed_keys.erase(key_with_modifiers)
+
+		# When ALL keys released, apply the binding
+		if pressed_keys.size() == 0 and key_combo_to_bind.size() > 0:
+			var binding_str = "+".join(key_combo_to_bind)
+			_apply_binding(binding_str)
 
 func _handle_mouse_binding(event: InputEventMouseButton) -> void:
 	"""Handles mouse button binding"""

@@ -1,3 +1,6 @@
+# ISOMETRY
+
+
 + There are nine action slots. On controller, use the south button to target and use the W N E + bumpers to access all actions.
 + Make resources public / private / secret
 + The follow action should change a strategy
