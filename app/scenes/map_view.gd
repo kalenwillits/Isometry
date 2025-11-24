@@ -3,11 +3,13 @@ extends CanvasLayer
 const ActorEllipseMarker = preload("res://scenes/actor_ellipse_marker.gd")
 const WaypointMarker = preload("res://scenes/waypoint_marker.gd")
 
-@onready var viewport: SubViewport = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport
-@onready var viewport_camera: Camera2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/Camera
-@onready var player_marker: Node2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/PlayerMarker
-@onready var camera_viewport_indicator: Node2D = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/CameraViewportIndicator
-@onready var title_label: Label = $Overlay/CenterContainer/PanelContainer/VBox/Title
+@onready var viewport: SubViewport = $Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport
+@onready var viewport_camera: Camera2D = $Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/Camera
+@onready var player_marker: Node2D = $Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/PlayerMarker
+@onready var camera_viewport_indicator: Node2D = $Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport/CameraViewportIndicator
+@onready var title_label: Label = $Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/Title
+@onready var pagination_label: Label = $Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/PaginationLabel
+@onready var description_label: RichTextLabel = $Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/DescriptionLabel
 
 const TILE_SIZE: Vector2 = Vector2(32, 16)  # Isometric tile size from Map.gd
 const PLAYER_MARKER_RADIUS: float = 8.0
@@ -19,6 +21,9 @@ var actor_markers: Dictionary = {}  # Dictionary[String, Node2D] - actor name to
 var waypoint_markers: Dictionary = {}  # Dictionary[String, Node2D] - waypoint key to marker node
 var discovered_waypoint_keys: Array[String] = []  # Ordered list of discovered waypoints
 var selected_waypoint_index: int = -1  # Currently selected waypoint (-1 = none)
+var all_discovered_maps: Array[String] = []  # All discovered map keys
+var current_map_page: int = 0  # Current map page being viewed
+var current_map_key: String = ""  # Current map being displayed
 
 func _ready() -> void:
 	visible = false
@@ -45,6 +50,9 @@ func open_view() -> void:
 		Logger.warn("Cannot open map view: primary actor not found")
 		return
 
+	# Discover all maps with discovered waypoints
+	discover_all_maps(primary_actor)
+
 	# Get the primary actor's current map
 	var map_key: String = primary_actor.map
 	Logger.debug("Primary actor map key: %s" % map_key)
@@ -53,36 +61,67 @@ func open_view() -> void:
 		Logger.warn("Cannot open map view: primary actor has no map")
 		return
 
+	# Set current page to the primary actor's map
+	current_map_page = 0
+	if all_discovered_maps.has(map_key):
+		current_map_page = all_discovered_maps.find(map_key)
+
+	# Set current map key
+	current_map_key = all_discovered_maps[current_map_page] if all_discovered_maps.size() > 0 else map_key
+
+	# Load the current map page
+	load_map_page(primary_actor)
+
+	Logger.info("Map view opened successfully")
+	visible = true
+
+func discover_all_maps(primary_actor: Actor) -> void:
+	# Get all waypoints and collect unique map keys that have been discovered
+	all_discovered_maps.clear()
+	var all_waypoints = Repo.query([Group.WAYPOINT_ENTITY])
+
+	for waypoint_ent in all_waypoints:
+		if is_waypoint_discovered(waypoint_ent, primary_actor):
+			var waypoint_map_key = waypoint_ent.map.key() if waypoint_ent.map else ""
+			if not waypoint_map_key.is_empty() and not all_discovered_maps.has(waypoint_map_key):
+				all_discovered_maps.append(waypoint_map_key)
+
+	Logger.info("Discovered maps: %s" % str(all_discovered_maps))
+
+func load_map_page(primary_actor: Actor) -> void:
+	# Clear previous map content
+	clear_viewport()
+
+	# Update pagination label
+	update_pagination_label()
+
 	# Try multiple methods to find the map node
-	var map_node = Finder.select(map_key) as Map
+	var map_node = Finder.select(current_map_key) as Map
 	if not map_node:
 		# Try getting it from World node
 		var world = Finder.select(Group.WORLD)
 		if world:
-			map_node = world.get_node_or_null(map_key) as Map
+			map_node = world.get_node_or_null(current_map_key) as Map
 			Logger.debug("Tried getting map from World node")
 
 	if not map_node:
 		# Try using get_tree to find it in the group
-		map_node = get_tree().get_first_node_in_group(map_key) as Map
+		map_node = get_tree().get_first_node_in_group(current_map_key) as Map
 		Logger.debug("Tried getting map from tree group")
 
 	if not map_node:
-		Logger.warn("Cannot open map view: map node not found: %s" % map_key)
+		Logger.warn("Cannot load map page: map node not found: %s" % current_map_key)
 		Logger.warn("Available groups: %s" % str(get_tree().get_nodes_in_group(Group.MAP)))
 		return
 
 	Logger.debug("Found map node: %s" % map_node.name)
 
 	# Set title from map entity name
-	var map_entity = Repo.select(map_key)
+	var map_entity = Repo.select(current_map_key)
 	if map_entity and map_entity.get("name_"):
 		title_label.text = map_entity.name_
 	else:
-		title_label.text = map_key  # Fallback to key if no name
-
-	# Clear previous map content
-	clear_viewport()
+		title_label.text = current_map_key  # Fallback to key if no name
 
 	# Set player marker size from base
 	player_marker.set_size(primary_actor.base)
@@ -108,11 +147,43 @@ func open_view() -> void:
 	# Render actor markers
 	render_actor_markers(primary_actor)
 
-	# Render waypoint markers
+	# Render waypoint markers for current map
 	render_waypoint_markers(primary_actor)
 
-	Logger.info("Map view opened successfully")
-	visible = true
+func update_pagination_label() -> void:
+	if all_discovered_maps.size() > 1:
+		pagination_label.text = "Map %d/%d" % [current_map_page + 1, all_discovered_maps.size()]
+		pagination_label.visible = true
+	else:
+		pagination_label.visible = false
+
+func next_map_page() -> void:
+	if all_discovered_maps.size() == 0:
+		return
+
+	var primary_actor: Actor = Finder.get_primary_actor()
+	if not primary_actor:
+		return
+
+	current_map_page = (current_map_page + 1) % all_discovered_maps.size()
+	current_map_key = all_discovered_maps[current_map_page]
+	selected_waypoint_index = -1  # Reset waypoint selection
+	load_map_page(primary_actor)
+	Logger.info("Next map page: %s (%d/%d)" % [current_map_key, current_map_page + 1, all_discovered_maps.size()])
+
+func previous_map_page() -> void:
+	if all_discovered_maps.size() == 0:
+		return
+
+	var primary_actor: Actor = Finder.get_primary_actor()
+	if not primary_actor:
+		return
+
+	current_map_page = (current_map_page - 1 + all_discovered_maps.size()) % all_discovered_maps.size()
+	current_map_key = all_discovered_maps[current_map_page]
+	selected_waypoint_index = -1  # Reset waypoint selection
+	load_map_page(primary_actor)
+	Logger.info("Previous map page: %s (%d/%d)" % [current_map_key, current_map_page + 1, all_discovered_maps.size()])
 
 func close_view() -> void:
 	visible = false
@@ -145,6 +216,26 @@ func update_waypoint_selection() -> void:
 		if waypoint_markers.has(selected_key):
 			waypoint_markers[selected_key].set_selected(true)
 
+		# Update description label
+		update_description_display(selected_key)
+	else:
+		# Clear description if no waypoint selected
+		description_label.text = ""
+
+func update_description_display(waypoint_key: String) -> void:
+	var waypoint_ent = Repo.select(waypoint_key)
+	if not waypoint_ent:
+		description_label.text = ""
+		return
+
+	var waypoint_name = waypoint_ent.get("name_") if waypoint_ent.get("name_") else waypoint_key
+	var description = waypoint_ent.get("description") if waypoint_ent.get("description") else ""
+
+	if description and not description.is_empty():
+		description_label.text = "[b]" + waypoint_name + "[/b] - " + description
+	else:
+		description_label.text = "[b]" + waypoint_name + "[/b]"
+
 func cycle_waypoint_selection(direction: int) -> void:
 	if discovered_waypoint_keys.size() == 0:
 		return
@@ -166,8 +257,29 @@ func _input(event: InputEvent) -> void:
 	if not visible:
 		return
 
+	# Mouse input handling
+	if event is InputEventMouseButton:
+		var mouse_event = event as InputEventMouseButton
+
+		# Left click - center camera on clicked position
+		if mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed:
+			handle_left_click(mouse_event.position)
+			get_viewport().set_input_as_handled()
+
+		# Right click - set destination for primary actor
+		elif mouse_event.button_index == MOUSE_BUTTON_RIGHT and mouse_event.pressed:
+			handle_right_click(mouse_event.position)
+			get_viewport().set_input_as_handled()
+
+	# Map pagination with Tab/Shift+Tab
+	if event.is_action_pressed(Keybinds.INCREMENT_TARGET):  # Tab
+		next_map_page()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(Keybinds.DECREMENT_TARGET):  # Shift+Tab
+		previous_map_page()
+		get_viewport().set_input_as_handled()
 	# Arrow key navigation
-	if event.is_action_pressed("ui_right") or event.is_action_pressed("ui_down"):
+	elif event.is_action_pressed("ui_right") or event.is_action_pressed("ui_down"):
 		cycle_waypoint_selection(1)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_up"):
@@ -176,6 +288,77 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_select"):
 		activate_selected_waypoint()
 		get_viewport().set_input_as_handled()
+
+func handle_left_click(screen_position: Vector2) -> void:
+	# Convert screen position to viewport position
+	var viewport_container = $Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/SubViewportContainer
+	var viewport_rect = viewport_container.get_global_rect()
+
+	# Check if click is within viewport
+	if not viewport_rect.has_point(screen_position):
+		return
+
+	# Convert to local viewport coordinates
+	var local_pos = screen_position - viewport_rect.position
+
+	# Convert viewport coordinates to world coordinates
+	var world_pos = viewport_to_world_position(local_pos)
+
+	# Get the main game camera and center it on clicked position
+	var game_camera = Finder.select(Group.CAMERA) as Camera2D
+	if not game_camera:
+		Logger.warn("Cannot move camera: main camera not found")
+		return
+
+	# Unlock camera so it doesn't follow the primary actor
+	game_camera._lock = false
+	game_camera.global_position = world_pos
+	Logger.info("Unlocked and centered main camera on position: %s" % world_pos)
+
+func handle_right_click(screen_position: Vector2) -> void:
+	# Convert screen position to viewport position
+	var viewport_container = $Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/SubViewportContainer
+	var viewport_rect = viewport_container.get_global_rect()
+
+	# Check if click is within viewport
+	if not viewport_rect.has_point(screen_position):
+		return
+
+	# Convert to local viewport coordinates
+	var local_pos = screen_position - viewport_rect.position
+
+	# Convert viewport coordinates to world coordinates
+	var world_pos = viewport_to_world_position(local_pos)
+
+	# Get primary actor
+	var primary_actor = Finder.get_primary_actor()
+	if not primary_actor:
+		Logger.warn("Cannot set destination: primary actor not found")
+		return
+
+	# Only allow destination setting on the actor's current map
+	if current_map_key != primary_actor.map:
+		Logger.info("Cannot set destination on different map (current=%s, actor=%s)" % [current_map_key, primary_actor.map])
+		return
+
+	# Set destination for primary actor
+	primary_actor.set_destination(world_pos)
+	Logger.info("Set destination for primary actor to: %s" % world_pos)
+
+func viewport_to_world_position(viewport_pos: Vector2) -> Vector2:
+	# Get viewport size
+	var viewport_size = viewport.size
+
+	# Calculate normalized position (-0.5 to 0.5 from center)
+	var normalized_x = (viewport_pos.x / viewport_size.x) - 0.5
+	var normalized_y = (viewport_pos.y / viewport_size.y) - 0.5
+
+	# Convert to world position relative to camera
+	var world_offset_x = normalized_x * viewport_size.x / viewport_camera.zoom.x
+	var world_offset_y = normalized_y * viewport_size.y / viewport_camera.zoom.y
+
+	# Add camera position to get final world position
+	return viewport_camera.position + Vector2(world_offset_x, world_offset_y)
 
 func clone_parallax_backgrounds(map_node: Map, center_position: Vector2) -> void:
 	# Get all parallax children from the map (both legacy ParallaxBackground and new CanvasLayer-based)
@@ -333,9 +516,9 @@ func render_waypoint_markers(primary_actor: Actor) -> void:
 	Logger.info("Rendering waypoints: found %d total waypoints" % all_waypoints.size())
 
 	for waypoint_ent in all_waypoints:
-		# Only show waypoints on the same map
-		if waypoint_ent.map and waypoint_ent.map.key() != primary_actor.map:
-			Logger.info("Waypoint %s skipped: wrong map (waypoint=%s, actor=%s)" % [waypoint_ent.key(), waypoint_ent.map.key(), primary_actor.map])
+		# Only show waypoints on the current map page
+		if waypoint_ent.map and waypoint_ent.map.key() != current_map_key:
+			Logger.info("Waypoint %s skipped: wrong map (waypoint=%s, current=%s)" % [waypoint_ent.key(), waypoint_ent.map.key(), current_map_key])
 			continue
 
 		Logger.info("Rendering waypoint %s at location %s" % [waypoint_ent.key(), waypoint_ent.location])
@@ -484,7 +667,7 @@ func calculate_and_set_zoom(primary_actor: Actor) -> Vector2:
 	var bounds := calculate_bounds(discovered_coords, layers[0] if layers.size() > 0 else null)
 
 	# Get viewport container size
-	var viewport_size: Vector2 = $Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer.size
+	var viewport_size: Vector2 = $Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/SubViewportContainer.size
 
 	# Calculate zoom to fit bounds
 	var bounds_size_world := bounds.size

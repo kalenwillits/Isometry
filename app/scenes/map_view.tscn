@@ -18,24 +18,31 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="CenterContainer" type="CenterContainer" parent="Overlay"]
+[node name="MarginContainer" type="MarginContainer" parent="Overlay"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
 
-[node name="PanelContainer" type="PanelContainer" parent="Overlay/CenterContainer"]
-custom_minimum_size = Vector2(800, 600)
+[node name="CenterContainer" type="CenterContainer" parent="Overlay/MarginContainer"]
+layout_mode = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Overlay/MarginContainer/CenterContainer"]
+custom_minimum_size = Vector2(700, 500)
 layout_mode = 2
 theme = ExtResource("2_theme")
 theme_override_styles/panel = ExtResource("3_panel")
 
-[node name="VBox" type="VBoxContainer" parent="Overlay/CenterContainer/PanelContainer"]
+[node name="VBox" type="VBoxContainer" parent="Overlay/MarginContainer/CenterContainer/PanelContainer"]
 layout_mode = 2
 
-[node name="Title" type="Label" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+[node name="Title" type="Label" parent="Overlay/MarginContainer/CenterContainer/PanelContainer/VBox"]
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 theme = ExtResource("2_theme")
@@ -43,27 +50,50 @@ theme_override_font_sizes/font_size = 16
 text = "Map"
 horizontal_alignment = 1
 
-[node name="Margin" type="MarginContainer" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+[node name="Margin" type="MarginContainer" parent="Overlay/MarginContainer/CenterContainer/PanelContainer/VBox"]
 custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="Overlay/CenterContainer/PanelContainer/VBox"]
-custom_minimum_size = Vector2(780, 550)
+[node name="SubViewportContainer" type="SubViewportContainer" parent="Overlay/MarginContainer/CenterContainer/PanelContainer/VBox"]
+custom_minimum_size = Vector2(680, 450)
 layout_mode = 2
 size_flags_vertical = 3
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer"]
+[node name="SubViewport" type="SubViewport" parent="Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/SubViewportContainer"]
 handle_input_locally = false
-size = Vector2i(780, 550)
+size = Vector2i(680, 450)
 render_target_update_mode = 0
 
-[node name="Camera" type="Camera2D" parent="Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport"]
+[node name="Camera" type="Camera2D" parent="Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport"]
 
-[node name="CameraViewportIndicator" type="Node2D" parent="Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport"]
+[node name="CameraViewportIndicator" type="Node2D" parent="Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport"]
 z_index = 101
 script = ExtResource("5_viewport_indicator")
 
-[node name="PlayerMarker" type="Node2D" parent="Overlay/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport"]
+[node name="PlayerMarker" type="Node2D" parent="Overlay/MarginContainer/CenterContainer/PanelContainer/VBox/SubViewportContainer/SubViewport"]
 z_index = 100
 script = ExtResource("4_marker")
+
+[node name="BottomMargin" type="MarginContainer" parent="Overlay/MarginContainer/CenterContainer/PanelContainer/VBox"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+
+[node name="PaginationLabel" type="Label" parent="Overlay/MarginContainer/CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+text = "Map 1/1"
+horizontal_alignment = 1
+
+[node name="DescriptionMargin" type="MarginContainer" parent="Overlay/MarginContainer/CenterContainer/PanelContainer/VBox"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="Overlay/MarginContainer/CenterContainer/PanelContainer/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme = ExtResource("2_theme")
+bbcode_enabled = true
+text = ""
+fit_content = true
+scroll_active = false
