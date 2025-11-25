@@ -164,12 +164,165 @@ func broadcast_actor_is_despawning(peer_id: int, _map: String) -> void:
 		targeted_by_actor.set_target("") # Clear ANY other actor from being able to target_this one
 
 @rpc("any_peer", "call_local", "reliable")
-func submit_chat_request_to_server(author: String, message: String) -> void:
-	broadcast_chat.rpc(author, message)
-	
+func submit_chat_request_to_server(author: String, message: String, channel: int = Chat.Channel.PUBLIC) -> void:
+	# Server-side routing logic based on channel type
+	if Cache.network == Network.Mode.HOST or Cache.network == Network.Mode.SERVER:
+		var sender_actor = Finder.get_actor(author)
+		if sender_actor == null:
+			Logger.warn("Chat sender actor not found: %s" % author)
+			return
+
+		match channel:
+			Chat.Channel.WHISPER:
+				_route_whisper(author, message, sender_actor)
+			Chat.Channel.SAY:
+				_route_say(author, message, sender_actor)
+			Chat.Channel.FOCUS:
+				_route_focus(author, message, sender_actor)
+			Chat.Channel.GROUP:
+				_route_group(author, message, sender_actor)
+			Chat.Channel.PUBLIC:
+				_route_public(author, message)
+			Chat.Channel.MAP:
+				_route_map(author, message, sender_actor)
+			Chat.Channel.YELL:
+				_route_yell(author, message, sender_actor)
+
 @rpc("authority", "call_local", "reliable")
-func broadcast_chat(author, message: String) -> void:
-	Finder.select(Group.UI_CHAT_WIDGET).submit_message(author, message)
+func broadcast_chat(actor_node_name: String, message: String, channel: int, recipient_node_name: String = "") -> void:
+	# Get the actor to retrieve display name
+	var actor = Finder.get_actor(actor_node_name)
+	var display_name = actor.display_name if actor else actor_node_name
+
+	# Get recipient display name if provided
+	var recipient_display_name = ""
+	if not recipient_node_name.is_empty():
+		var recipient_actor = Finder.get_actor(recipient_node_name)
+		recipient_display_name = recipient_actor.display_name if recipient_actor else recipient_node_name
+
+	Finder.select(Group.UI_CHAT_WIDGET).submit_message(display_name, message, channel, recipient_display_name)
+
+# Channel routing helpers
+func _route_whisper(author: String, message: String, sender_actor: Actor) -> void:
+	var target_name = sender_actor.target
+	if target_name.is_empty():
+		# Send error message back to sender using LOG channel
+		broadcast_chat.rpc_id(sender_actor.peer_id, "System", "No target selected for whisper", Chat.Channel.LOG)
+		return
+
+	var target_actor = Finder.get_actor(target_name)
+	if target_actor == null or target_actor.is_npc():
+		broadcast_chat.rpc_id(sender_actor.peer_id, "System", "Target not found: %s" % target_name, Chat.Channel.LOG)
+		return
+
+	# Send to both sender and recipient with recipient info
+	broadcast_chat.rpc_id(sender_actor.peer_id, author, message, Chat.Channel.WHISPER, target_name)
+	broadcast_chat.rpc_id(target_actor.peer_id, author, message, Chat.Channel.WHISPER, target_name)
+
+func _route_say(author: String, message: String, sender_actor: Actor) -> void:
+	var recipients = {}
+	recipients[sender_actor.peer_id] = true  # Include sender
+
+	# Send to all actors who have the sender in their view
+	for actor in Finder.query([Group.ACTOR]):
+		if actor.is_npc():
+			continue
+		if actor.in_view.has(author):
+			recipients[actor.peer_id] = true
+
+	# Broadcast once per unique peer_id
+	for peer_id in recipients.keys():
+		broadcast_chat.rpc_id(peer_id, author, message, Chat.Channel.SAY)
+
+func _route_focus(author: String, message: String, sender_actor: Actor) -> void:
+	var recipients = {}
+	recipients[sender_actor.peer_id] = true  # Include sender
+
+	# Add all focus slot targets
+	for focus_target in [sender_actor.focus_top_left, sender_actor.focus_top_right,
+	                      sender_actor.focus_bot_left, sender_actor.focus_bot_right]:
+		if not focus_target.is_empty():
+			var target_actor = Finder.get_actor(focus_target)
+			if target_actor and not target_actor.is_npc():
+				recipients[target_actor.peer_id] = true
+
+	# Broadcast to all recipients
+	for peer_id in recipients.keys():
+		broadcast_chat.rpc_id(peer_id, author, message, Chat.Channel.FOCUS)
+
+func _route_group(author: String, message: String, sender_actor: Actor) -> void:
+	var target_group = sender_actor.target_group
+	if target_group.is_empty():
+		broadcast_chat.rpc_id(sender_actor.peer_id, "System", "No target group selected", Chat.Channel.LOG)
+		return
+
+	var recipients = {}
+	# Send to all actors in the same target group
+	for actor in Finder.query([Group.ACTOR]):
+		if actor.is_npc():
+			continue
+		if actor.target_group == target_group:
+			recipients[actor.peer_id] = true
+
+	# Broadcast once per unique peer_id
+	for peer_id in recipients.keys():
+		broadcast_chat.rpc_id(peer_id, author, message, Chat.Channel.GROUP)
+
+func _route_public(author: String, message: String) -> void:
+	var recipients = {}
+	# Broadcast to all non-NPC actors
+	for actor in Finder.query([Group.ACTOR]):
+		if actor.is_npc():
+			continue
+		recipients[actor.peer_id] = true
+
+	# Broadcast once per unique peer_id
+	for peer_id in recipients.keys():
+		broadcast_chat.rpc_id(peer_id, author, message, Chat.Channel.PUBLIC)
+
+func _route_map(author: String, message: String, sender_actor: Actor) -> void:
+	# Get sender's current map by checking their groups
+	var sender_map = ""
+	for group in sender_actor.get_groups():
+		# Maps are typically group names like "grasslands", "forest", etc.
+		# We need to identify which group is the map group
+		if group in Finder.query([Group.MAP]).map(func(node): return node.name):
+			sender_map = group
+			break
+
+	if sender_map.is_empty():
+		Logger.warn("Could not determine map for actor: %s" % author)
+		broadcast_chat.rpc_id(sender_actor.peer_id, author, message, Chat.Channel.MAP)
+		return
+
+	var recipients = {}
+	# Send to all actors on the same map
+	for actor in Finder.query([Group.ACTOR]):
+		if actor.is_npc():
+			continue
+		if actor.is_in_group(sender_map):
+			recipients[actor.peer_id] = true
+
+	# Broadcast once per unique peer_id
+	for peer_id in recipients.keys():
+		broadcast_chat.rpc_id(peer_id, author, message, Chat.Channel.MAP)
+
+func _route_yell(author: String, message: String, sender_actor: Actor) -> void:
+	# Yell reaches actors within 2x(salience + perception)
+	var yell_range = 2 * (sender_actor.salience + sender_actor.perception)
+
+	var recipients = {}
+	# Calculate who can hear the yell
+	for actor in Finder.query([Group.ACTOR]):
+		if actor.is_npc():
+			continue
+		var distance = sender_actor.global_position.distance_to(actor.global_position)
+		if distance <= yell_range:
+			recipients[actor.peer_id] = true
+
+	# Broadcast once per unique peer_id
+	for peer_id in recipients.keys():
+		broadcast_chat.rpc_id(peer_id, author, message, Chat.Channel.YELL)
 
 @rpc("authority", "call_local", "reliable")
 func open_plate_on_client(plate_key: String, caller: String, target: String) -> void:

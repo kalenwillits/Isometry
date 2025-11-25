@@ -1,18 +1,9 @@
 extends Node
 
-var ui_state_machine: Node
-
 func _ready() -> void:
 	add_to_group(Group.INTERFACE)
-
-	# Apply theme on startup
-	var theme_mgr = get_node_or_null("/root/ThemeManager")
-	if theme_mgr:
-		theme_mgr._apply_theme_recursive(self)
-
-	# Connect to state machine signals
-	ui_state_machine = get_node("/root/UIStateMachine")
-	ui_state_machine.state_changed.connect(_on_ui_state_changed)
+	ThemeManager._apply_theme_recursive(self)
+	UIStateMachine.state_changed.connect(_on_ui_state_changed)
 
 func open_selection_menu_for_actor(target_actor_name: String) -> void:
 	var target_actor = Finder.get_actor(target_actor_name)
@@ -26,7 +17,7 @@ func open_selection_menu_for_actor(target_actor_name: String) -> void:
 		if menu_ent:
 			var primary_actor = Finder.get_primary_actor()
 			if primary_actor:
-				ui_state_machine.open_context_menu()
+				UIStateMachine.open_context_menu()
 				$ContextMenu.open_menu(target_actor.display_name, menu_ent, primary_actor.name, target_actor_name)
 			else:
 				Logger.warn("Primary actor not found")
@@ -42,7 +33,7 @@ func open_selection_menu_for_entity(entity_key: String, actor_name: String) -> v
 
 	var menu_ent: Entity = entity.menu.lookup()
 	if menu_ent:
-		ui_state_machine.open_context_menu()
+		UIStateMachine.open_context_menu()
 		$ContextMenu.open_menu(entity.name_ if entity.get("name_") else entity_key, menu_ent, actor_name, actor_name)
 
 func open_plate_for_actor(plate_key: String, caller: String, target: String) -> void:
@@ -50,7 +41,7 @@ func open_plate_for_actor(plate_key: String, caller: String, target: String) -> 
 	if plate_ent == null:
 		Logger.warn("Plate entity not found: %s" % plate_key)
 		return
-	ui_state_machine.transition_to(ui_state_machine.State.PLATE_VIEW)
+	UIStateMachine.transition_to(UIStateMachine.State.PLATE_VIEW)
 	$PlateView.open_plate(plate_ent, caller, target)
 
 
@@ -104,51 +95,61 @@ func open_close_confirmation() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# Handle toggle_map_view action
 	if Keybinds.is_action_just_pressed(Keybinds.TOGGLE_MAP_VIEW):
-		ui_state_machine.handle_toggle_map()
+		UIStateMachine.handle_toggle_map()
 		get_viewport().set_input_as_handled()
 		return
 
 	# Handle toggle_resources_view action
 	if Keybinds.is_action_just_pressed(Keybinds.TOGGLE_RESOURCES_VIEW):
-		ui_state_machine.handle_toggle_resources()
+		UIStateMachine.handle_toggle_resources()
 		get_viewport().set_input_as_handled()
 		return
 
 	# Handle toggle_skills_view action
 	if Keybinds.is_action_just_pressed(Keybinds.TOGGLE_SKILLS_VIEW):
-		ui_state_machine.handle_toggle_skills()
+		UIStateMachine.handle_toggle_skills()
 		get_viewport().set_input_as_handled()
 		return
 
 	# Handle focus_chat action (Enter key by default)
 	if Keybinds.is_action_just_pressed(Keybinds.FOCUS_CHAT):
 		# Only focus chat when in gameplay state
-		if ui_state_machine.current_state == ui_state_machine.State.GAMEPLAY:
+		if UIStateMachine.current_state == UIStateMachine.State.GAMEPLAY:
 			var chat_widget = Finder.select(Group.UI_CHAT_WIDGET)
 			if chat_widget:
 				chat_widget.focus_chat_input()
 			get_viewport().set_input_as_handled()
 		return
 
+	# Handle cycle_chat_channel action (C key by default)
+	if Keybinds.is_action_just_pressed(Keybinds.CYCLE_CHAT_CHANNEL):
+		# Only cycle channels when in gameplay state
+		if UIStateMachine.current_state == UIStateMachine.State.GAMEPLAY:
+			var chat_widget = Finder.select(Group.UI_CHAT_WIDGET)
+			if chat_widget:
+				chat_widget.cycle_channel()
+			get_viewport().set_input_as_handled()
+		return
+
 	# Handle open_menu action (Home key by default)
 	if Keybinds.is_action_just_pressed(Keybinds.OPEN_MENU):
-		ui_state_machine.handle_open_menu()
+		UIStateMachine.handle_open_menu()
 		get_viewport().set_input_as_handled()
 		return
 
 	# Handle cancel action (ESC)
 	if event.is_action_pressed("cancel"):
-		ui_state_machine.handle_cancel()
+		UIStateMachine.handle_cancel()
 		get_viewport().set_input_as_handled()
 		return
 
 ## State machine callback - show/hide views based on state transitions
 func _on_ui_state_changed(old_state: int, new_state: int) -> void:
-	var state_enum = ui_state_machine.State
+	var state_enum = UIStateMachine.State
 	Logger.info("Interface: State changed %s -> %s" % [state_enum.keys()[old_state], state_enum.keys()[new_state]])
 
 	# Hide views based on old state
-	var State = ui_state_machine.State
+	var State = UIStateMachine.State
 	match old_state:
 		State.MENU_GLOBAL:
 			$GlobalMenuView.visible = false
@@ -166,6 +167,8 @@ func _on_ui_state_changed(old_state: int, new_state: int) -> void:
 			$GamepadView.visible = false
 		State.MENU_MAP:
 			$MapView.close_view()
+		State.MENU_FEEDS:
+			$FeedsView.close_menu()
 		State.CONTEXT_MENU:
 			$ContextMenu.visible = false
 		State.PLATE_VIEW:
@@ -191,6 +194,8 @@ func _on_ui_state_changed(old_state: int, new_state: int) -> void:
 			$GamepadView.visible = true
 		State.MENU_MAP:
 			$MapView.open_view()
+		State.MENU_FEEDS:
+			$FeedsView.open_menu()
 		State.CONTEXT_MENU:
 			# Context menu opens itself via open_selection_menu_for_actor
 			pass

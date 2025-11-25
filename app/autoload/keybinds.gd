@@ -47,6 +47,7 @@ const TOGGLE_MAP_VIEW: String = "toggle_map_view"
 const TOGGLE_RESOURCES_VIEW: String = "toggle_resources_view"
 const TOGGLE_SKILLS_VIEW: String = "toggle_skills_view"
 const FOCUS_CHAT: String = "focus_chat"
+const CYCLE_CHAT_CHANNEL: String = "cycle_chat_channel"
 
 # Config file settings
 var CONFIG_FILE_PATH: String = io.get_dir() + "options.cfg"
@@ -96,7 +97,8 @@ const DEFAULT_KEYBINDS: Dictionary = {
 	TOGGLE_MAP_VIEW: "",
 	TOGGLE_RESOURCES_VIEW: "",
 	TOGGLE_SKILLS_VIEW: "",
-	FOCUS_CHAT: "enter"
+	FOCUS_CHAT: "enter",
+	CYCLE_CHAT_CHANNEL: "c"
 }
 
 # Default gamepad bindings
@@ -142,7 +144,8 @@ const DEFAULT_GAMEPAD: Dictionary = {
 	TOGGLE_MAP_VIEW: "",
 	TOGGLE_RESOURCES_VIEW: "",
 	TOGGLE_SKILLS_VIEW: "",
-	FOCUS_CHAT: ""
+	FOCUS_CHAT: "",
+	CYCLE_CHAT_CHANNEL: ""
 }
 
 # Display names for actions
@@ -188,7 +191,8 @@ const ACTION_LABELS: Dictionary = {
 	TOGGLE_MAP_VIEW: "Toggle Map View",
 	TOGGLE_RESOURCES_VIEW: "Toggle Resources View",
 	TOGGLE_SKILLS_VIEW: "Toggle Skills View",
-	FOCUS_CHAT: "Focus Chat"
+	FOCUS_CHAT: "Focus Chat",
+	CYCLE_CHAT_CHANNEL: "Cycle Chat Channel"
 }
 
 func _init_actions() -> void:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://dluxm6e80n02y"]
+[gd_scene load_steps=24 format=3 uid="uid://dluxm6e80n02y"]
 
 [ext_resource type="Script" uid="uid://b7v1pie42hxe" path="res://scenes/interface.gd" id="1_7q01f"]
 [ext_resource type="PackedScene" uid="uid://doj5tijrttd2p" path="res://scenes/action_widget.tscn" id="2_lw6my"]
@@ -22,6 +22,7 @@
 [ext_resource type="PackedScene" uid="uid://c3kma4g21xb5e" path="res://scenes/keybinds_view.tscn" id="18_keybinds_view"]
 [ext_resource type="PackedScene" uid="uid://cyv07p46q0gp3" path="res://scenes/gamepad_view.tscn" id="19_gamepad_view"]
 [ext_resource type="PackedScene" uid="uid://dq7v4k6n3r50p" path="res://scenes/map_view.tscn" id="20_map_view"]
+[ext_resource type="PackedScene" path="res://scenes/feeds_view.tscn" id="21_feeds_view"]
 
 [node name="Interface" type="Node"]
 script = ExtResource("1_7q01f")
@@ -179,5 +180,7 @@ visible = false
 [node name="GamepadView" parent="." instance=ExtResource("19_gamepad_view")]
 
 [node name="MapView" parent="." instance=ExtResource("20_map_view")]
+
+[node name="FeedsView" parent="." instance=ExtResource("21_feeds_view")]
 
 [node name="ConfirmationModal" parent="." instance=ExtResource("14_confirmation")]

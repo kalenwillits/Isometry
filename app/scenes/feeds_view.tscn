@@ -1,0 +1,133 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/feeds_view.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="2_theme"]
+
+[node name="FeedsView" type="CanvasLayer"]
+layer = 10
+visible = false
+script = ExtResource("1_script")
+
+[node name="Overlay" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Overlay/CenterContainer"]
+custom_minimum_size = Vector2(800, 600)
+layout_mode = 2
+theme = ExtResource("2_theme")
+
+[node name="VBox" type="VBoxContainer" parent="Overlay/CenterContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="TopBar" type="HBoxContainer" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Overlay/CenterContainer/PanelContainer/VBox/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("2_theme")
+theme_override_font_sizes/font_size = 16
+text = "Chat Feeds"
+horizontal_alignment = 1
+
+[node name="FilterBar" type="HBoxContainer" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="FilterLabel" type="Label" parent="Overlay/CenterContainer/PanelContainer/VBox/FilterBar"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+text = "Channels:"
+
+[node name="WhisperCheck" type="CheckBox" parent="Overlay/CenterContainer/PanelContainer/VBox/FilterBar"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+button_pressed = true
+text = "Whisper"
+
+[node name="SayCheck" type="CheckBox" parent="Overlay/CenterContainer/PanelContainer/VBox/FilterBar"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+button_pressed = true
+text = "Say"
+
+[node name="FocusCheck" type="CheckBox" parent="Overlay/CenterContainer/PanelContainer/VBox/FilterBar"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+button_pressed = true
+text = "Focus"
+
+[node name="GroupCheck" type="CheckBox" parent="Overlay/CenterContainer/PanelContainer/VBox/FilterBar"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+button_pressed = true
+text = "Group"
+
+[node name="PublicCheck" type="CheckBox" parent="Overlay/CenterContainer/PanelContainer/VBox/FilterBar"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+button_pressed = true
+text = "Public"
+
+[node name="MapCheck" type="CheckBox" parent="Overlay/CenterContainer/PanelContainer/VBox/FilterBar"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+button_pressed = true
+text = "Map"
+
+[node name="YellCheck" type="CheckBox" parent="Overlay/CenterContainer/PanelContainer/VBox/FilterBar"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+button_pressed = true
+text = "Yell"
+
+[node name="LogCheck" type="CheckBox" parent="Overlay/CenterContainer/PanelContainer/VBox/FilterBar"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+button_pressed = false
+text = "Log"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("2_theme")
+
+[node name="FeedText" type="RichTextLabel" parent="Overlay/CenterContainer/PanelContainer/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("2_theme")
+bbcode_enabled = true
+fit_content = true
+scroll_following = true
+
+[node name="BottomBar" type="HBoxContainer" parent="Overlay/CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="ChannelLabel" type="Label" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 16
+text = "[Public]"
+
+[node name="LineEdit" type="LineEdit" parent="Overlay/CenterContainer/PanelContainer/VBox/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("2_theme")
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 16

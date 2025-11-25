@@ -15,6 +15,7 @@ enum State {
 	MENU_KEYBINDS,
 	MENU_GAMEPAD,
 	MENU_MAP,
+	MENU_FEEDS,
 	CONTEXT_MENU,
 	PLATE_VIEW,
 	CONFIRMATION_MODAL
@@ -97,6 +98,10 @@ func handle_cancel() -> void:
 				transition_to(State.GAMEPLAY)
 			else:
 				transition_to(State.MENU_GLOBAL)
+
+		State.MENU_FEEDS:
+			# Back to global menu
+			transition_to(State.MENU_GLOBAL)
 
 		State.CONTEXT_MENU:
 			# Close context menu, return to where it was opened from

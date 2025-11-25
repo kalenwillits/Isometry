@@ -1,7 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://bxp0a6bse7b4l"]
+[gd_scene load_steps=4 format=3 uid="uid://bxp0a6bse7b4l"]
 
 [ext_resource type="Script" uid="uid://dt5cn808yj0n0" path="res://scenes/chat_widget.gd" id="1_1f15l"]
 [ext_resource type="Theme" uid="uid://ckorw5avm0nr4" path="res://themes/BaseTheme.res" id="1_5xbif"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_chat_bg"]
+bg_color = Color(0, 0, 0, 0)
 
 [node name="ChatWidget" type="Control"]
 layout_mode = 3
@@ -19,12 +22,14 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -28.0
 grow_horizontal = 2
 grow_vertical = 2
 alignment = 2
 
 [node name="Text" type="RichTextLabel" parent="VBox"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 240)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 6
 theme_override_font_sizes/bold_italics_font_size = 16
@@ -33,11 +38,27 @@ theme_override_font_sizes/mono_font_size = 16
 theme_override_font_sizes/normal_font_size = 16
 theme_override_font_sizes/bold_font_size = 16
 bbcode_enabled = true
-fit_content = true
 scroll_following = true
+visible_lines = 12
+scroll_active = false
 
-[node name="LineEdit" type="LineEdit" parent="VBox"]
+[node name="MarginSpacer" type="Control" parent="VBox"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 28)
+
+[node name="InputRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="ChannelLabel" type="Label" parent="VBox/InputRow"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 16
+text = "[Public]"
+
+[node name="LineEdit" type="LineEdit" parent="VBox/InputRow"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 6
 theme_override_font_sizes/font_size = 16

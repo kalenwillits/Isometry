@@ -2015,7 +2015,7 @@ func _on_view_box_area_exited(area: Area2D) -> void:
 
 func is_npc() -> bool:
 	return is_in_group(Group.NPC)
-	
+
 func _notification(what):
 	# It is important to save on this hook because it will also save on OS notifications. i.e. alt-F4
 	if what == NOTIFICATION_WM_CLOSE_REQUEST and std.is_host_or_server() and !token.is_empty() and !is_npc():
