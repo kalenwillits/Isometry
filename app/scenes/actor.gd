@@ -344,18 +344,18 @@ func build_audio() -> void:
 	Optional.of_nullable(Repo.select(actor))\
 		.map(func(actor_ent): return actor_ent.sprite)\
 		.map(func(sprite_key): return sprite_key.lookup())\
-		.map(func(sprite_ent): return sprite_ent.animation)\
-		.map(func(animation_key): return animation_key.lookup())\
+		.map(func(sprite_ent): return sprite_ent.animation_set)\
+		.map(func(animation_set_key): return animation_set_key.lookup())\
 		.if_present(
-			func(animation_ent):
-				if animation_ent.keyframes:
-					var keyframes_list = animation_ent.keyframes.lookup()
-					if keyframes_list:
-						for keyframe_ref in keyframes_list:
-							var keyframe_ent = keyframe_ref
-							if keyframe_ent and keyframe_ent.key():
-								var state_name = keyframe_ent.key()
-								Optional.of_nullable(keyframe_ent.sound)\
+			func(animation_set_ent):
+				if animation_set_ent.animations:
+					var animations_list = animation_set_ent.animations.lookup()
+					if animations_list:
+						for animation_ref in animations_list:
+							var animation_ent = animation_ref
+							if animation_ent and animation_ent.key():
+								var state_name = animation_ent.key()
+								Optional.of_nullable(animation_ent.sound)\
 								.map(func(sound_key): return sound_key.lookup())\
 								.if_present(func(sound_ent): add_sound_as_child_node(sound_ent, state_name)))
 
@@ -1135,13 +1135,13 @@ func build_skill(skill_ent: Entity, slot_number: int) -> void:
 					func(target_entity): 
 						var target_name: String = target_entity.name if target_entity else ""
 						
-						# Set animation keyframe from action entity
-						var keyframe = "tool"  # default
-						if "keyframe" in start_action_ent and start_action_ent.keyframe:
-							keyframe = start_action_ent.keyframe
-						
+						# Set animation from action entity
+						var animation_key = "tool"  # default
+						if "animation" in start_action_ent and start_action_ent.animation:
+							animation_key = start_action_ent.animation.key()  # Convert KeyRef to String
+
 						# Set animation state and configure SubState lifecycle
-						set_state(keyframe)
+						set_state(animation_key)
 						use_animation()
 						
 						# Configure ActionTimer with action duration
@@ -1493,37 +1493,37 @@ func build_sprite() -> void:
 		.pull()
 	var texture = Cache.textures.get(sprite_ent.texture)
 	var sprite_frames: SpriteFrames = SpriteFrames.new()
-	var animation_ent = sprite_ent.animation.lookup()
 	sprite_frames.remove_animation("default") # default has no meaning in isometric space
-	
-	# Build animations from dynamic keyframes array
-	if animation_ent.keyframes:
-		var keyframes_list = animation_ent.keyframes.lookup()
-		if keyframes_list:
-			for keyframe_ref in keyframes_list:
-				var key_frame_ent = keyframe_ref
-				if key_frame_ent and key_frame_ent.key():
-					var key_frame_name = key_frame_ent.key()
-					for radial in std.RADIALS.keys():
-						var animation_radial_name: String = "%s:%s" % [key_frame_name, radial]
-						sprite_frames.add_animation(animation_radial_name)
-						if key_frame_ent.get(radial):  # Check if radial direction exists
-							for frame in key_frame_ent.get(radial):
-								sprite_frames.add_frame(
-									animation_radial_name, 
-										build_frame(
-											frame,
-											get_sprite_size(),
-											sprite_ent.texture,
+
+	# Build animations from dynamic animations array
+	if sprite_ent.animation_set:
+		var animation_set_ent = sprite_ent.animation_set.lookup()
+		if animation_set_ent and animation_set_ent.animations:
+			var animations_list = animation_set_ent.animations.lookup()
+			if animations_list:
+				for animation_ref in animations_list:
+					var animation_ent = animation_ref
+					if animation_ent and animation_ent.key():
+						var animation_name = animation_ent.key()
+						for radial in std.RADIALS.keys():
+							var animation_radial_name: String = "%s:%s" % [animation_name, radial]
+							sprite_frames.add_animation(animation_radial_name)
+							if animation_ent.get(radial):  # Check if radial direction exists
+								for frame in animation_ent.get(radial):
+									sprite_frames.add_frame(
+										animation_radial_name,
+											build_frame(
+												frame,
+												get_sprite_size(),
+												sprite_ent.texture,
+											)
 										)
-									)
-		setup_sprite.call_deferred(sprite_frames)
-		Queue.enqueue(
-			Queue.Item.builder()
+	setup_sprite.call_deferred(sprite_frames)
+	Queue.enqueue(
+		Queue.Item.builder()
 			.comment("Build audio tracks for actor %s" % name)
 			.task(build_audio)
-			.build()
-		)
+			.build())
 		
 func get_resource(resource_name: String) -> int:
 	## Returns 0 if resource does not exist

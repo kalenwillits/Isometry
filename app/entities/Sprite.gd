@@ -1,6 +1,6 @@
 extends Entity
 
-var animation: KeyRef
+var animation_set: KeyRef # AnimationSet
 var texture: String
 var size: KeyRef
 var margin: KeyRef
