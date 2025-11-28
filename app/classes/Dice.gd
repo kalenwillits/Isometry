@@ -17,7 +17,11 @@ class RollEngine:
 			_number_regex.compile(r"\d+")
 
 	static func roll(expr: String) -> int:
+		var start_time = Time.get_ticks_usec()
+		Logger.trace("[DICE ROLL START] expression=\"%s\"" % expr)
+
 		if expr == null or expr.is_empty():
+			Logger.trace("[DICE ROLL END] expression=\"\" result=0 (empty)")
 			return 0
 
 		# Validate expression
@@ -29,18 +33,54 @@ class RollEngine:
 		_init_regex()
 
 		# Evaluate in order (matching C++ precedence)
+		var original_expr = expr
 		expr = _eval_parentheses(expr)
+		if expr != original_expr:
+			Logger.trace("[DICE EVAL] phase=parentheses before=\"%s\" after=\"%s\"" % [original_expr, expr])
+
+		original_expr = expr
 		expr = _eval_filters(expr)
+		if expr != original_expr:
+			Logger.trace("[DICE EVAL] phase=filters before=\"%s\" after=\"%s\"" % [original_expr, expr])
+
+		original_expr = expr
 		expr = _eval_dice_pool(expr)
+		if expr != original_expr:
+			Logger.trace("[DICE EVAL] phase=dice_pool before=\"%s\" after=\"%s\"" % [original_expr, expr])
+
+		original_expr = expr
 		expr = _eval_multiplication(expr)
+		if expr != original_expr:
+			Logger.trace("[DICE EVAL] phase=multiplication before=\"%s\" after=\"%s\"" % [original_expr, expr])
+
+		original_expr = expr
 		expr = _eval_division(expr)
+		if expr != original_expr:
+			Logger.trace("[DICE EVAL] phase=division before=\"%s\" after=\"%s\"" % [original_expr, expr])
+
+		original_expr = expr
 		expr = _eval_modulus(expr)
+		if expr != original_expr:
+			Logger.trace("[DICE EVAL] phase=modulus before=\"%s\" after=\"%s\"" % [original_expr, expr])
+
+		original_expr = expr
 		expr = _eval_addition(expr)
+		if expr != original_expr:
+			Logger.trace("[DICE EVAL] phase=addition before=\"%s\" after=\"%s\"" % [original_expr, expr])
+
+		original_expr = expr
 		expr = _eval_subtraction(expr)
+		if expr != original_expr:
+			Logger.trace("[DICE EVAL] phase=subtraction before=\"%s\" after=\"%s\"" % [original_expr, expr])
 
 		# Final result - clamp to minimum 0
 		var result = int(expr) if expr.is_valid_int() else 0
-		return max(result, 0)
+		result = max(result, 0)
+
+		var elapsed_usec = Time.get_ticks_usec() - start_time
+		Logger.trace("[DICE ROLL END] result=%d clamped=true elapsed_usec=%d" % [result, elapsed_usec])
+
+		return result
 
 	static func _eval_parentheses(expr: String) -> String:
 		# Recursively evaluate innermost parentheses first
@@ -106,24 +146,36 @@ class RollEngine:
 			var num_dice = int(parts[0]) if parts[0] != "" else 1
 			var num_sides = int(parts[1]) if parts.size() > 1 else 1
 
+			Logger.trace("[DICE FILTER] rolling %dd%d for filter" % [num_dice, num_sides])
+
 			var rolls = []
 			for i in range(num_dice):
 				rolls.append(randi_range(1, num_sides))
+
+			Logger.trace("[DICE FILTER] all_rolls=%s" % str(rolls))
 
 			# Apply filter
 			rolls.sort()
 			if is_greater:
 				# Keep highest: reverse and take first N
 				rolls.reverse()
-				rolls = rolls.slice(0, filter_count)
+				var kept = rolls.slice(0, filter_count)
+				var discarded = rolls.slice(filter_count, rolls.size())
+				Logger.trace("[DICE FILTER] keep_highest=%d kept=%s discarded=%s" % [filter_count, str(kept), str(discarded)])
+				rolls = kept
 			else:
 				# Keep lowest: take first N
-				rolls = rolls.slice(0, filter_count)
+				var kept = rolls.slice(0, filter_count)
+				var discarded = rolls.slice(filter_count, rolls.size())
+				Logger.trace("[DICE FILTER] keep_lowest=%d kept=%s discarded=%s" % [filter_count, str(kept), str(discarded)])
+				rolls = kept
 
 			# Sum the kept rolls
 			var total = 0
 			for roll in rolls:
 				total += roll
+
+			Logger.trace("[DICE FILTER] total=%d" % total)
 
 			# Substitute back into expression
 			expr = expr.substr(0, dice_start) + str(total) + expr.substr(filter_end)
@@ -143,10 +195,17 @@ class RollEngine:
 			var num_dice = int(num_str) if num_str != "" else 1
 			var num_sides = int(sides_str)
 
+			Logger.trace("[DICE POOL] rolling %dd%d" % [num_dice, num_sides])
+
 			# Roll dice
 			var total = 0
+			var rolls = []
 			for i in range(num_dice):
-				total += randi_range(1, num_sides)
+				var roll = randi_range(1, num_sides)
+				rolls.append(roll)
+				total += roll
+
+			Logger.trace("[DICE POOL] rolls=%s total=%d" % [str(rolls), total])
 
 			# Replace in expression
 			expr = expr.substr(0, match_obj.get_start()) + str(total) + expr.substr(match_obj.get_end())
@@ -271,6 +330,8 @@ func inject_resources(caller_actor, target_actor) -> String:
 		Logger.error("Dice: Regex not compiled, returning original expression")
 		return expression
 
+	Logger.debug("[DICE INJECT RESOURCES] processing expression=\"%s\"" % expression)
+
 	var result: String = expression
 	var matches: Array = _regex.search_all(expression)
 
@@ -283,17 +344,22 @@ func inject_resources(caller_actor, target_actor) -> String:
 		var end_pos: int = match_obj.get_end(0)
 
 		var actor = caller_actor if marker == CALLER_MARKER else target_actor
+		var actor_name = caller_name if marker == CALLER_MARKER else target_name
 		var value: String = "0"  # Default to 0
+		var source: String = "default"
 
 		# Handle null actor - default to 0 (intended behavior)
 		if actor == null:
-			pass  # Silently default to 0
+			source = "null_actor"
 		# Check if it's a resource
 		elif key in actor.resources:
 			value = str(actor.resources[key])
+			source = "resource"
 		# Not a resource - leave it for measure injection
 		else:
 			continue
+
+		Logger.debug("[DICE INJECT RESOURCE] marker=%s key=%s actor=%s value=%s source=%s" % [marker, key, actor_name, value, source])
 
 		# Replace the match with the resolved value
 		result = result.substr(0, start_pos) + value + result.substr(end_pos)
@@ -317,6 +383,8 @@ func inject_measures(caller_actor, target_actor, processed_expr: String) -> Stri
 		Logger.error("Dice: Regex not compiled, returning original expression")
 		return processed_expr
 
+	Logger.debug("[DICE INJECT MEASURES] processing expression=\"%s\"" % processed_expr)
+
 	var result: String = processed_expr
 	var matches: Array = _regex.search_all(processed_expr)
 
@@ -329,11 +397,13 @@ func inject_measures(caller_actor, target_actor, processed_expr: String) -> Stri
 		var end_pos: int = match_obj.get_end(0)
 
 		var actor = caller_actor if marker == CALLER_MARKER else target_actor
+		var actor_name = caller_name if marker == CALLER_MARKER else target_name
 		var value: String = "0"  # Default to 0
+		var source: String = "default"
 
 		# Handle null actor - default to 0 (intended behavior)
 		if actor == null:
-			pass  # Silently default to 0
+			source = "null_actor"
 		# Check if it's a measure
 		elif key in actor.measures:
 			var measure = actor.measures[key]
@@ -347,6 +417,8 @@ func inject_measures(caller_actor, target_actor, processed_expr: String) -> Stri
 					# Built-in measure (no parameters)
 					var measure_value = measure.call()
 					value = str(measure_value)
+					source = "builtin_measure"
+					Logger.debug("[DICE INJECT MEASURE] marker=%s key=%s actor=%s type=builtin value=%s" % [marker, key, actor_name, value])
 				else:
 					# Entity measure (expects ActorInteraction parameter)
 					# Build ActorInteraction for measure evaluation
@@ -361,11 +433,16 @@ func inject_measures(caller_actor, target_actor, processed_expr: String) -> Stri
 
 					var measure_value = measure.call(interaction)
 					value = str(measure_value)
+					source = "entity_measure"
+					Logger.debug("[DICE INJECT MEASURE] marker=%s key=%s actor=%s type=entity value=%s" % [marker, key, actor_name, value])
 			else:
 				value = str(measure)
+				source = "static_measure"
+				Logger.debug("[DICE INJECT MEASURE] marker=%s key=%s actor=%s type=static value=%s" % [marker, key, actor_name, value])
 		else:
 			# Key not found in either resources or measures - default to 0 (intended behavior)
-			pass  # Silently default to 0
+			source = "not_found"
+			Logger.debug("[DICE INJECT MEASURE] marker=%s key=%s actor=%s not_found=true defaulting_to=0" % [marker, key, actor_name])
 
 		# Replace the match with the resolved value
 		result = result.substr(0, start_pos) + value + result.substr(end_pos)
@@ -375,8 +452,12 @@ func inject_measures(caller_actor, target_actor, processed_expr: String) -> Stri
 ## Evaluate the dice expression, injecting actor values and rolling.
 ## Two-phase injection: resources first, then measures.
 func evaluate() -> int:
+	var start_time = Time.get_ticks_usec()
+
 	# Recursion guard to prevent infinite loops from circular measure references
 	_recursion_depth += 1
+	Logger.trace("[DICE EVALUATE START] expression=\"%s\" caller=%s target=%s recursion_depth=%d" % [expression, caller_name, target_name, _recursion_depth])
+
 	if _recursion_depth > MAX_RECURSION_DEPTH:
 		Logger.error("Dice: Maximum recursion depth exceeded - possible circular measure reference")
 		_recursion_depth -= 1
@@ -387,11 +468,19 @@ func evaluate() -> int:
 
 	# Phase 1: Inject resources
 	var after_resources: String = inject_resources(caller_actor, target_actor)
+	if after_resources != expression:
+		Logger.debug("[DICE INJECT] phase=resources before=\"%s\" after=\"%s\"" % [expression, after_resources])
 
 	# Phase 2: Inject measures (which may contain dice notation with resources)
 	var processed_expr: String = inject_measures(caller_actor, target_actor, after_resources)
+	if processed_expr != after_resources:
+		Logger.debug("[DICE INJECT] phase=measures before=\"%s\" after=\"%s\"" % [after_resources, processed_expr])
 
 	var result = RollEngine.roll(processed_expr)
+
+	var elapsed_usec = Time.get_ticks_usec() - start_time
+	Logger.trace("[DICE EVALUATE END] result=%d recursion_depth=%d elapsed_usec=%d" % [result, _recursion_depth, elapsed_usec])
+
 	_recursion_depth -= 1
 	return result
 

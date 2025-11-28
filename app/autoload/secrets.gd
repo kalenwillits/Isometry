@@ -115,45 +115,61 @@ func get_auth() -> Auth:
 
 func encrypt(value: String) -> PackedByteArray:
 	if public_key == null:
-		push_error("Public key not set!")
+		Logger.error("Secrets: Cannot encrypt - public key not set")
 		return PackedByteArray()
+	Logger.debug("Encrypting data (%d bytes)" % value.length())
 	var data = value
 	return crypto.encrypt(public_key, data.to_utf8_buffer())
 
 func decrypt(value: PackedByteArray) -> String:
 	if private_key == null:
-		push_error("Private key not available!")
+		Logger.error("Secrets: Cannot decrypt - private key not available")
 		return ""
+	Logger.debug("Decrypting data (%d bytes)" % value.size())
 	var decrypted = crypto.decrypt(private_key, value)
 	return decrypted.get_string_from_utf8()
 
 func load_or_create_rsa() -> void: # For servers
 	io.use_dir(Config.rsa_dir)
 	if FileAccess.file_exists(Config.rsa_key) and FileAccess.file_exists(Config.rsa_pub):
+		Logger.info("Loading existing RSA keypair")
 		private_key = load_key(Config.rsa_key)
 		public_key = load_key(Config.rsa_pub)
+		if private_key and public_key:
+			Logger.debug("RSA keypair loaded successfully")
 	else:
+		Logger.info("Generating new RSA keypair (2048 bits)")
+		var start_time = Time.get_ticks_usec()
 		var key = crypto.generate_rsa(2048)
+		var elapsed = Time.get_ticks_usec() - start_time
+		Logger.info("RSA keypair generated (took %d µs)" % elapsed)
+
 		private_key = key
 		public_key = key
 		io.save_file(Config.rsa_key, key.save_to_string(false))
 		io.save_file(Config.rsa_pub, key.save_to_string(true))
+		Logger.debug("RSA keypair saved to: %s" % Config.rsa_dir)
 
 func load_key(path: String) -> CryptoKey:
+	Logger.debug("Loading cryptographic key from: %s" % path)
 	var key_pem: PackedByteArray = io.load_buffer(path)
 	if key_pem.is_empty():
-		push_error("Failed to load key from %s" % path)
+		Logger.error("Secrets: Failed to load key from %s" % path)
 		return null
 	var key = CryptoKey.new()
 	if key.load_from_string(key_pem.get_string_from_utf8(), path == Config.rsa_pub) != OK:
-		push_error("Failed to parse key from %s" % path)
+		Logger.error("Secrets: Failed to parse key from %s" % path)
 		return null
+	Logger.debug("Key loaded successfully from: %s" % path)
 	return key
 
 func set_public_key(value: String) -> void:
+	Logger.debug("Setting public key from string")
 	public_key = CryptoKey.new()
 	if public_key.load_from_string(value, true) != OK:
-		push_error("Failed to set public key")
+		Logger.error("Secrets: Failed to set public key")
+	else:
+		Logger.debug("Public key set successfully")
 
 func get_public_key() -> String:
 	return public_key.save_to_string(true) if public_key != null else ""

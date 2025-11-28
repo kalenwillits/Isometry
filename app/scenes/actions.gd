@@ -100,23 +100,40 @@ func handle_move_actor(actor_name: String, map: String) -> void:
 ## ACTION SIGNATURE MUST ALWAYS BE (String action_key, int caller_peer_id, int target_peer_id, Dict...params)
 @rpc("any_peer", "reliable", "call_local")
 func invoke_action(action_key: String, self_name: String, target_name: String) -> void:
+	var start_time = Time.get_ticks_usec()
+	Logger.trace("[ACTION START] action=%s caller=%s target=%s" % [action_key, self_name, target_name])
+
 	var action_ent = Repo.select(action_key)
-	if ConditionEvaluator.evaluate(
-			ConditionEvaluator.EvaluateParams.builder()
-			.caller_name(self_name)
-			.target_name(target_name)
-			.condition_key(
-				Optional.of_nullable(action_ent.if_)
-				.map(func(key_ref): return key_ref.key())
-				.or_else("")
-				)
-			.build()
-		):
+	var condition_key = Optional.of_nullable(action_ent.if_).map(func(key_ref): return key_ref.key()).or_else("")
+
+	if condition_key:
+		Logger.trace("[ACTION] action=%s has_condition=true condition_key=%s" % [action_key, condition_key])
+	else:
+		Logger.trace("[ACTION] action=%s has_condition=false (auto-pass)" % action_key)
+
+	var condition_result = ConditionEvaluator.evaluate(
+		ConditionEvaluator.EvaluateParams.builder()
+		.caller_name(self_name)
+		.target_name(target_name)
+		.condition_key(condition_key)
+		.build()
+	)
+
+	if condition_result:
+		Logger.trace("[ACTION] action=%s condition_passed=true executing_do=%s" % [action_key, action_ent.do != null])
 		var params := make_params(action_ent)
 		if action_ent.do != null: call(action_ent.do, self_name, target_name, params)
-		if action_ent.then != null: invoke_action(action_ent.then.key(), self_name, target_name)
+		if action_ent.then != null:
+			Logger.trace("[ACTION] action=%s chaining_to_then=%s" % [action_key, action_ent.then.key()])
+			invoke_action(action_ent.then.key(), self_name, target_name)
 	else:
-		if action_ent.else_ != null: invoke_action(action_ent.else_.key(),self_name, target_name)
+		Logger.trace("[ACTION] action=%s condition_passed=false" % action_key)
+		if action_ent.else_ != null:
+			Logger.trace("[ACTION] action=%s chaining_to_else=%s" % [action_key, action_ent.else_.key()])
+			invoke_action(action_ent.else_.key(), self_name, target_name)
+
+	var elapsed_usec = Time.get_ticks_usec() - start_time
+	Logger.trace("[ACTION END] action=%s elapsed_usec=%d" % [action_key, elapsed_usec])
 ## ACTION SIGNATURE... ------------------------------------------------------------- #
 
 func echo(_self_name: String, _target_name: String, params: Dictionary) -> void:
@@ -199,39 +216,8 @@ func change_map_self(self_name: String, _target_name: String, params: Dictionary
 func minus_resource_target(_self_name: String, target_name: String, params: Dictionary) -> void:
 	## resource: KeyRef to Resource entity
 	## expression: Dice algebra to be subtracted from the target's resource
+	Logger.trace("[RESOURCE OP] minus_resource_target target=%s resource=%s expression=%s" % [target_name, params.get("resource"), params.expression])
 	if target_name == "": return
-	Optional.of_nullable(
-		Repo.query([Group.RESOURCE_ENTITY])
-		.filter(
-	func(ent): 
-		return ent.key() == params.get("resource")
-	).pop_front()
-		).if_present(
-	func(resource: Entity):
-		var value: int = Dice.builder().expression(params.expression).build().evaluate()
-		var _result: int = ResourceOperator.builder().actor(target_name).resource(resource).build().minus(value).get_value()
-		#Logger.debug("minus_resource_target(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])		
-	)
-
-func minus_resource_self(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## resource: KeyRef to Resource entity
-	## expression: Dice algebra to be subtracted from caller's resource
-	Optional.of_nullable(
-		Repo.query([Group.RESOURCE_ENTITY])
-		.filter(
-	func(ent): 
-		return ent.key() == params.get("resource")
-	).pop_front()
-		).if_present(
-	func(resource: Entity):
-		var value: int = Dice.builder().expression(params.expression).build().evaluate()
-		var _result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().minus(value).get_value()
-		#Logger.debug("minus_resource_self(%s, %s, %s) -> expression=%s result=%s" % [self_name, target_name, params, value, result])
-	)
-	
-func plus_resource_self(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## resource: KeyRef to Resource entity
-	## expression: Dice algebra to be added to caller's resource
 	Optional.of_nullable(
 		Repo.query([Group.RESOURCE_ENTITY])
 		.filter(
@@ -240,14 +226,56 @@ func plus_resource_self(self_name: String, _target_name: String, params: Diction
 	).pop_front()
 		).if_present(
 	func(resource: Entity):
+		var before_value = Finder.get_actor(target_name).resources.get(resource.key(), 0)
 		var value: int = Dice.builder().expression(params.expression).build().evaluate()
-		var _result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().plus(value).get_value()
+		var result: int = ResourceOperator.builder().actor(target_name).resource(resource).build().minus(value).get_value()
+		var after_value = result
+		Logger.trace("[RESOURCE CHANGE] actor=%s resource=%s operation=minus delta=%d before=%d after=%d" % [target_name, resource.key(), value, before_value, after_value])
+	)
+
+func minus_resource_self(self_name: String, _target_name: String, params: Dictionary) -> void:
+	## resource: KeyRef to Resource entity
+	## expression: Dice algebra to be subtracted from caller's resource
+	Logger.trace("[RESOURCE OP] minus_resource_self caller=%s resource=%s expression=%s" % [self_name, params.get("resource"), params.expression])
+	Optional.of_nullable(
+		Repo.query([Group.RESOURCE_ENTITY])
+		.filter(
+	func(ent):
+		return ent.key() == params.get("resource")
+	).pop_front()
+		).if_present(
+	func(resource: Entity):
+		var before_value = Finder.get_actor(self_name).resources.get(resource.key(), 0)
+		var value: int = Dice.builder().expression(params.expression).build().evaluate()
+		var result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().minus(value).get_value()
+		var after_value = result
+		Logger.trace("[RESOURCE CHANGE] actor=%s resource=%s operation=minus delta=%d before=%d after=%d" % [self_name, resource.key(), value, before_value, after_value])
+	)
+	
+func plus_resource_self(self_name: String, _target_name: String, params: Dictionary) -> void:
+	## resource: KeyRef to Resource entity
+	## expression: Dice algebra to be added to caller's resource
+	Logger.trace("[RESOURCE OP] plus_resource_self caller=%s resource=%s expression=%s" % [self_name, params.get("resource"), params.expression])
+	Optional.of_nullable(
+		Repo.query([Group.RESOURCE_ENTITY])
+		.filter(
+	func(ent):
+		return ent.key() == params.get("resource")
+	).pop_front()
+		).if_present(
+	func(resource: Entity):
+		var before_value = Finder.get_actor(self_name).resources.get(resource.key(), 0)
+		var value: int = Dice.builder().expression(params.expression).build().evaluate()
+		var result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().plus(value).get_value()
+		var after_value = result
+		Logger.trace("[RESOURCE CHANGE] actor=%s resource=%s operation=plus delta=%d before=%d after=%d" % [self_name, resource.key(), value, before_value, after_value])
 	)
 
 func plus_resource_target(_self_name: String, target_name: String, params: Dictionary) -> void:
 	## resource: String - KeyRef to Resource entity (required)
 	## expression: String - Dice algebra expression (e.g., "2d6+3") (required)
 	## Adds to target's resource value. Useful for healing, buffs, giving resources to allies.
+	Logger.trace("[RESOURCE OP] plus_resource_target target=%s resource=%s expression=%s" % [target_name, params.get("resource"), params.expression])
 	if target_name.is_empty():
 		return
 
@@ -257,28 +285,36 @@ func plus_resource_target(_self_name: String, target_name: String, params: Dicti
 		.pop_front()
 	).if_present(
 		func(resource: Entity):
+			var before_value = Finder.get_actor(target_name).resources.get(resource.key(), 0)
 			var value: int = Dice.builder().expression(params.expression).build().evaluate()
-			var _result: int = ResourceOperator.builder().actor(target_name).resource(resource).build().plus(value).get_value()
+			var result: int = ResourceOperator.builder().actor(target_name).resource(resource).build().plus(value).get_value()
+			var after_value = result
+			Logger.trace("[RESOURCE CHANGE] actor=%s resource=%s operation=plus delta=%d before=%d after=%d" % [target_name, resource.key(), value, before_value, after_value])
 	)
 
 func set_resource_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## resource: String - KeyRef to Resource entity (required)
 	## value: int - Absolute value to set (required)
 	## Sets caller's resource to exact value (still respects min/max bounds).
+	Logger.trace("[RESOURCE OP] set_resource_self caller=%s resource=%s value=%d" % [self_name, params.get("resource"), params.get("value", 0)])
 	Optional.of_nullable(
 		Repo.query([Group.RESOURCE_ENTITY])
 		.filter(func(ent): return ent.key() == params.get("resource"))
 		.pop_front()
 	).if_present(
 		func(resource: Entity):
+			var before_value = Finder.get_actor(self_name).resources.get(resource.key(), 0)
 			var value: int = params.get("value", 0)
-			var _result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().set_value(value).get_value()
+			var result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().set_value(value).get_value()
+			var after_value = result
+			Logger.trace("[RESOURCE CHANGE] actor=%s resource=%s operation=set value=%d before=%d after=%d" % [self_name, resource.key(), value, before_value, after_value])
 	)
 
 func set_resource_target(_self_name: String, target_name: String, params: Dictionary) -> void:
 	## resource: String - KeyRef to Resource entity (required)
 	## value: int - Absolute value to set (required)
 	## Sets target's resource to exact value (still respects min/max bounds).
+	Logger.trace("[RESOURCE OP] set_resource_target target=%s resource=%s value=%d" % [target_name, params.get("resource"), params.get("value", 0)])
 	if target_name.is_empty():
 		return
 
@@ -288,8 +324,11 @@ func set_resource_target(_self_name: String, target_name: String, params: Dictio
 		.pop_front()
 	).if_present(
 		func(resource: Entity):
+			var before_value = Finder.get_actor(target_name).resources.get(resource.key(), 0)
 			var value: int = params.get("value", 0)
-			var _result: int = ResourceOperator.builder().actor(target_name).resource(resource).build().set_value(value).get_value()
+			var result: int = ResourceOperator.builder().actor(target_name).resource(resource).build().set_value(value).get_value()
+			var after_value = result
+			Logger.trace("[RESOURCE CHANGE] actor=%s resource=%s operation=set value=%d before=%d after=%d" % [target_name, resource.key(), value, before_value, after_value])
 	)
 
 func transfer_resource(self_name: String, target_name: String, params: Dictionary) -> void:
@@ -297,6 +336,7 @@ func transfer_resource(self_name: String, target_name: String, params: Dictionar
 	## expression: String - Dice algebra for amount to transfer (required)
 	## Subtracts from target's resource and adds same amount to caller's resource.
 	## Example: Drain 10 health from enemy and heal self for same amount.
+	Logger.trace("[RESOURCE OP] transfer_resource caller=%s target=%s resource=%s expression=%s" % [self_name, target_name, params.get("resource"), params.expression])
 	if target_name.is_empty():
 		return
 
@@ -310,15 +350,27 @@ func transfer_resource(self_name: String, target_name: String, params: Dictionar
 
 			# Subtract from target
 			var target_operator = ResourceOperator.builder().actor(target_name).resource(resource).build()
+			var target_before: int = target_operator.get_value()
 			var actual_removed: int = target_operator.minus(transfer_amount).get_value()
-
-			# Calculate actual amount removed (difference between before and after)
-			var target_before: int = target_operator.get_value() + actual_removed
 			var target_after: int = target_operator.get_value()
 			var actual_transfer: int = target_before - target_after
 
 			# Add same amount to caller
-			var _self_result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().plus(actual_transfer).get_value()
+			var self_before: int = Finder.get_actor(self_name).resources.get(resource.key(), 0)
+			var self_result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().plus(actual_transfer).get_value()
+			var self_after: int = self_result
+
+			Logger.trace("[RESOURCE TRANSFER] resource=%s requested=%d actual=%d target=%s(%d->%d) caller=%s(%d->%d)" % [
+				resource.key(),
+				transfer_amount,
+				actual_transfer,
+				target_name,
+				target_before,
+				target_after,
+				self_name,
+				self_before,
+				self_after
+			])
 	)
 
 func target_nearest(self_name: String, _target_name: String, _params: Dictionary) -> void:

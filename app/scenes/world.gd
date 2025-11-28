@@ -37,6 +37,8 @@ func _ready() -> void:
 	_handle_network_mode()
 	
 func spawn_primary_actor(peer_id: int) -> void:
+	Logger.debug("Spawning primary actor: peer_id=%d" % peer_id)
+
 	var auth = Secret.get_auth()
 	var main_ent = Repo.select(Group.MAIN_ENTITY)
 	var data := {
@@ -45,10 +47,14 @@ func spawn_primary_actor(peer_id: int) -> void:
 		"name": auth.get_username(),
 		"speed": main_ent.actor.lookup().speed
 		}
-	if FileAccess.file_exists(auth.get_path()): 
+
+	if FileAccess.file_exists(auth.get_path()):
+		Logger.debug("Loading saved actor data from: %s" % auth.get_path())
 		var result = io.load_json(auth.get_path())
 		if result:
 			data.merge(result, false) # False because we do not want to overwrite the new peer id
+			Logger.debug("Merged saved data for: %s" % auth.get_username())
+
 	Finder.select(Group.SPAWNER).spawn(data)
 
 func _handle_network_mode() -> void:
@@ -155,11 +161,21 @@ func _handle_network_mode() -> void:
 			Network.start_client()
 	
 func build_world() -> void:
+	var start_time = Time.get_ticks_usec()
+	var map_count = Repo.query([Group.MAP_ENTITY]).size()
+	Logger.info("Building world: %d maps to build" % map_count)
+
 	for map_ent in Repo.query([Group.MAP_ENTITY]):
 		build_map(map_ent.key())
+
+	var elapsed = Time.get_ticks_usec() - start_time
+	Logger.info("World build complete: %d maps built (took %d µs)" % [map_count, elapsed])
 	_build_world_complete = true
 
 func build_map(map_key: String) -> void:
+	var start_time = Time.get_ticks_usec()
+	Logger.debug("Building map: %s" % map_key)
+
 	add_child(
 		Map
 		.builder()
@@ -167,7 +183,13 @@ func build_map(map_key: String) -> void:
 		.build()
 	)
 
+	var elapsed = Time.get_ticks_usec() - start_time
+	Logger.debug("Map built: %s (took %d µs)" % [map_key, elapsed])
+
 func build_deployments() -> void:
+	var deployment_count = 0
+	Logger.debug("Building deployments")
+
 	for map_ent in Repo.query([Group.MAP_ENTITY]):
 		if map_ent.deployments == null: continue
 		for deployment_ent in map_ent.deployments.lookup():
@@ -184,6 +206,9 @@ func build_deployments() -> void:
 				"speed": actor_ent.speed,
 			}
 			get_tree().get_first_node_in_group(Group.SPAWNER).spawn(data)
+			deployment_count += 1
+
+	Logger.info("Deployments complete: %d NPCs spawned" % deployment_count)
 
 func get_actor_location(data: Dictionary) -> Vector2:
 	## Derives the actor's location using fallbacks
@@ -211,6 +236,13 @@ func get_actor_location(data: Dictionary) -> Vector2:
 	return Vector2(0.0, 0.0)
 	
 func spawn_actor(data: Dictionary) -> Actor:
+	var start_time = Time.get_ticks_usec()
+	var peer_id = data.get("peer_id", 0)
+	var actor_key = data.get("actor", "")
+	var map_key = data.get("map", "")
+
+	Logger.debug("Spawning actor: peer_id=%d actor=%s map=%s" % [peer_id, actor_key, map_key])
+
 	var main_ent = Repo.select(Group.MAIN_ENTITY)
 	var builder: Actor.ActorBuilder = Actor.builder()
 	var location: Vector2 = get_actor_location(data)
@@ -228,7 +260,18 @@ func spawn_actor(data: Dictionary) -> Actor:
 	.perception(data.get("perception", -1))\
 	.salience(data.get("salience", -1))
 
-	return builder.build()
+	var actor = builder.build()
+	var elapsed = Time.get_ticks_usec() - start_time
+	Logger.info("Actor spawned: %s (peer_id=%d, map=%s, location=(%.1f, %.1f), took %d µs)" % [
+		actor.display_name,
+		peer_id,
+		map_key,
+		location.x,
+		location.y,
+		elapsed
+	])
+
+	return actor
 
 func _on_connected_to_server() -> void:
 	# Queue modal update for authentication

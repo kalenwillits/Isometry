@@ -406,6 +406,8 @@ func save() -> void:
 func save_and_exit() -> void:
 	if OS.has_feature("trial"): return   # The trial version will not save data
 	if !std.is_host_or_server(): return
+
+	Logger.info("Actor save and exit: %s (peer_id=%d)" % [display_name, peer_id])
 	on_map_exited.emit()
 	Queue.enqueue(
 		Queue.Item.builder()
@@ -421,6 +423,9 @@ func save_and_exit() -> void:
 	)
 
 func _ready() -> void:
+	var start_time = Time.get_ticks_usec()
+	Logger.info("Actor initializing: %s (peer_id=%d)" % [display_name if display_name else "unnamed", peer_id])
+
 	build_fader()
 	is_awake(false)
 	visible_to_primary(false)
@@ -517,6 +522,9 @@ func _ready() -> void:
 			.task(func(): Finder.select(Group.UI_DATA_PLATE).load_actor_data())
 			.build()
 		)
+
+	var elapsed = Time.get_ticks_usec() - start_time
+	Logger.debug("Actor ready: %s (took %d µs)" % [display_name, elapsed])
 
 func schedule_render_this_actors_map() -> void:
 	Queue.enqueue(
@@ -1065,6 +1073,7 @@ func click_to_move() -> void:
 		set_destination(mouse_pos)
 
 func despawn() -> void:
+	Logger.info("Actor despawning: %s (peer_id=%d)" % [display_name, peer_id])
 	set_process(false)
 	set_physics_process(false)
 	queue_free()

@@ -39,23 +39,45 @@ class EvaluateParams extends Object:
 		return Builder.new()
 
 static func evaluate(params: EvaluateParams) -> bool:
-	if params.condition_key == null or params.condition_key == "": return true # if there is no condition set, automatically pass
+	var start_time = Time.get_ticks_usec()
+
+	if params.condition_key == null or params.condition_key == "":
+		Logger.trace("[CONDITION] no_condition=true result=true (auto-pass)")
+		return true
+
+	Logger.trace("[CONDITION START] condition_key=%s caller=%s target=%s" % [params.condition_key, params.caller_name, params.target_name])
+
 	var condition_ent = Repo.select(params.condition_key)
+
+	Logger.trace("[CONDITION] left_expression=\"%s\"" % condition_ent.left)
 	var lvalue: int = Dice.builder().caller(params.caller_name).target(params.target_name).expression(condition_ent.left).build().evaluate()
+	Logger.trace("[CONDITION] left_value=%d" % lvalue)
+
+	Logger.trace("[CONDITION] right_expression=\"%s\"" % condition_ent.right)
 	var rvalue: int = Dice.builder().caller(params.caller_name).target(params.target_name).expression(condition_ent.right).build().evaluate()
+	Logger.trace("[CONDITION] right_value=%d" % rvalue)
+
+	Logger.trace("[CONDITION] operator=\"%s\" comparing %d %s %d" % [condition_ent.operator, lvalue, condition_ent.operator, rvalue])
+
+	var result: bool = false
 	match OperatorSymbolMap.get(condition_ent.operator):
 		OP_EQUAL:
-			return lvalue == rvalue
+			result = lvalue == rvalue
 		OP_NOT_EQUAL:
-			return lvalue != rvalue
+			result = lvalue != rvalue
 		OP_GREATER:
-			return lvalue > rvalue
+			result = lvalue > rvalue
 		OP_LESS:
-			return lvalue < rvalue
+			result = lvalue < rvalue
 		OP_GREATER_EQUAL:
-			return lvalue >= rvalue
+			result = lvalue >= rvalue
 		OP_LESS_EQUAL:
-			return lvalue <= rvalue
+			result = lvalue <= rvalue
 		_:
 			Logger.warn("Condition [%s] evaluates to `true` due to invalid operator [%s] used -- options are: %s" % [condition_ent.key(), condition_ent.operator, OperatorSymbolMap.keys()])
-			return true
+			result = true
+
+	var elapsed_usec = Time.get_ticks_usec() - start_time
+	Logger.trace("[CONDITION END] result=%s elapsed_usec=%d" % [str(result), elapsed_usec])
+
+	return result

@@ -65,28 +65,48 @@ func pack_audio() -> void:
 func _handle_expiry() -> void:
 	var now: float = Time.get_unix_time_from_system()
 	var keys: Array = expiry.keys().duplicate()
+	var expired_count = 0
 	for key in expiry.keys():
 		if expiry[key] < 0:
 			continue
 		if expiry[key] < now:
 			expiry.erase(key)
 			packs.erase(key)
+			expired_count += 1
+	if expired_count > 0:
+		Logger.debug("Cache: Expired %d entries" % expired_count)
 
 func pack(pack_data: Pack) -> Variant:
+	var was_cached = packs.has(pack_data.key)
 	var object: Variant = Optional.of_nullable(packs.get(pack_data.key)).or_else(pack_data.ref.call())
 	packs[pack_data.key] = object
+
+	if was_cached:
+		Logger.trace("Cache hit: key=%s" % pack_data.key)
+	else:
+		Logger.debug("Cache pack: key=%s expiry=%s" % [pack_data.key, "never" if pack_data.expiry < 0 else str(pack_data.expiry - Time.get_unix_time_from_system()) + "s"])
+
 	return object
 	
 func unpack(key: String) -> Variant:
 	var object: Variant = packs.get(key)
+	if object == null:
+		Logger.trace("Cache miss on unpack: key=%s" % key)
+	else:
+		Logger.debug("Cache unpack: key=%s" % key)
 	packs.erase(key)
 	return object
 
 func pack_actor(peer_id: int, pack_data: Dictionary) -> void:
+	Logger.debug("Cache: Packing actor data for peer_id=%d" % peer_id)
 	packed_actors[peer_id] = pack_data
 
 func unpack_actor(peer_id: int) -> Dictionary:
 	var result = packed_actors.get(peer_id, {}).duplicate()
+	if result.is_empty():
+		Logger.warn("Cache: No packed actor data found for peer_id=%d" % peer_id)
+	else:
+		Logger.debug("Cache: Unpacking actor data for peer_id=%d" % peer_id)
 	packed_actors.erase(peer_id)
 	return result
 

@@ -78,7 +78,7 @@ func add_asset_as_entities_to_tree(asset: Dictionary):
 					Logger.info("Successfully created Entity: %s" % entity.unique_node_name())
 					add_child(entity)
 				else:
-					Logger.warn("Naming conflict detected in archive: [%s], resolve this or the map will contain missing data on load." % entity.unique_node_name())
+					Logger.warn("Naming conflict detected in archive: [%s], resolve this or the campaign will contain missing data on load." % entity.unique_node_name())
 		else:
 			Logger.warn("Type [%s] is not recognized as a valid type and will be skipped, options are [%s]." % [objtype, _entities.keys()])
 
