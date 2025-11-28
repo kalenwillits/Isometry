@@ -122,6 +122,13 @@ func invoke_action(action_key: String, self_name: String, target_name: String) -
 func echo(_self_name: String, _target_name: String, params: Dictionary) -> void:
 	## message: String
 	Logger.info(params["message"])
+
+func wait(_self_name: String, _target_name: String, _params: Dictionary) -> void:
+	## No parameters required
+	## Duration specified via action.time field
+	## Pauses action chain execution. Useful for timing/sequencing effects.
+	## Note: This is essentially a no-op that relies on the time field.
+	pass
 	
 func set_destination_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## destination: Vertex Key
@@ -228,13 +235,90 @@ func plus_resource_self(self_name: String, _target_name: String, params: Diction
 	Optional.of_nullable(
 		Repo.query([Group.RESOURCE_ENTITY])
 		.filter(
-	func(ent): 
+	func(ent):
 		return ent.key() == params.get("resource")
 	).pop_front()
 		).if_present(
 	func(resource: Entity):
 		var value: int = Dice.builder().expression(params.expression).build().evaluate()
 		var _result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().plus(value).get_value()
+	)
+
+func plus_resource_target(_self_name: String, target_name: String, params: Dictionary) -> void:
+	## resource: String - KeyRef to Resource entity (required)
+	## expression: String - Dice algebra expression (e.g., "2d6+3") (required)
+	## Adds to target's resource value. Useful for healing, buffs, giving resources to allies.
+	if target_name.is_empty():
+		return
+
+	Optional.of_nullable(
+		Repo.query([Group.RESOURCE_ENTITY])
+		.filter(func(ent): return ent.key() == params.get("resource"))
+		.pop_front()
+	).if_present(
+		func(resource: Entity):
+			var value: int = Dice.builder().expression(params.expression).build().evaluate()
+			var _result: int = ResourceOperator.builder().actor(target_name).resource(resource).build().plus(value).get_value()
+	)
+
+func set_resource_self(self_name: String, _target_name: String, params: Dictionary) -> void:
+	## resource: String - KeyRef to Resource entity (required)
+	## value: int - Absolute value to set (required)
+	## Sets caller's resource to exact value (still respects min/max bounds).
+	Optional.of_nullable(
+		Repo.query([Group.RESOURCE_ENTITY])
+		.filter(func(ent): return ent.key() == params.get("resource"))
+		.pop_front()
+	).if_present(
+		func(resource: Entity):
+			var value: int = params.get("value", 0)
+			var _result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().set_value(value).get_value()
+	)
+
+func set_resource_target(_self_name: String, target_name: String, params: Dictionary) -> void:
+	## resource: String - KeyRef to Resource entity (required)
+	## value: int - Absolute value to set (required)
+	## Sets target's resource to exact value (still respects min/max bounds).
+	if target_name.is_empty():
+		return
+
+	Optional.of_nullable(
+		Repo.query([Group.RESOURCE_ENTITY])
+		.filter(func(ent): return ent.key() == params.get("resource"))
+		.pop_front()
+	).if_present(
+		func(resource: Entity):
+			var value: int = params.get("value", 0)
+			var _result: int = ResourceOperator.builder().actor(target_name).resource(resource).build().set_value(value).get_value()
+	)
+
+func transfer_resource(self_name: String, target_name: String, params: Dictionary) -> void:
+	## resource: String - KeyRef to Resource entity (required)
+	## expression: String - Dice algebra for amount to transfer (required)
+	## Subtracts from target's resource and adds same amount to caller's resource.
+	## Example: Drain 10 health from enemy and heal self for same amount.
+	if target_name.is_empty():
+		return
+
+	Optional.of_nullable(
+		Repo.query([Group.RESOURCE_ENTITY])
+		.filter(func(ent): return ent.key() == params.get("resource"))
+		.pop_front()
+	).if_present(
+		func(resource: Entity):
+			var transfer_amount: int = Dice.builder().expression(params.expression).build().evaluate()
+
+			# Subtract from target
+			var target_operator = ResourceOperator.builder().actor(target_name).resource(resource).build()
+			var actual_removed: int = target_operator.minus(transfer_amount).get_value()
+
+			# Calculate actual amount removed (difference between before and after)
+			var target_before: int = target_operator.get_value() + actual_removed
+			var target_after: int = target_operator.get_value()
+			var actual_transfer: int = target_before - target_after
+
+			# Add same amount to caller
+			var _self_result: int = ResourceOperator.builder().actor(self_name).resource(resource).build().plus(actual_transfer).get_value()
 	)
 
 func target_nearest(self_name: String, _target_name: String, _params: Dictionary) -> void:
@@ -301,6 +385,73 @@ func target_highest_measure(self_name: String, _target_name: String, params: Dic
 		.or_else("")
 	)
 
+func target_nearest_in_group(self_name: String, _target_name: String, params: Dictionary) -> void:
+	## group: String - KeyRef to Group entity (required)
+	## Targets nearest actor in view that belongs to specified group.
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null:
+		return
+
+	var group_key: String = params.get("group", "")
+	if group_key.is_empty():
+		return
+
+	# Get all actors in view
+	var actors_in_view: Array = self_actor.get_actors_in_view()
+
+	# Filter by group and find nearest
+	var nearest_actor: Actor = null
+	var nearest_distance: float = INF
+
+	for actor in actors_in_view:
+		if actor is Actor and actor.actor_ent and actor.actor_ent.group:
+			if actor.actor_ent.group.key() == group_key:
+				var distance: float = self_actor.get_position().distance_to(actor.get_position())
+				if distance < nearest_distance:
+					nearest_distance = distance
+					nearest_actor = actor
+
+	if nearest_actor != null:
+		self_actor.set_target(nearest_actor.get_name())
+	else:
+		self_actor.set_target("")
+
+func target_random_in_group(self_name: String, _target_name: String, params: Dictionary) -> void:
+	## group: String - KeyRef to Group entity (required)
+	## Targets a random actor in view that belongs to specified group.
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null:
+		return
+
+	var group_key: String = params.get("group", "")
+	if group_key.is_empty():
+		return
+
+	# Get all actors in view
+	var actors_in_view: Array = self_actor.get_actors_in_view()
+
+	# Filter by group
+	var group_actors: Array[Actor] = []
+	for actor in actors_in_view:
+		if actor is Actor and actor.actor_ent and actor.actor_ent.group:
+			if actor.actor_ent.group.key() == group_key:
+				group_actors.append(actor)
+
+	# Pick random actor from filtered list
+	if group_actors.size() > 0:
+		var random_actor: Actor = group_actors[randi() % group_actors.size()]
+		self_actor.set_target(random_actor.get_name())
+	else:
+		self_actor.set_target("")
+
+func clear_target_self(self_name: String, _target_name: String, _params: Dictionary) -> void:
+	## No parameters required
+	## Clears caller's current target, setting it to empty string.
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null:
+		return
+	self_actor.set_target("")
+
 func move_to_target(self_name: String, target_name: String, _params: Dictionary) -> void:
 	## Sets caller's destination to target actor's position. No parameters required.
 	var self_actor: Actor = Finder.get_actor(self_name)
@@ -308,6 +459,30 @@ func move_to_target(self_name: String, target_name: String, _params: Dictionary)
 	Optional.of_nullable(Finder.get_actor(target_name))\
 	.map(func(t): return t.get_position())\
 	.if_present(func(pos): self_actor.set_destination(pos))
+
+func move_away_from_target(self_name: String, target_name: String, params: Dictionary) -> void:
+	## distance: float - How far to move away (required)
+	## Sets caller's destination to position away from target by specified distance.
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null:
+		return
+
+	if target_name.is_empty():
+		return
+
+	var target_actor: Actor = Finder.get_actor(target_name)
+	if target_actor == null:
+		return
+
+	var distance: float = params.get("distance", 0.0)
+	if distance <= 0.0:
+		return
+
+	# Calculate direction away from target (from target to self)
+	var direction: Vector2 = (self_actor.get_position() - target_actor.get_position()).normalized()
+	var destination: Vector2 = self_actor.get_position() + (direction * distance)
+
+	self_actor.set_destination(destination)
 
 func move_to_target_radial(self_name: String, target_name: String, params: Dictionary) -> void:
 	## radial: int - Angle in degrees (0-360) relative to actor's bearing, where 0° is forward
@@ -339,6 +514,58 @@ func move_to_self_radial(self_name: String, _target_name: String, params: Dictio
 	var absolute_radial: int = (self_actor.get_bearing() + radial) % 360
 	var target_position: Vector2 = calculate_radial_position(self_actor.get_position(), absolute_radial, distance)
 	self_actor.set_destination(target_position)
+
+func push_target_away(self_name: String, target_name: String, params: Dictionary) -> void:
+	## distance: float - How far to push the target away from caller (required)
+	## Pushes target away from caller by specified distance. Direction calculated from caller to target.
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null:
+		return
+
+	if target_name.is_empty():
+		return
+
+	var target_actor: Actor = Finder.get_actor(target_name)
+	if target_actor == null:
+		return
+
+	var distance: float = params.get("distance", 0.0)
+	if distance <= 0.0:
+		return
+
+	# Calculate direction from caller to target
+	var direction: Vector2 = (target_actor.get_position() - self_actor.get_position()).normalized()
+	var push_destination: Vector2 = target_actor.get_position() + (direction * distance)
+
+	# Validate destination is valid
+	if can_teleport_to(target_actor, push_destination):
+		target_actor.set_location(push_destination)
+
+func pull_target_closer(self_name: String, target_name: String, params: Dictionary) -> void:
+	## distance: float - How far to pull the target toward caller (required)
+	## Pulls target closer to caller by specified distance. Direction calculated from target to caller.
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null:
+		return
+
+	if target_name.is_empty():
+		return
+
+	var target_actor: Actor = Finder.get_actor(target_name)
+	if target_actor == null:
+		return
+
+	var distance: float = params.get("distance", 0.0)
+	if distance <= 0.0:
+		return
+
+	# Calculate direction from target to caller
+	var direction: Vector2 = (self_actor.get_position() - target_actor.get_position()).normalized()
+	var pull_destination: Vector2 = target_actor.get_position() + (direction * distance)
+
+	# Validate destination is valid
+	if can_teleport_to(target_actor, pull_destination):
+		target_actor.set_location(pull_destination)
 
 func teleport_self_to_target(self_name: String, target_name: String, _params: Dictionary) -> void:
 	## Instantly teleports caller to target's position. No parameters required.
@@ -433,6 +660,34 @@ func teleport(self_name: String, _target_name: String, params: Dictionary) -> vo
 
 	if can_teleport_to(self_actor, destination):
 		self_actor.set_location(destination)
+
+func swap_positions(self_name: String, target_name: String, _params: Dictionary) -> void:
+	## No parameters required
+	## Swaps the positions of caller and target. Both actors teleport to each other's location.
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null:
+		return
+
+	if target_name.is_empty():
+		return
+
+	var target_actor: Actor = Finder.get_actor(target_name)
+	if target_actor == null:
+		return
+
+	# Store both positions before swapping
+	var self_position: Vector2 = self_actor.get_position()
+	var target_position: Vector2 = target_actor.get_position()
+
+	# Validate both positions are teleportable
+	if not can_teleport_to(self_actor, target_position):
+		return
+	if not can_teleport_to(target_actor, self_position):
+		return
+
+	# Perform the swap
+	self_actor.set_location(target_position)
+	target_actor.set_location(self_position)
 
 func area_of_effect_at_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## radius: float - Radius of the elliptical area
@@ -532,6 +787,67 @@ func despawn_target(_self_name: String, target_name: String, _params: Dictionary
 	var target_actor: Actor = Finder.get_actor(target_name)
 	if target_actor == null: return
 	target_actor.despawn()
+
+func change_actor_self(self_name: String, _target_name: String, params: Dictionary) -> void:
+	## actor: String - KeyRef to Actor entity to transform into (required)
+	## Transforms the calling actor into a different actor type while preserving all resources,
+	## location, and identity. Useful for polymorph, shapeshift, level up, or evolution mechanics.
+
+	var actor_to_transform: Actor = Finder.get_actor(self_name)
+	if actor_to_transform == null:
+		return
+
+	var new_actor_key: String = params.get("actor", "")
+	if new_actor_key.is_empty():
+		return
+
+	# Validate new actor entity exists
+	if Repo.select(new_actor_key) == null:
+		return
+
+	# Pack current state
+	var spawn_data: Dictionary = actor_to_transform.pack()
+
+	# Override actor key with new form
+	spawn_data["actor"] = new_actor_key
+
+	# Despawn current actor
+	actor_to_transform.despawn()
+
+	# Spawn new actor with preserved state (deferred to avoid peer_id conflict)
+	Finder.select(Group.SPAWNER).spawn.call_deferred(spawn_data)
+
+func change_actor_target(_self_name: String, target_name: String, params: Dictionary) -> void:
+	## actor: String - KeyRef to Actor entity to transform target into (required)
+	## Transforms the target actor into a different actor type while preserving all resources,
+	## location, and identity. Useful for polymorph effects cast on other actors.
+
+	if target_name.is_empty():
+		return
+
+	var actor_to_transform: Actor = Finder.get_actor(target_name)
+	if actor_to_transform == null:
+		return
+
+	var new_actor_key: String = params.get("actor", "")
+	if new_actor_key.is_empty():
+		return
+
+	# Validate new actor entity exists
+	if Repo.select(new_actor_key) == null:
+		return
+
+	# Pack current state
+	var spawn_data: Dictionary = actor_to_transform.pack()
+
+	# Override actor key with new form
+	spawn_data["actor"] = new_actor_key
+
+	# Despawn current actor
+	actor_to_transform.despawn()
+
+	# Spawn new actor with preserved state (deferred to avoid peer_id conflict)
+	Finder.select(Group.SPAWNER).spawn.call_deferred(spawn_data)
 
 func spawn_actor_at_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## actor: String - KeyRef to Actor entity (required)
@@ -731,6 +1047,39 @@ func temp_speed_self(self_name: String, _target_name: String, params: Dictionary
 		if self_actor != null and is_instance_valid(self_actor):
 			self_actor.set_speed(original_speed)
 	, CONNECT_ONE_SHOT)
+
+func set_modulate_self(self_name: String, _target_name: String, params: Dictionary) -> void:
+	## color: String - Hex color code (e.g., "#ff0000" for red) or color name (required)
+	## Sets caller's color modulation/tint. Useful for visual status effects, team colors, highlighting.
+	var self_actor: Actor = Finder.get_actor(self_name)
+	if self_actor == null:
+		return
+
+	var color_param: String = params.get("color", "")
+	if color_param.is_empty():
+		return
+
+	# Parse color from string (supports hex codes and color names)
+	var color: Color = Color(color_param) if color_param.begins_with("#") else Color.from_string(color_param, Color.WHITE)
+	self_actor.modulate = color
+
+func set_modulate_target(_self_name: String, target_name: String, params: Dictionary) -> void:
+	## color: String - Hex color code (e.g., "#ff0000" for red) or color name (required)
+	## Sets target's color modulation/tint. Useful for visual status effects, team colors, highlighting.
+	if target_name.is_empty():
+		return
+
+	var target_actor: Actor = Finder.get_actor(target_name)
+	if target_actor == null:
+		return
+
+	var color_param: String = params.get("color", "")
+	if color_param.is_empty():
+		return
+
+	# Parse color from string (supports hex codes and color names)
+	var color: Color = Color(color_param) if color_param.begins_with("#") else Color.from_string(color_param, Color.WHITE)
+	target_actor.modulate = color
 
 func open_options(_self_name: String, _target_name: String, _params: Dictionary) -> void:
 	## Opens the options/settings menu. No parameters required.
