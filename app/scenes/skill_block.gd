@@ -26,7 +26,7 @@ func _ready() -> void:
 	if entity.get("description") and entity.description != "":
 		# Get the primary actor for injection
 		var primary_actor = Finder.get_primary_actor()
-		var caller_name = primary_actor.name if primary_actor else ""
+		var caller_name = str(primary_actor.name) if primary_actor else ""
 
 		# Process text through Dice engine for resource/measure injection
 		var processed_desc = process_description(entity.description, caller_name, caller_name)

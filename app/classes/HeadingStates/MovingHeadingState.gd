@@ -4,7 +4,7 @@ extends HeadingState
 ## Heading state for when the actor is moving.
 ## Heading syncs to the direction of movement (velocity angle).
 
-func update_heading(actor: Actor, delta: float) -> String:
+func update_heading(actor: Actor, _delta: float) -> String:
 	if actor.velocity.length_squared() > 0:
 		# Add PI to reverse direction to match original backwards convention
 		return actor.map_radial(actor.velocity.angle() + PI)

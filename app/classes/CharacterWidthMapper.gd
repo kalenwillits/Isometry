@@ -80,8 +80,8 @@ func generate_character_widths(rich_text_label: RichTextLabel) -> void:
 
 	# Measure ASCII printable characters (32-126)
 	for ascii_code in range(32, 127):
-		var char = char(ascii_code)
-		var width = font.get_string_size(char, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		var character = char(ascii_code)
+		var width = font.get_string_size(character, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 		char_widths[ascii_code] = width
 
 	# Calculate average width for default
@@ -128,13 +128,13 @@ func calculate_text_width(text: String) -> float:
 	var in_bbcode = false
 
 	for i in range(text.length()):
-		var char = text[i]
+		var ch = text[i]
 
 		# Handle BBCode tags
-		if char == "[":
+		if ch == "[":
 			in_bbcode = true
 			continue
-		elif char == "]":
+		elif ch == "]":
 			in_bbcode = false
 			continue
 
@@ -143,7 +143,7 @@ func calculate_text_width(text: String) -> float:
 			continue
 
 		# Add character width
-		total_width += get_char_width(char)
+		total_width += get_char_width(ch)
 
 	return total_width
 
@@ -157,13 +157,13 @@ func calculate_line_breaks(text: String, container_width: float) -> Array[int]:
 	var in_bbcode = false
 
 	for i in range(text.length()):
-		var char = text[i]
+		var ch = text[i]
 
 		# Handle BBCode tags
-		if char == "[":
+		if ch == "[":
 			in_bbcode = true
 			continue
-		elif char == "]":
+		elif ch == "]":
 			in_bbcode = false
 			continue
 
@@ -172,7 +172,7 @@ func calculate_line_breaks(text: String, container_width: float) -> Array[int]:
 			continue
 
 		# Handle newlines
-		if char == "\n":
+		if ch == "\n":
 			line_breaks.append(i)
 			current_line_width = 0.0
 			last_space_index = -1
@@ -180,11 +180,11 @@ func calculate_line_breaks(text: String, container_width: float) -> Array[int]:
 			continue
 
 		# Track spaces for word wrapping
-		if char == " ":
+		if ch == " ":
 			last_space_index = i
 
 		# Add character width
-		var char_width = get_char_width(char)
+		var char_width = get_char_width(ch)
 		current_line_width += char_width
 
 		# Check if we exceeded container width

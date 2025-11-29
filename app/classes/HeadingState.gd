@@ -4,7 +4,7 @@ extends RefCounted
 ## Abstract base class for heading state machine states.
 ## Defines the interface for updating actor heading based on current state.
 
-func update_heading(actor: Actor, delta: float) -> String:
+func update_heading(_actor: Actor, _delta: float) -> String:
 	push_error("HeadingState.update_heading() must be implemented by subclass")
 	return "S"
 

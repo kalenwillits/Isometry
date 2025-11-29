@@ -11,7 +11,7 @@ func on_enter(actor: Actor) -> void:
 	# Initialize mouse tracking
 	last_mouse_position = actor.get_global_mouse_position()
 
-func update_bearing(actor: Actor, delta: float) -> int:
+func update_bearing(actor: Actor, _delta: float) -> int:
 	# Block input if camera not locked or UI blocking
 	if !Finder.select(Group.CAMERA).is_locked():
 		return actor.bearing

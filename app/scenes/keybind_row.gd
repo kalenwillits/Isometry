@@ -3,7 +3,6 @@ extends HBoxContainer
 const BaseTheme = preload("res://themes/BaseTheme.res")
 
 signal binding_requested(action_name: String, binding_type: String)
-signal reset_requested(action_name: String, binding_type: String)
 
 @export var action_name: String = ""
 @export var binding_type: String = "keyboard"  # "keyboard" or "gamepad"
@@ -124,9 +123,9 @@ func _handle_key_binding(event: InputEventKey) -> void:
 
 		# Find key name using physical_keycode
 		var key_name: String = ""
-		for name in Keybinds.KEY_MAP.keys():
-			if Keybinds.KEY_MAP[name] == event.physical_keycode:
-				key_name = name
+		for key_map_name in Keybinds.KEY_MAP.keys():
+			if Keybinds.KEY_MAP[key_map_name] == event.physical_keycode:
+				key_name = key_map_name
 				break
 
 		if key_name == "":
@@ -159,9 +158,9 @@ func _handle_key_binding(event: InputEventKey) -> void:
 
 		# Find the key that was released
 		var key_name: String = ""
-		for name in Keybinds.KEY_MAP.keys():
-			if Keybinds.KEY_MAP[name] == event.physical_keycode:
-				key_name = name
+		for key_map_name in Keybinds.KEY_MAP.keys():
+			if Keybinds.KEY_MAP[key_map_name] == event.physical_keycode:
+				key_name = key_map_name
 				break
 
 		if key_name == "":
@@ -191,9 +190,9 @@ func _handle_mouse_binding(event: InputEventMouseButton) -> void:
 	var binding_str: String = ""
 
 	# Find mouse button name
-	for name in Keybinds.MOUSE_MAP.keys():
-		if Keybinds.MOUSE_MAP[name] == event.button_index:
-			binding_str = name
+	for mouse_button_name in Keybinds.MOUSE_MAP.keys():
+		if Keybinds.MOUSE_MAP[mouse_button_name] == event.button_index:
+			binding_str = mouse_button_name
 			break
 
 	if binding_str == "":
@@ -207,9 +206,9 @@ func _handle_joy_binding(event: InputEventJoypadButton) -> void:
 	if event.pressed:
 		# Add button to pressed list
 		var button_name: String = ""
-		for name in Keybinds.JOY_MAP.keys():
-			if Keybinds.JOY_MAP[name] == event.button_index:
-				button_name = name
+		for joy_button_name in Keybinds.JOY_MAP.keys():
+			if Keybinds.JOY_MAP[joy_button_name] == event.button_index:
+				button_name = joy_button_name
 				break
 
 		if button_name != "" and button_name not in pressed_joy_buttons:
@@ -223,9 +222,9 @@ func _handle_joy_binding(event: InputEventJoypadButton) -> void:
 	else:
 		# Button released - remove from currently pressed list
 		var button_name: String = ""
-		for name in Keybinds.JOY_MAP.keys():
-			if Keybinds.JOY_MAP[name] == event.button_index:
-				button_name = name
+		for joy_button_name in Keybinds.JOY_MAP.keys():
+			if Keybinds.JOY_MAP[joy_button_name] == event.button_index:
+				button_name = joy_button_name
 				break
 
 		if button_name in pressed_joy_buttons:
@@ -244,8 +243,8 @@ func _handle_joy_motion_binding(event: InputEventJoypadMotion) -> void:
 
 	# Find the motion name in the JOY_MAP
 	var motion_name: String = ""
-	for name in Keybinds.JOY_MAP.keys():
-		var joy_data = Keybinds.JOY_MAP[name]
+	for joy_motion_name in Keybinds.JOY_MAP.keys():
+		var joy_data = Keybinds.JOY_MAP[joy_motion_name]
 		if joy_data is String:
 			# Parse format "0:axis:value"
 			var parts = joy_data.split(":")
@@ -254,7 +253,7 @@ func _handle_joy_motion_binding(event: InputEventJoypadMotion) -> void:
 				var map_value = float(parts[2])
 				# Check if axis matches and direction matches (same sign)
 				if map_axis == event.axis and sign(map_value) == sign(event.axis_value):
-					motion_name = name
+					motion_name = joy_motion_name
 					break
 
 	if motion_name == "":

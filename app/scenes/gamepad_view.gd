@@ -205,7 +205,7 @@ func _on_next_page() -> void:
 	if current_page < total_pages - 1:
 		_show_page(current_page + 1)
 
-func _on_binding_changed_anywhere(action_name: String, binding_type: String) -> void:
+func _on_binding_changed_anywhere(_action_name: String, binding_type: String) -> void:
 	"""Called when any binding changes"""
 	# Only track gamepad changes (this is the gamepad view)
 	if binding_type == "gamepad":

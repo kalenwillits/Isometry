@@ -137,7 +137,7 @@ func process_text(text: String) -> String:
 
 	return processed
 
-func find_best_page_break(calculated_break_index: int, line_breaks: Array[int]) -> int:
+func find_best_page_break(calculated_break_index: int, _line_breaks: Array[int]) -> int:
 	# Priority 1: Look for natural newline N lines up from calculated break
 	# Estimate ~80 characters per line for lookback range calculation
 	var chars_per_line = 80

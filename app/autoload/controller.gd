@@ -135,7 +135,10 @@ func render_map(map: String) -> void:
 				for floor_sprite in Finder.query([Group.FLOOR_SPRITE, map_node.name]):
 					floor_sprite.visible = map_node.name == map
 				for audio_fader in Finder.query([Group.AUDIO, map_node.name]):
-					audio_fader.fade_in() if map_node.name == map else audio_fader.fade_out()
+					if map_node.name == map:
+						audio_fader.fade_in()
+					else:
+						audio_fader.fade_out()
 				).build()
 			)
 	for navigation_region: NavigationRegion2D in Finder.query([Group.NAVIGATION]):
@@ -240,7 +243,7 @@ func _route_focus(author: String, message: String, sender_actor: Actor) -> void:
 
 	# Add all focus slot targets
 	for focus_target in [sender_actor.focus_top_left, sender_actor.focus_top_right,
-	                      sender_actor.focus_bot_left, sender_actor.focus_bot_right]:
+						  sender_actor.focus_bot_left, sender_actor.focus_bot_right]:
 		if not focus_target.is_empty():
 			var target_actor = Finder.get_actor(focus_target)
 			if target_actor and not target_actor.is_npc():

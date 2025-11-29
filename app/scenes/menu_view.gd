@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-const ActionMenuItem = preload("res://scenes/action_menu_item.tscn")
+const ActionMenuItemScene = preload("res://scenes/action_menu_item.tscn")
 
 var actions: Array = [] # Array of Action entities
 var current_page: int = 0
@@ -75,7 +75,7 @@ func render_page() -> void:
 	# Create action items for this page
 	for i in range(start_index, end_index):
 		var action_ent: Entity = actions[i]
-		var item = ActionMenuItem.instantiate()
+		var item = ActionMenuItemScene.instantiate()
 		item.setup(action_ent, i - start_index)
 		item.item_clicked.connect(_on_action_item_clicked)
 		$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(item)

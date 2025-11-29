@@ -3,8 +3,6 @@ extends Widget
 ## Widget that displays colored dots for each visible target group
 ## and highlights the currently selected target group
 
-signal group_dot_clicked(group_key: String)
-
 # Dictionary mapping group_key -> Label node
 var group_dots: Dictionary = {}
 var current_selected_group: String = ""

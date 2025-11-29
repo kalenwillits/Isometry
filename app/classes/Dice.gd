@@ -172,8 +172,8 @@ class RollEngine:
 
 			# Sum the kept rolls
 			var total = 0
-			for roll in rolls:
-				total += roll
+			for roll_result in rolls:
+				total += roll_result
 
 			Logger.trace("[DICE FILTER] total=%d" % total)
 
@@ -201,9 +201,9 @@ class RollEngine:
 			var total = 0
 			var rolls = []
 			for i in range(num_dice):
-				var roll = randi_range(1, num_sides)
-				rolls.append(roll)
-				total += roll
+				var dice_roll = randi_range(1, num_sides)
+				rolls.append(dice_roll)
+				total += dice_roll
 
 			Logger.trace("[DICE POOL] rolls=%s total=%d" % [str(rolls), total])
 
@@ -281,12 +281,12 @@ class Builder extends Object:
 		this.caller_name = self_name
 		return self
 
-	func target(target_name: String) -> Builder:
-		this.target_name = target_name
+	func target(target_actor_name: String) -> Builder:
+		this.target_name = target_actor_name
 		return self
 
-	func target_name(target_name: String) -> Builder:
-		this.target_name = target_name
+	func target_name(target_actor_name: String) -> Builder:
+		this.target_name = target_actor_name
 		return self
 
 	func expression(expr: String) -> Builder:
@@ -399,11 +399,10 @@ func inject_measures(caller_actor, target_actor, processed_expr: String) -> Stri
 		var actor = caller_actor if marker == CALLER_MARKER else target_actor
 		var actor_name = caller_name if marker == CALLER_MARKER else target_name
 		var value: String = "0"  # Default to 0
-		var source: String = "default"
 
 		# Handle null actor - default to 0 (intended behavior)
 		if actor == null:
-			source = "null_actor"
+			pass  # Use default value
 		# Check if it's a measure
 		elif key in actor.measures:
 			var measure = actor.measures[key]
@@ -417,7 +416,6 @@ func inject_measures(caller_actor, target_actor, processed_expr: String) -> Stri
 					# Built-in measure (no parameters)
 					var measure_value = measure.call()
 					value = str(measure_value)
-					source = "builtin_measure"
 					Logger.debug("[DICE INJECT MEASURE] marker=%s key=%s actor=%s type=builtin value=%s" % [marker, key, actor_name, value])
 				else:
 					# Entity measure (expects ActorInteraction parameter)
@@ -433,15 +431,12 @@ func inject_measures(caller_actor, target_actor, processed_expr: String) -> Stri
 
 					var measure_value = measure.call(interaction)
 					value = str(measure_value)
-					source = "entity_measure"
 					Logger.debug("[DICE INJECT MEASURE] marker=%s key=%s actor=%s type=entity value=%s" % [marker, key, actor_name, value])
 			else:
 				value = str(measure)
-				source = "static_measure"
 				Logger.debug("[DICE INJECT MEASURE] marker=%s key=%s actor=%s type=static value=%s" % [marker, key, actor_name, value])
 		else:
 			# Key not found in either resources or measures - default to 0 (intended behavior)
-			source = "not_found"
 			Logger.debug("[DICE INJECT MEASURE] marker=%s key=%s actor=%s not_found=true defaulting_to=0" % [marker, key, actor_name])
 
 		# Replace the match with the resolved value

@@ -9,7 +9,7 @@ class Item extends Object:
 	var task: Callable
 	var target: Node
 	var _target_is_set: bool = false
-	var _retry_count: int = 0
+	var retry_count: int = 0
 	
 	class Builder extends Object:
 		var obj: Item = Item.new()
@@ -88,9 +88,9 @@ func _process(_delta: float) -> void:
 			_call_task_safe(current_item)
 			items.pop_at(0)
 		else:
-			current_item._retry_count += 1
-			if current_item._retry_count > 10:
-				Logger.warn("Task stuck in queue (retried %d times): %s" % [current_item._retry_count, current_item.comment])
+			current_item.retry_count += 1
+			if current_item.retry_count > 10:
+				Logger.warn("Task stuck in queue (retried %d times): %s" % [current_item.retry_count, current_item.comment])
 				# Reset counter to avoid spam, but keep trying
-				current_item._retry_count = 0
+				current_item.retry_count = 0
 			items.append(items.pop_at(0))

@@ -42,7 +42,10 @@ LoadingModal="*res://scenes/loading_modal.tscn"
 
 [debug]
 
+gdscript/warnings/standalone_expression=0
+gdscript/warnings/standalone_ternary=0
 gdscript/warnings/integer_division=0
+gdscript/warnings/narrowing_conversion=0
 
 [display]
 

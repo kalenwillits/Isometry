@@ -62,7 +62,7 @@ func reload_from_config() -> void:
 
 # Map InputEvent to display data (icon path or text)
 # Returns Dictionary with keys: type ("icon" or "text"), value (path or text string)
-static func event_to_display(event: InputEvent, icon_mode: IconMode) -> Dictionary:
+func event_to_display(event: InputEvent, icon_mode: IconMode) -> Dictionary:
 	if icon_mode == IconMode.NONE:
 		return {"type": "none", "value": ""}
 
@@ -76,7 +76,7 @@ static func event_to_display(event: InputEvent, icon_mode: IconMode) -> Dictiona
 	return {"type": "text", "value": "?"}
 
 # Convert keyboard event to display
-static func _key_event_to_display(event: InputEventKey, icon_mode: IconMode) -> Dictionary:
+func _key_event_to_display(event: InputEventKey, icon_mode: IconMode) -> Dictionary:
 	# Build modifier prefix (shortened to 2-3 characters)
 	var modifier_string = ""
 	if event.ctrl_pressed:
@@ -98,7 +98,7 @@ static func _key_event_to_display(event: InputEventKey, icon_mode: IconMode) -> 
 		return {"type": "text", "value": modifier_string + key_string}
 
 # Shorten common key names to fit better in UI
-static func _shorten_key_name(key_string: String) -> String:
+func _shorten_key_name(key_string: String) -> String:
 	match key_string:
 		"Escape": return "Esc"
 		"Enter": return "Enter"
@@ -115,7 +115,7 @@ static func _shorten_key_name(key_string: String) -> String:
 		_: return key_string
 
 # Convert mouse event to display
-static func _mouse_event_to_display(event: InputEventMouseButton, icon_mode: IconMode) -> Dictionary:
+func _mouse_event_to_display(event: InputEventMouseButton, icon_mode: IconMode) -> Dictionary:
 	if icon_mode == IconMode.KEYBOARD:
 		# Return text representation for keyboard mode
 		var mouse_text = _mouse_button_to_text(event.button_index)
@@ -126,7 +126,7 @@ static func _mouse_event_to_display(event: InputEventMouseButton, icon_mode: Ico
 		return {"type": "text", "value": _mouse_button_to_text(event.button_index)}
 
 # Convert joypad event to display
-static func _joypad_event_to_display(event: InputEventJoypadButton, icon_mode: IconMode) -> Dictionary:
+func _joypad_event_to_display(event: InputEventJoypadButton, icon_mode: IconMode) -> Dictionary:
 	if icon_mode == IconMode.KEYBOARD:
 		# Show text for keyboard mode
 		var button_text = _joypad_button_to_text(event.button_index)
@@ -141,7 +141,7 @@ static func _joypad_event_to_display(event: InputEventJoypadButton, icon_mode: I
 			return {"type": "text", "value": _joypad_button_to_text(event.button_index)}
 
 # Map mouse button index to text
-static func _mouse_button_to_text(button_index: int) -> String:
+func _mouse_button_to_text(button_index: int) -> String:
 	match button_index:
 		MOUSE_BUTTON_LEFT: return "LMB"
 		MOUSE_BUTTON_RIGHT: return "RMB"
@@ -155,7 +155,7 @@ static func _mouse_button_to_text(button_index: int) -> String:
 		_: return "Mouse"
 
 # Map joypad button index to text
-static func _joypad_button_to_text(button_index: int) -> String:
+func _joypad_button_to_text(button_index: int) -> String:
 	match button_index:
 		JOY_BUTTON_A: return "A"
 		JOY_BUTTON_B: return "B"
@@ -175,7 +175,7 @@ static func _joypad_button_to_text(button_index: int) -> String:
 		_: return "Button"
 
 # Map joypad button index to icon filename (without path or extension)
-static func _joypad_button_to_icon_name(button_index: int, icon_mode: IconMode) -> String:
+func _joypad_button_to_icon_name(button_index: int, icon_mode: IconMode) -> String:
 	# Map button to icon name based on mode
 	match icon_mode:
 		IconMode.GENERIC:
@@ -190,7 +190,7 @@ static func _joypad_button_to_icon_name(button_index: int, icon_mode: IconMode) 
 			return ""
 
 # Generic gamepad icons
-static func _joypad_button_to_generic_icon(button_index: int) -> String:
+func _joypad_button_to_generic_icon(button_index: int) -> String:
 	match button_index:
 		JOY_BUTTON_LEFT_STICK: return "generic_l3"
 		JOY_BUTTON_RIGHT_STICK: return "generic_r3"
@@ -203,7 +203,7 @@ static func _joypad_button_to_generic_icon(button_index: int) -> String:
 		_: return ""
 
 # Xbox gamepad icons
-static func _joypad_button_to_xbox_icon(button_index: int) -> String:
+func _joypad_button_to_xbox_icon(button_index: int) -> String:
 	match button_index:
 		JOY_BUTTON_A: return "xb_a"
 		JOY_BUTTON_B: return "xb_b"
@@ -217,7 +217,7 @@ static func _joypad_button_to_xbox_icon(button_index: int) -> String:
 		_: return _joypad_button_to_generic_icon(button_index)
 
 # PlayStation gamepad icons
-static func _joypad_button_to_playstation_icon(button_index: int) -> String:
+func _joypad_button_to_playstation_icon(button_index: int) -> String:
 	match button_index:
 		JOY_BUTTON_A: return "ps_x"  # A button maps to X on PlayStation
 		JOY_BUTTON_B: return "ps_circle"
@@ -229,7 +229,7 @@ static func _joypad_button_to_playstation_icon(button_index: int) -> String:
 		_: return _joypad_button_to_generic_icon(button_index)
 
 # Nintendo Switch gamepad icons
-static func _joypad_button_to_nintendo_icon(button_index: int) -> String:
+func _joypad_button_to_nintendo_icon(button_index: int) -> String:
 	match button_index:
 		JOY_BUTTON_A: return "switch_b"  # A button maps to B on Switch (physically)
 		JOY_BUTTON_B: return "switch_a"  # B button maps to A on Switch (physically)

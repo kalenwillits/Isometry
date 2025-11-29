@@ -385,7 +385,7 @@ func open_view() -> void:
 func close_view() -> void:
 	visible = false
 
-func _unhandled_input(event: InputEvent) -> void:
+func _unhandled_input(_event: InputEvent) -> void:
 	if not visible:
 		return
 

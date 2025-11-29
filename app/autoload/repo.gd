@@ -103,8 +103,8 @@ func calculate_campaign_checksum() -> String:
 	var ctx: HashingContext = HashingContext.new()
 	ctx.start(HashingContext.HASH_SHA256)
 	ctx.update(file_bytes)
-	var hash: PackedByteArray = ctx.finish()
-	var checksum: String = hash.hex_encode()
+	var campaign_hash: PackedByteArray = ctx.finish()
+	var checksum: String = campaign_hash.hex_encode()
 	Logger.info("Campaign checksum calculated: %s" % checksum)
 	return checksum
 

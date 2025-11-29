@@ -926,10 +926,10 @@ func get_target_group_index() -> int:
 	return min(target_group_index, get_targetable_groups().size() - 1)
 	
 func get_target_group() -> String:
-	var target_group_index: int = get_target_group_index()
+	var local_target_group_index: int = get_target_group_index()
 	var targetable_groups: Array = get_targetable_groups()
 	if targetable_groups.is_empty(): return ""
-	return targetable_groups[target_group_index]
+	return targetable_groups[local_target_group_index]
 
 # Focus slot management
 func store_focus_in_slot(slot: String) -> void:
@@ -1142,7 +1142,7 @@ func build_skill(skill_ent: Entity, slot_number: int) -> void:
 				_local_action_handler(
 					target_actor, 
 					func(target_entity): 
-						var target_name: String = target_entity.name if target_entity else ""
+						var target_name: String = str(target_entity.name) if target_entity else ""
 						
 						# Set animation from action entity
 						var animation_key = "tool"  # default
@@ -1173,7 +1173,7 @@ func build_skill(skill_ent: Entity, slot_number: int) -> void:
 				_local_action_handler(
 					target_actor, 
 					func(target_entity): 
-						var target_name: String = target_entity.name if target_entity else ""
+						var target_name: String = str(target_entity.name) if target_entity else ""
 						get_tree().get_first_node_in_group(Group.ACTIONS).invoke_action.rpc_id(1, skill_ent.end.key(), name, target_name),
 					end_action_ent))
 
@@ -1795,7 +1795,7 @@ func use_move_directly(delta) -> void:
 			set_destination(position)
 			velocity = Vector2.ZERO
 
-func use_bearing_input(delta: float) -> void:
+func use_bearing_input(_delta: float) -> void:
 	if is_bearing_mode_blocked: return
 	if !Finder.select(Group.CAMERA).is_locked(): return
 	
@@ -1942,7 +1942,7 @@ func _on_state_change() -> void:
 	set_substate(SubState.START)
 
 func _on_hit_box_body_entered(other):
-	Logger.trace("Actor %s: hitbox collision with %s" % [name, other.name if other != self else "self"])
+	Logger.trace("Actor %s: hitbox collision with %s" % [name, str(other.name) if other != self else "self"])
 	if other != self and $HitboxTriggerCooldownTimer.is_stopped():
 		Logger.debug("Actor %s: triggering on_touch event for %s" % [name, other.name])
 		$HitboxTriggerCooldownTimer.start()
@@ -1971,7 +1971,7 @@ func _on_line_of_sight_exited(_other: Actor) -> void:
 
 func _on_view_box_area_entered(area: Area2D) -> void:
 	var other = area.get_parent()
-	Logger.trace("Actor %s: view box area entered by %s" % [name, other.name if other != self else "self"])
+	Logger.trace("Actor %s: view box area entered by %s" % [name, str(other.name) if other != self else "self"])
 	if other == self: return
 	in_view[other.get_name()] = in_view.size()
 	Logger.debug("Actor %s: added %s to view (total in view: %d)" % [name, other.name, in_view.size()])
@@ -1990,11 +1990,10 @@ func _on_view_box_area_entered(area: Area2D) -> void:
 
 func _on_view_box_area_exited(area: Area2D) -> void:
 	var other = area.get_parent()
-	Logger.trace("Actor %s: view box area exited by %s" % [name, other.name if other != self else "self"])
+	Logger.trace("Actor %s: view box area exited by %s" % [name, str(other.name) if other != self else "self"])
 	if other == self: return
 	in_view.erase(other.get_name())
 	Logger.debug("Actor %s: removed %s from view (remaining in view: %d)" % [name, other.name, in_view.size()])
-	var other_name: String = other.get_name()
 	var this_actor_name: String = get_name()
 	other.remove_from_group(Group.LINE_OF_SIGHT)
 
@@ -2034,7 +2033,7 @@ func _on_tree_exiting() -> void:
 	Controller.broadcast_actor_is_despawning.rpc_id(1, peer_id, map)
 
 func _on_discovery_box_body_entered(tileMapLayer: FadingTileMapLayer) -> void:
-	Logger.trace("Actor %s: discovery box collision with tilemap layer %s" % [name, tileMapLayer.name if tileMapLayer else "unknown"])
+	Logger.trace("Actor %s: discovery box collision with tilemap layer %s" % [name, str(tileMapLayer.name) if tileMapLayer else "unknown"])
 	if tileMapLayer is FadingTileMapLayer:
 		Logger.debug("Actor %s: setting discovery source for tilemap layer %s" % [name, tileMapLayer.name])
 		tileMapLayer.set_discovery_source(self)

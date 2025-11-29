@@ -360,7 +360,7 @@ func viewport_to_world_position(viewport_pos: Vector2) -> Vector2:
 	# Add camera position to get final world position
 	return viewport_camera.position + Vector2(world_offset_x, world_offset_y)
 
-func clone_parallax_backgrounds(map_node: Map, center_position: Vector2) -> void:
+func clone_parallax_backgrounds(map_node: Map, _center_position: Vector2) -> void:
 	# Get all parallax children from the map (both legacy ParallaxBackground and new CanvasLayer-based)
 	var parallax_nodes = map_node.get_children().filter(func(child):
 		return child is ParallaxBackground or (child is CanvasLayer and child.is_in_group(Group.PARALLAX))
@@ -409,12 +409,12 @@ func clone_parallax_backgrounds(map_node: Map, center_position: Vector2) -> void
 			# Move to back
 			viewport.move_child(cloned_parallax_bg, 0)
 
-func clone_map_layers(map_node: Map, primary_actor: Actor) -> void:
+func clone_map_layers(map_node: Map, _primary_actor: Actor) -> void:
 	# Get all TileMapLayer children from the map
 	var layers = map_node.get_children().filter(func(child): return child is TileMapLayer)
 
-	for layer in layers:
-		var original_layer: TileMapLayer = layer as TileMapLayer
+	for tile_layer in layers:
+		var original_layer: TileMapLayer = tile_layer as TileMapLayer
 
 		# Create a simplified TileMapLayer (not FadingTileMapLayer)
 		var cloned_layer := TileMapLayer.new()
@@ -649,9 +649,9 @@ func calculate_and_set_zoom(primary_actor: Actor) -> Vector2:
 
 	var layers = map_node.get_children().filter(func(child): return child is TileMapLayer)
 
-	for layer in layers:
-		if layer is FadingTileMapLayer:
-			var fading_layer: FadingTileMapLayer = layer as FadingTileMapLayer
+	for tile_layer in layers:
+		if tile_layer is FadingTileMapLayer:
+			var fading_layer: FadingTileMapLayer = tile_layer as FadingTileMapLayer
 			for coords in fading_layer.tile_render_states.keys():
 				var tile_state = fading_layer.tile_render_states[coords]
 				if tile_state.is_discovered and coords not in discovered_coords:
@@ -825,7 +825,7 @@ func update_camera_viewport_indicator() -> void:
 
 	camera_viewport_indicator.set_viewport_rect(rect)
 
-func _unhandled_input(event: InputEvent) -> void:
+func _unhandled_input(_event: InputEvent) -> void:
 	if not visible:
 		return
 

@@ -240,9 +240,9 @@ func _add_icon(icon_path: String) -> void:
 	content_container.add_child(texture_rect)
 
 # Add a text label to the display
-func _add_text_label(text: String) -> void:
+func _add_text_label(new_text: String) -> void:
 	var label = Label.new()
-	label.text = text
+	label.text = new_text
 	label.add_theme_font_override("font", UbuntuMonoFont)
 	label.add_theme_font_size_override("font_size", text_size)
 	label.add_theme_color_override("font_color", Color.WHITE)
@@ -275,9 +275,9 @@ func _add_icon_to_container(icon_path: String, container: HBoxContainer) -> void
 	container.add_child(texture_rect)
 
 # Add a text label to a specific container
-func _add_text_label_to_container(text: String, container: HBoxContainer) -> void:
+func _add_text_label_to_container(new_text: String, container: HBoxContainer) -> void:
 	var label = Label.new()
-	label.text = text
+	label.text = new_text
 	label.add_theme_font_override("font", UbuntuMonoFont)
 	label.add_theme_font_size_override("font_size", text_size)
 	label.add_theme_color_override("font_color", Color.WHITE)

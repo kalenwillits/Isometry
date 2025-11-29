@@ -38,7 +38,7 @@ func _build_hints() -> void:
 		_add_spacer()
 		_add_hint("menu_next_page", "Next", func(): next_clicked.emit())
 
-func _add_hint(action_name: String, label_text: String, on_click: Callable) -> void:
+func _add_hint(_action_name: String, label_text: String, on_click: Callable) -> void:
 	# Create regular button
 	var button = Button.new()
 	button.text = label_text.strip_edges()

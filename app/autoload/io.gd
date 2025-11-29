@@ -108,6 +108,10 @@ func load_asset(key: String, campaign_name: String, flag: int = 0):
 		return null
 
 	var data = archive.read_file(key)
+	if data == null:
+		Logger.error("I/O: File does not exist in archive: %s" % key)
+		archive.close()
+		return null
 	archive.close()
 
 	var result = null

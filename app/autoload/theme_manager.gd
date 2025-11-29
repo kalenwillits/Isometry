@@ -237,7 +237,6 @@ func _ready() -> void:
 		.comment("Apply initial theme on startup: %s" % current_theme)\
 		.condition(func(): return _is_ui_ready())\
 		.task(func():
-			print("ThemeManager: Applying saved theme '%s' on startup" % current_theme)
 			apply_theme(current_theme))\
 		.expiry(10.0)\
 		.build()
@@ -249,9 +248,7 @@ func _is_ui_ready() -> bool:
 	for group_name in ui_groups:
 		var nodes = get_tree().get_nodes_in_group(group_name)
 		if nodes.size() > 0:
-			print("ThemeManager: UI ready - found %d nodes in group '%s'" % [nodes.size(), group_name])
 			return true
-	print("ThemeManager: UI not ready yet - no nodes in any UI groups")
 	return false
 
 func get_theme_list() -> Array[String]:
@@ -414,11 +411,9 @@ func load_from_config() -> void:
 			push_warning("Saved theme '%s' not found, using Dark theme" % current_theme)
 			current_theme = "Dark"
 		current_palette = theme_palettes[current_theme]
-		print("ThemeManager: Loaded theme from config: '%s'" % current_theme)
 	else:
 		current_theme = "Dark"
 		current_palette = theme_palettes["Dark"]
-		print("ThemeManager: Config load failed (err %d), using default 'Dark'" % err)
 
 func save_to_config(theme_name: String) -> void:
 	"""Saves the theme preference to config file"""

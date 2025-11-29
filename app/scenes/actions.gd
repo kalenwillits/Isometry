@@ -351,7 +351,7 @@ func transfer_resource(self_name: String, target_name: String, params: Dictionar
 			# Subtract from target
 			var target_operator = ResourceOperator.builder().actor(target_name).resource(resource).build()
 			var target_before: int = target_operator.get_value()
-			var actual_removed: int = target_operator.minus(transfer_amount).get_value()
+			target_operator.minus(transfer_amount)
 			var target_after: int = target_operator.get_value()
 			var actual_transfer: int = target_before - target_after
 

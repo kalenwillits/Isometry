@@ -57,7 +57,6 @@ func initialize() -> void:
 	if initialized:
 		return
 
-	print("GenericInputManager: Initializing %d generic input actions..." % GENERIC_ID_COUNT)
 
 	# Register all generic actions in InputMap
 	for i in range(GENERIC_ID_COUNT):
@@ -74,7 +73,6 @@ func initialize() -> void:
 	state_machine = InputStateMachine.builder().build()
 
 	initialized = true
-	print("GenericInputManager: Initialization complete. %d IDs available." % available_ids.size())
 
 
 func allocate_ids(count: int) -> Array:

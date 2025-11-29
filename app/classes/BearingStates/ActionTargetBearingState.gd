@@ -9,15 +9,15 @@ var target_actor: Actor = null
 func set_target(actor: Actor) -> void:
 	target_actor = actor
 
-func on_enter(actor: Actor) -> void:
+func on_enter(_actor: Actor) -> void:
 	# Target should be set before entering this state
 	if target_actor == null:
 		push_warning("ActionTargetBearingState entered without a target actor")
 
-func on_exit(actor: Actor) -> void:
+func on_exit(_actor: Actor) -> void:
 	target_actor = null  # Clear reference
 
-func update_bearing(actor: Actor, delta: float) -> int:
+func update_bearing(actor: Actor, _delta: float) -> int:
 	# Continuously track target if it exists and is valid
 	if target_actor != null and is_instance_valid(target_actor):
 		# Calculate bearing to target's current position

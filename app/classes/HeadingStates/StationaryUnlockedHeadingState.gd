@@ -6,7 +6,7 @@ extends HeadingState
 
 var frozen_heading: String = "S"
 
-func update_heading(actor: Actor, delta: float) -> String:
+func update_heading(_actor: Actor, _delta: float) -> String:
 	# Return the frozen heading value
 	return frozen_heading
 

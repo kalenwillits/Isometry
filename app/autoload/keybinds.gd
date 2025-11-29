@@ -400,6 +400,7 @@ func get_keybind(action_name: String) -> String:
 func get_gamepad_bind(action_name: String) -> String:
 	"""Returns the current gamepad binding as a string (e.g., 'a+b' or 'left_stick_up')"""
 	# First check generic system
+	var joy_inputs: Array = []
 	var events = GenericInputManager.get_action_input_events(action_name)
 	if events.size() > 0:
 		# Check if these are gamepad events
@@ -410,8 +411,8 @@ func get_gamepad_bind(action_name: String) -> String:
 				break
 
 		if is_gamepad:
+			joy_inputs = []
 			# Convert events to string representation
-			var joy_inputs: Array = []
 			for event in events:
 				if event is InputEventJoypadButton:
 					joy_inputs.append(_joy_button_to_string(event.button_index))
@@ -422,7 +423,7 @@ func get_gamepad_bind(action_name: String) -> String:
 
 	# Fallback to traditional InputMap
 	events = InputMap.action_get_events(action_name)
-	var joy_inputs: Array = []
+	joy_inputs = []
 	for event in events:
 		if event is InputEventJoypadButton:
 			joy_inputs.append(_joy_button_to_string(event.button_index))
@@ -904,7 +905,9 @@ func bind(action_name: String, binding: String) -> void:
 		# Split the binding if it's a combination (e.g., "ctrl+shift+x")
 		var parts = binding.split("+")
 		var key_name = parts[parts.size() - 1]  # Last part is the main key
-		var modifiers = parts.slice(0, parts.size() - 1) if parts.size() > 1 else []
+		var modifiers = []
+		if parts.size() > 1:
+			modifiers = parts.slice(0, parts.size() - 1)
 
 		# Create the key event
 		event = InputEventKey.new()

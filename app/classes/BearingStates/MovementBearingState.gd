@@ -4,7 +4,7 @@ extends BearingState
 ## Bearing state for when the actor is moving.
 ## Bearing follows the direction of movement (velocity angle).
 
-func update_bearing(actor: Actor, delta: float) -> int:
+func update_bearing(actor: Actor, _delta: float) -> int:
 	if actor.velocity.length_squared() > 0.01:
 		# Calculate target position from velocity direction
 		var velocity_direction = actor.velocity.normalized()

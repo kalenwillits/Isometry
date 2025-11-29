@@ -4,7 +4,7 @@ extends HeadingState
 ## Heading state for when the actor is stationary and camera is locked.
 ## Heading maintains the last direction from movement (decoupled from bearing).
 
-func update_heading(actor: Actor, delta: float) -> String:
+func update_heading(actor: Actor, _delta: float) -> String:
 	# Maintain current heading when stationary (bearing controls camera, not heading)
 	return actor.heading
 
