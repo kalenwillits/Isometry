@@ -50,9 +50,7 @@ func _ready() -> void:
 	visible = false
 	add_to_group(Group.OPTIONS_MENU)
 	# Load available themes from ThemeManager
-	var theme_mgr = get_node("/root/ThemeManager")
-	if theme_mgr:
-		themes = theme_mgr.get_theme_list()
+	themes = ThemeManager.get_theme_list()
 	_load_config()
 	_apply_saved_settings()
 	_create_option_items()
@@ -63,9 +61,7 @@ func _ready() -> void:
 
 func _on_visibility_changed() -> void:
 	if visible:
-		var theme_mgr = get_node_or_null("/root/ThemeManager")
-		if theme_mgr:
-			theme_mgr._apply_theme_recursive(self)
+		ThemeManager._apply_theme_recursive(self)
 
 func _load_config() -> void:
 	var err = config.load(CONFIG_FILE_PATH)
@@ -109,9 +105,7 @@ func _save_config() -> void:
 	config.save(CONFIG_FILE_PATH)
 
 	# Also save theme to ThemeManager
-	var theme_mgr = get_node("/root/ThemeManager")
-	if theme_mgr:
-		theme_mgr.save_to_config(themes[current_theme_index])
+	ThemeManager.save_to_config(themes[current_theme_index])
 
 func _apply_saved_settings() -> void:
 	# Apply fullscreen setting
@@ -292,9 +286,7 @@ func _update_theme_display() -> void:
 
 func _apply_theme_preview() -> void:
 	"""Applies the theme as a preview (before saving)"""
-	var theme_mgr = get_node("/root/ThemeManager")
-	if theme_mgr:
-		theme_mgr.apply_theme(themes[current_theme_index])
+	ThemeManager.apply_theme(themes[current_theme_index])
 
 func _apply_display_settings_immediately() -> void:
 	# Apply fullscreen setting
@@ -457,9 +449,7 @@ func _on_revert_settings() -> void:
 		DisplayServer.window_set_size(resolutions[current_resolution_index])
 
 	# Revert theme
-	var theme_mgr = get_node("/root/ThemeManager")
-	if theme_mgr:
-		theme_mgr.apply_theme(themes[current_theme_index])
+	ThemeManager.apply_theme(themes[current_theme_index])
 
 	# Update UI to reflect reverted settings
 	_update_fullscreen_button_text()
@@ -493,9 +483,7 @@ func _on_cancel_pressed() -> void:
 			DisplayServer.window_set_size(resolutions[current_resolution_index])
 
 		# Revert theme
-		var theme_mgr = get_node("/root/ThemeManager")
-		if theme_mgr:
-			theme_mgr.apply_theme(themes[current_theme_index])
+		ThemeManager.apply_theme(themes[current_theme_index])
 
 		# Update UI
 		_update_fullscreen_button_text()

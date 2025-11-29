@@ -1,11 +1,9 @@
 extends CanvasLayer
 
 var selected_index: int = 0
-var ui_state_machine: Node
 
 func _ready() -> void:
 	visible = false
-	ui_state_machine = get_node("/root/UIStateMachine")
 	add_to_group(Group.SYSTEM_MENU)
 	_create_menu_items()
 
@@ -15,9 +13,7 @@ func _ready() -> void:
 
 func _on_visibility_changed() -> void:
 	if visible:
-		var theme_mgr = get_node_or_null("/root/ThemeManager")
-		if theme_mgr:
-			theme_mgr._apply_theme_recursive(self)
+		ThemeManager._apply_theme_recursive(self)
 
 func _create_menu_items() -> void:
 	# Create "Keybinds" button
@@ -49,16 +45,16 @@ func _create_menu_items() -> void:
 	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(exit_button)
 
 func _on_keybinds_button_pressed() -> void:
-	ui_state_machine.transition_to(ui_state_machine.State.MENU_KEYBINDS)
+	UIStateMachine.transition_to(UIStateMachine.State.MENU_KEYBINDS)
 
 func _on_gamepad_button_pressed() -> void:
-	ui_state_machine.transition_to(ui_state_machine.State.MENU_GAMEPAD)
+	UIStateMachine.transition_to(UIStateMachine.State.MENU_GAMEPAD)
 
 func _on_options_button_pressed() -> void:
-	ui_state_machine.transition_to(ui_state_machine.State.MENU_OPTIONS)
+	UIStateMachine.transition_to(UIStateMachine.State.MENU_OPTIONS)
 
 func _on_exit_button_pressed() -> void:
-	ui_state_machine.transition_to(ui_state_machine.State.CONFIRMATION_MODAL)
+	UIStateMachine.transition_to(UIStateMachine.State.CONFIRMATION_MODAL)
 	get_parent().open_close_confirmation()
 
 func open_menu() -> void:

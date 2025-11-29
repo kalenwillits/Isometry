@@ -18,6 +18,4 @@ func _on_visibility_changed() -> void:
 
 
 func _apply_theme() -> void:
-	var theme_mgr = get_node_or_null("/root/ThemeManager")
-	if theme_mgr:
-		theme_mgr._apply_theme_recursive(self)
+	ThemeManager._apply_theme_recursive(self)

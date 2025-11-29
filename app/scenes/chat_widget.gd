@@ -6,7 +6,6 @@ const MAX_MESSAGE_HISTORY: int = 1000
 var chat_queue: Array[Chat] = []
 var message_history: Array[Chat] = []  # Persistent history for Feeds view
 var needs_render: bool = true
-var ui_state_machine: Node
 var active_channel: int = Chat.Channel.PUBLIC
 var enabled_channels: Dictionary = {
 	Chat.Channel.WHISPER: true,
@@ -20,7 +19,6 @@ var enabled_channels: Dictionary = {
 }
 
 func _ready() -> void:
-	ui_state_machine = get_node("/root/UIStateMachine")
 	$Timer.wait_time = TICK_RATE
 	$Timer.timeout.connect(_process_chat)
 	$Timer.autostart = true
@@ -93,12 +91,12 @@ func _on_text_submitted(new_text: String) -> void:
 func _on_chat_focus_entered() -> void:
 	$VBox/InputRow.visible = true
 	$VBox/MarginSpacer.visible = false
-	ui_state_machine.transition_to(ui_state_machine.State.CHAT_ACTIVE)
+	UIStateMachine.transition_to(UIStateMachine.State.CHAT_ACTIVE)
 
 func _on_chat_focus_exited() -> void:
 	$VBox/InputRow.visible = false
 	$VBox/MarginSpacer.visible = true
-	ui_state_machine.transition_to(ui_state_machine.State.GAMEPLAY)
+	UIStateMachine.transition_to(UIStateMachine.State.GAMEPLAY)
 
 func _process_chat() -> void:
 	var now: int = Time.get_unix_time_from_system()

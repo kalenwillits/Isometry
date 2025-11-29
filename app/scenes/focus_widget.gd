@@ -8,9 +8,7 @@ func _ready() -> void:
 	add_to_group(Group.UI_TARGET_WIDGET)
 
 	# Apply current theme to this widget
-	var theme_mgr = get_node_or_null("/root/ThemeManager")
-	if theme_mgr:
-		theme_mgr._apply_theme_recursive(self)
+	ThemeManager._apply_theme_recursive(self)
 	
 func append_plate(plate_target: String) -> void:
 	if $HBox.has_node(plate_target): return

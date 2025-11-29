@@ -26,11 +26,9 @@ const THEME_FILE_NAMES: Dictionary = {
 
 func _ready() -> void:
 	# Load themed icons FIRST (before any theme processing)
-	var theme_mgr = get_node_or_null("/root/ThemeManager")
-	if theme_mgr:
-		_load_themed_icons(theme_mgr.current_theme)
-		# THEN apply current theme to this widget
-		theme_mgr._apply_theme_recursive(self)
+	_load_themed_icons(ThemeManager.current_theme)
+	# THEN apply current theme to this widget
+	ThemeManager._apply_theme_recursive(self)
 
 	if actor == null: return
 	if actor == "": return

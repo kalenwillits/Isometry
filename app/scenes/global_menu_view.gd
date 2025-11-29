@@ -1,11 +1,9 @@
 extends CanvasLayer
 
 var selected_index: int = 0
-var ui_state_machine: Node
 
 func _ready() -> void:
 	visible = false
-	ui_state_machine = get_node("/root/UIStateMachine")
 	add_to_group(Group.GLOBAL_MENU)
 	_create_menu_items()
 
@@ -15,9 +13,7 @@ func _ready() -> void:
 
 func _on_visibility_changed() -> void:
 	if visible:
-		var theme_mgr = get_node_or_null("/root/ThemeManager")
-		if theme_mgr:
-			theme_mgr._apply_theme_recursive(self)
+		ThemeManager._apply_theme_recursive(self)
 
 func _create_menu_items() -> void:
 	# Create "Map" button
@@ -56,19 +52,19 @@ func _create_menu_items() -> void:
 	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(system_button)
 
 func _on_map_button_pressed() -> void:
-	ui_state_machine.open_map_from_menu()
+	UIStateMachine.open_map_from_menu()
 
 func _on_resources_button_pressed() -> void:
-	ui_state_machine.open_resources_from_menu()
+	UIStateMachine.open_resources_from_menu()
 
 func _on_skills_button_pressed() -> void:
-	ui_state_machine.open_skills_from_menu()
+	UIStateMachine.open_skills_from_menu()
 
 func _on_feeds_button_pressed() -> void:
-	ui_state_machine.transition_to(ui_state_machine.State.MENU_FEEDS)
+	UIStateMachine.transition_to(UIStateMachine.State.MENU_FEEDS)
 
 func _on_system_button_pressed() -> void:
-	ui_state_machine.transition_to(ui_state_machine.State.MENU_SYSTEM)
+	UIStateMachine.transition_to(UIStateMachine.State.MENU_SYSTEM)
 
 func open_menu() -> void:
 	selected_index = 0

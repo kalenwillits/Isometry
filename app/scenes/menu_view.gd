@@ -14,9 +14,7 @@ func _ready() -> void:
 	add_to_group(Group.CONTEXT_MENU)
 
 	# Apply current theme to this menu
-	var theme_mgr = get_node_or_null("/root/ThemeManager")
-	if theme_mgr:
-		theme_mgr._apply_theme_recursive(self)
+	ThemeManager._apply_theme_recursive(self)
 
 	# Connect pagination button signals
 	$Overlay/CenterContainer/PanelContainer/VBox/BottomBar/PaginationRow/PrevButton.pressed.connect(previous_page)
@@ -28,9 +26,7 @@ func _ready() -> void:
 
 func _on_visibility_changed() -> void:
 	if visible:
-		var theme_mgr = get_node_or_null("/root/ThemeManager")
-		if theme_mgr:
-			theme_mgr._apply_theme_recursive(self)
+		ThemeManager._apply_theme_recursive(self)
 
 func open_menu(title: String, menu_ent: Entity, caller: String, target: String) -> void:
 	if menu_ent == null or menu_ent.actions == null:
@@ -81,9 +77,7 @@ func render_page() -> void:
 		$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(item)
 
 		# Apply theme to newly created button
-		var theme_mgr = get_node_or_null("/root/ThemeManager")
-		if theme_mgr:
-			theme_mgr._apply_theme_to_node(item)
+		ThemeManager._apply_theme_to_node(item)
 
 	# Update pagination label
 	var total_pages = max(1, ceil(float(actions.size()) / float(items_per_page)))

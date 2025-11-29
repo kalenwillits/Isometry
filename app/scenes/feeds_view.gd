@@ -83,9 +83,7 @@ func _save_channel_filter(channel_key: String, enabled: bool) -> void:
 
 func _on_visibility_changed() -> void:
 	if visible:
-		var theme_mgr = get_node_or_null("/root/ThemeManager")
-		if theme_mgr:
-			theme_mgr._apply_theme_recursive(self)
+		ThemeManager._apply_theme_recursive(self)
 
 func open_menu() -> void:
 	visible = true

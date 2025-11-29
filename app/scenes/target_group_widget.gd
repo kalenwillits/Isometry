@@ -12,9 +12,7 @@ func _ready() -> void:
 	add_to_group(Group.UI_TARGET_GROUP_WIDGET)
 
 	# Apply current theme to this widget
-	var theme_mgr = get_node_or_null("/root/ThemeManager")
-	if theme_mgr:
-		theme_mgr._apply_theme_recursive(self)
+	ThemeManager._apply_theme_recursive(self)
 
 	# Connect to primary actor's signals when it becomes available
 	get_tree().node_added.connect(_on_node_added)
