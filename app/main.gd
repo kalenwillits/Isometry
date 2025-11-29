@@ -3,10 +3,10 @@ extends Node
 func _ready() -> void:
 	var parsed_args: Dictionary = ArgParse.parse()
 	for arg in [
-		"uri", 
-		"port", 
-		"campaign", 
-		"network", 
+		"uri",
+		"port",
+		"campaign",
+		# "network" is already parsed correctly in cache.gd during initialization
 		"dir",
 		"username",
 		"password",

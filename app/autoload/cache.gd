@@ -11,7 +11,7 @@ var username: String
 var password: String
 
 # Runtime storage
-var network: Network.Mode = cliargs.get("network", "0").to_int()
+var network: Network.Mode = _parse_network_mode(cliargs.get("network", "0")) as Network.Mode
 var campaign: String = ""
 var campaign_checksum: String = ""
 var campaign_mismatch_error: bool = false
@@ -50,7 +50,10 @@ class Pack extends Object:
 
 	static func builder() -> Pack.Builder:
 		return Builder.new()
-		
+
+func _ready() -> void:
+	pass
+
 func pack_audio() -> void:
 	## Pre-packs ALL audio files into the cache.
 	for sound_ent in Repo.query([Group.SOUND_ENTITY]):
@@ -109,6 +112,38 @@ func unpack_actor(peer_id: int) -> Dictionary:
 		Logger.debug("Cache: Unpacking actor data for peer_id=%d" % peer_id)
 	packed_actors.erase(peer_id)
 	return result
+
+# Parse network mode from CLI argument (supports int, string names, and abbreviations)
+# Examples: "0", "1", "HOST", "host", "h", "Server", "s", "client", "c"
+# Returns Network.Mode enum value, defaults to NONE if invalid
+func _parse_network_mode(input: String) -> int:
+	var trimmed = input.strip_edges().strip_escapes()
+
+	# Try parsing as integer first (backward compatibility)
+	if trimmed.is_valid_int():
+		var value = trimmed.to_int()
+		# Validate range [0-3]
+		if value >= 0 and value <= 3:
+			return value
+		else:
+			push_warning("Cache._parse_network_mode: Integer value %d out of range [0-3], using NONE" % value)
+			return 0  # Network.Mode.NONE
+
+	# Try parsing as string name (case-insensitive)
+	var upper_input = trimmed.to_upper()
+
+	# Support full names and abbreviations
+	if upper_input == "NONE" or upper_input == "N":
+		return 0  # Network.Mode.NONE
+	elif upper_input == "HOST" or upper_input == "H":
+		return 1  # Network.Mode.HOST
+	elif upper_input == "SERVER" or upper_input == "S":
+		return 2  # Network.Mode.SERVER
+	elif upper_input == "CLIENT" or upper_input == "C":
+		return 3  # Network.Mode.CLIENT
+	else:
+		push_warning("Cache._parse_network_mode: Invalid mode name '%s', using NONE" % trimmed)
+		return 0  # Network.Mode.NONE
 
 func _parse_command_line_args() -> Dictionary:
 	var args = OS.get_cmdline_args()  # Get the command line arguments

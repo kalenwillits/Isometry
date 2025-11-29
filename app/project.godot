@@ -57,7 +57,7 @@ window/stretch/aspect="expand"
 
 [editor]
 
-run/main_run_args="--campaign=maze --uri=localhost --port=5002 --network=1 --dir=maps/target --username=user1 --password=pass1 --log-level=trace"
+run/main_run_args="--campaign=maze --uri=localhost --port=5002 --network=host --dir=maps/target --username=user1 --password=pass1 --log-level=trace"
 
 [gui]
 
