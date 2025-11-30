@@ -14,6 +14,7 @@ enum State {
 	MENU_OPTIONS,
 	MENU_KEYBINDS,
 	MENU_GAMEPAD,
+	MENU_INFO,
 	MENU_MAP,
 	MENU_FEEDS,
 	CONTEXT_MENU,
@@ -89,6 +90,10 @@ func handle_cancel() -> void:
 			transition_to(State.MENU_SYSTEM)
 
 		State.MENU_GAMEPAD:
+			# Back to system menu
+			transition_to(State.MENU_SYSTEM)
+
+		State.MENU_INFO:
 			# Back to system menu
 			transition_to(State.MENU_SYSTEM)
 

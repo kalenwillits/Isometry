@@ -21,8 +21,9 @@
 [ext_resource type="PackedScene" uid="uid://b7wm8x2n5qk3p" path="res://scenes/skills_menu_view.tscn" id="17_skills_menu"]
 [ext_resource type="PackedScene" uid="uid://c3kma4g21xb5e" path="res://scenes/keybinds_view.tscn" id="18_keybinds_view"]
 [ext_resource type="PackedScene" uid="uid://cyv07p46q0gp3" path="res://scenes/gamepad_view.tscn" id="19_gamepad_view"]
-[ext_resource type="PackedScene" uid="uid://dq7v4k6n3r50p" path="res://scenes/map_view.tscn" id="20_map_view"]
-[ext_resource type="PackedScene" path="res://scenes/feeds_view.tscn" id="21_feeds_view"]
+[ext_resource type="PackedScene" uid="uid://cqw6yjbx5m3vf" path="res://scenes/info_view.tscn" id="20_info_view"]
+[ext_resource type="PackedScene" uid="uid://dq7v4k6n3r50p" path="res://scenes/map_view.tscn" id="21_map_view"]
+[ext_resource type="PackedScene" path="res://scenes/feeds_view.tscn" id="22_feeds_view"]
 
 [node name="Interface" type="Node"]
 script = ExtResource("1_7q01f")
@@ -179,8 +180,10 @@ visible = false
 
 [node name="GamepadView" parent="." instance=ExtResource("19_gamepad_view")]
 
-[node name="MapView" parent="." instance=ExtResource("20_map_view")]
+[node name="InfoView" parent="." instance=ExtResource("20_info_view")]
 
-[node name="FeedsView" parent="." instance=ExtResource("21_feeds_view")]
+[node name="MapView" parent="." instance=ExtResource("21_map_view")]
+
+[node name="FeedsView" parent="." instance=ExtResource("22_feeds_view")]
 
 [node name="ConfirmationModal" parent="." instance=ExtResource("14_confirmation")]

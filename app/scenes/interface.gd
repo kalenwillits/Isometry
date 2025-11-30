@@ -74,6 +74,12 @@ func close_gamepad_view() -> void:
 	$GamepadView.visible = false
 	UIStateMachine.transition_to(UIStateMachine.State.MENU_SYSTEM)
 
+func open_info_view() -> void:
+	$InfoView.open_view()
+
+func close_info_view() -> void:
+	$InfoView.close_view()
+
 func open_map_view() -> void:
 	Logger.info("Interface: Opening map view")
 	$MapView.open_view()
@@ -165,6 +171,8 @@ func _on_ui_state_changed(old_state: int, new_state: int) -> void:
 			$KeybindsView.visible = false
 		State.MENU_GAMEPAD:
 			$GamepadView.visible = false
+		State.MENU_INFO:
+			$InfoView.visible = false
 		State.MENU_MAP:
 			$MapView.close_view()
 		State.MENU_FEEDS:
@@ -192,6 +200,8 @@ func _on_ui_state_changed(old_state: int, new_state: int) -> void:
 			$KeybindsView.visible = true
 		State.MENU_GAMEPAD:
 			$GamepadView.visible = true
+		State.MENU_INFO:
+			$InfoView.open_view()
 		State.MENU_MAP:
 			$MapView.open_view()
 		State.MENU_FEEDS:

@@ -30,6 +30,13 @@ func _create_menu_items() -> void:
 	gamepad_button.pressed.connect(_on_gamepad_button_pressed)
 	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(gamepad_button)
 
+	# Create "Info" button
+	var info_button = Button.new()
+	info_button.custom_minimum_size = Vector2(256, 24)
+	info_button.text = "Info"
+	info_button.pressed.connect(_on_info_button_pressed)
+	$Overlay/CenterContainer/PanelContainer/VBox/ActionList.add_child(info_button)
+
 	# Create "Options" button
 	var options_button = Button.new()
 	options_button.custom_minimum_size = Vector2(256, 24)
@@ -49,6 +56,9 @@ func _on_keybinds_button_pressed() -> void:
 
 func _on_gamepad_button_pressed() -> void:
 	UIStateMachine.transition_to(UIStateMachine.State.MENU_GAMEPAD)
+
+func _on_info_button_pressed() -> void:
+	UIStateMachine.transition_to(UIStateMachine.State.MENU_INFO)
 
 func _on_options_button_pressed() -> void:
 	UIStateMachine.transition_to(UIStateMachine.State.MENU_OPTIONS)
