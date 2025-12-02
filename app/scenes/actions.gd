@@ -137,18 +137,18 @@ func invoke_action(action_key: String, self_name: String, target_name: String) -
 ## ACTION SIGNATURE... ------------------------------------------------------------- #
 
 func echo(_self_name: String, _target_name: String, params: Dictionary) -> void:
-	## message: String
+	## message: String - Text message to log (required)
+	## Logs a message. Useful for debugging and displaying information.
 	Logger.info(params["message"])
 
 func wait(_self_name: String, _target_name: String, _params: Dictionary) -> void:
-	## No parameters required
-	## Duration specified via action.time field
+	## No parameters required. Duration specified via action.time field.
 	## Pauses action chain execution. Useful for timing/sequencing effects.
-	## Note: This is essentially a no-op that relies on the time field.
 	pass
 	
 func set_destination_self(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## destination: Vertex Key
+	## destination: String - KeyRef to Vertex entity (required)
+	## Sets caller's movement destination to specified vertex coordinates.
 	var vertex_ent = Repo.select(params.destination)
 	Finder.get_actor(self_name).set_destination(Vector2(vertex_ent.x, vertex_ent.y))
 
@@ -214,8 +214,9 @@ func change_map_self(self_name: String, _target_name: String, params: Dictionary
 	)
 
 func minus_resource_target(_self_name: String, target_name: String, params: Dictionary) -> void:
-	## resource: KeyRef to Resource entity
-	## expression: Dice algebra to be subtracted from the target's resource
+	## resource: String - KeyRef to Resource entity (required)
+	## expression: String - Dice algebra expression (e.g., "2d6+3") (required)
+	## Subtracts from target's resource value. Useful for damage, debuffs, resource costs.
 	Logger.trace("[RESOURCE OP] minus_resource_target target=%s resource=%s expression=%s" % [target_name, params.get("resource"), params.expression])
 	if target_name == "": return
 	Optional.of_nullable(
@@ -234,8 +235,9 @@ func minus_resource_target(_self_name: String, target_name: String, params: Dict
 	)
 
 func minus_resource_self(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## resource: KeyRef to Resource entity
-	## expression: Dice algebra to be subtracted from caller's resource
+	## resource: String - KeyRef to Resource entity (required)
+	## expression: String - Dice algebra expression (e.g., "2d6+3") (required)
+	## Subtracts from caller's resource value. Useful for self-damage, costs, debuffs.
 	Logger.trace("[RESOURCE OP] minus_resource_self caller=%s resource=%s expression=%s" % [self_name, params.get("resource"), params.expression])
 	Optional.of_nullable(
 		Repo.query([Group.RESOURCE_ENTITY])
@@ -253,8 +255,9 @@ func minus_resource_self(self_name: String, _target_name: String, params: Dictio
 	)
 	
 func plus_resource_self(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## resource: KeyRef to Resource entity
-	## expression: Dice algebra to be added to caller's resource
+	## resource: String - KeyRef to Resource entity (required)
+	## expression: String - Dice algebra expression (e.g., "2d6+3") (required)
+	## Adds to caller's resource value. Useful for self-healing, gaining resources, buffs.
 	Logger.trace("[RESOURCE OP] plus_resource_self caller=%s resource=%s expression=%s" % [self_name, params.get("resource"), params.expression])
 	Optional.of_nullable(
 		Repo.query([Group.RESOURCE_ENTITY])
@@ -402,7 +405,8 @@ func target_random(self_name: String, _target_name: String, _params: Dictionary)
 	)
 	
 func target_lowest_resource(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## resource: Name of resource to filter on
+	## resource: String - KeyRef to Resource entity (required)
+	## Targets the actor in view with the lowest value of specified resource.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.set_target(
 		self_actor.find_actor_in_view_with_lowest_resource(params.get("resource"))
@@ -411,7 +415,8 @@ func target_lowest_resource(self_name: String, _target_name: String, params: Dic
 	)
 	
 func target_highest_resource(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## resource: Name of resource to filter on
+	## resource: String - KeyRef to Resource entity (required)
+	## Targets the actor in view with the highest value of specified resource.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.set_target(
 		self_actor.find_actor_in_view_with_highest_resource(params.get("resource"))
@@ -420,7 +425,8 @@ func target_highest_resource(self_name: String, _target_name: String, params: Di
 	)
 	
 func target_lowest_measure(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## measure: Name of measure to filter on
+	## measure: String - KeyRef to Measure entity (required)
+	## Targets the actor in view with the lowest value of specified measure.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.set_target(
 		self_actor.find_actor_in_view_with_lowest_measure(params.get("measure"))
@@ -429,7 +435,8 @@ func target_lowest_measure(self_name: String, _target_name: String, params: Dict
 	)
 	
 func target_highest_measure(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## measure: Name of measure to filter on
+	## measure: String - KeyRef to Measure entity (required)
+	## Targets the actor in view with the highest value of specified measure.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.set_target(
 		self_actor.find_actor_in_view_with_highest_measure(params.get("measure"))
@@ -537,8 +544,9 @@ func move_away_from_target(self_name: String, target_name: String, params: Dicti
 	self_actor.set_destination(destination)
 
 func move_to_target_radial(self_name: String, target_name: String, params: Dictionary) -> void:
-	## radial: int - Angle in degrees (0-360) relative to actor's bearing, where 0° is forward
-	## distance: float - Distance in pixels from target position
+	## radial: int - Angle in degrees (0-360) relative to caller's bearing, where 0° is forward (required)
+	## distance: float - Distance in pixels from target position (required)
+	## Moves caller to a position at specified radial angle and distance from target.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -554,8 +562,9 @@ func move_to_target_radial(self_name: String, target_name: String, params: Dicti
 	self_actor.set_destination(target_position)
 
 func move_to_self_radial(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## radial: int - Angle in degrees (0-360) relative to actor's bearing, where 0° is forward
-	## distance: float - Distance in pixels from caller's current position
+	## radial: int - Angle in degrees (0-360) relative to caller's bearing, where 0° is forward (required)
+	## distance: float - Distance in pixels from caller's current position (required)
+	## Moves caller to a position at specified radial angle and distance from current location.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -620,7 +629,8 @@ func pull_target_closer(self_name: String, target_name: String, params: Dictiona
 		target_actor.set_location(pull_destination)
 
 func teleport_self_to_target(self_name: String, target_name: String, _params: Dictionary) -> void:
-	## Instantly teleports caller to target's position. No parameters required.
+	## No parameters required
+	## Instantly teleports caller to target's current position.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -633,7 +643,8 @@ func teleport_self_to_target(self_name: String, target_name: String, _params: Di
 		self_actor.set_location(destination)
 
 func teleport_target_to_self(self_name: String, target_name: String, _params: Dictionary) -> void:
-	## Instantly teleports target to caller's position. No parameters required.
+	## No parameters required
+	## Instantly teleports target to caller's current position.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -646,8 +657,9 @@ func teleport_target_to_self(self_name: String, target_name: String, _params: Di
 		target_actor.set_location(destination)
 
 func teleport_self_to_target_radial(self_name: String, target_name: String, params: Dictionary) -> void:
-	## radial: int - Angle in degrees (0-360) relative to caller's bearing, where 0° is forward
-	## distance: float - Distance in pixels from target position
+	## radial: int - Angle in degrees (0-360) relative to caller's bearing, where 0° is forward (required)
+	## distance: float - Distance in pixels from target position (required)
+	## Teleports caller to position at specified radial angle and distance from target.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -665,8 +677,9 @@ func teleport_self_to_target_radial(self_name: String, target_name: String, para
 		self_actor.set_location(destination)
 
 func teleport_target_to_self_radial(self_name: String, target_name: String, params: Dictionary) -> void:
-	## radial: int - Angle in degrees (0-360) relative to target's bearing, where 0° is forward
-	## distance: float - Distance in pixels from caller's position
+	## radial: int - Angle in degrees (0-360) relative to target's bearing, where 0° is forward (required)
+	## distance: float - Distance in pixels from caller's position (required)
+	## Teleports target to position at specified radial angle and distance from caller.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -684,8 +697,9 @@ func teleport_target_to_self_radial(self_name: String, target_name: String, para
 		target_actor.set_location(destination)
 
 func teleport_to_radial(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## radial: int - Angle in degrees (0-360) relative to caller's bearing, where 0° is forward
-	## distance: float - Distance in pixels from caller's current position
+	## radial: int - Angle in degrees (0-360) relative to caller's bearing, where 0° is forward (required)
+	## distance: float - Distance in pixels from caller's current position (required)
+	## Teleports caller to position at specified radial angle and distance from current location.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -700,7 +714,8 @@ func teleport_to_radial(self_name: String, _target_name: String, params: Diction
 		self_actor.set_location(destination)
 
 func teleport(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## distance: float - Distance in pixels to teleport forward in current bearing direction
+	## distance: float - Distance in pixels to teleport forward (required)
+	## Teleports caller forward in current bearing direction by specified distance.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -715,7 +730,7 @@ func teleport(self_name: String, _target_name: String, params: Dictionary) -> vo
 
 func swap_positions(self_name: String, target_name: String, _params: Dictionary) -> void:
 	## No parameters required
-	## Swaps the positions of caller and target. Both actors teleport to each other's location.
+	## Swaps positions of caller and target. Both actors instantly teleport to each other's location.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null:
 		return
@@ -742,8 +757,9 @@ func swap_positions(self_name: String, target_name: String, _params: Dictionary)
 	target_actor.set_location(self_position)
 
 func area_of_effect_at_self(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## radius: float - Radius of the elliptical area
-	## action: String - Action key to execute on each affected actor
+	## radius: float - Radius of the elliptical area in pixels (required)
+	## action: String - KeyRef to Action entity to execute on each affected actor (required)
+	## Executes specified action on all actors within elliptical area centered at caller's position.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -759,8 +775,9 @@ func area_of_effect_at_self(self_name: String, _target_name: String, params: Dic
 		invoke_action(action_key, self_name, actor.get_name())
 
 func area_of_effect_at_target(self_name: String, target_name: String, params: Dictionary) -> void:
-	## radius: float - Radius of the elliptical area
-	## action: String - Action key to execute on each affected actor
+	## radius: float - Radius of the elliptical area in pixels (required)
+	## action: String - KeyRef to Action entity to execute on each affected actor (required)
+	## Executes specified action on all actors within elliptical area centered at target's position.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -779,10 +796,11 @@ func area_of_effect_at_target(self_name: String, target_name: String, params: Di
 		invoke_action(action_key, self_name, actor.get_name())
 
 func area_of_effect_at_self_radial(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## radial: int - Angle in degrees (0-360) relative to actor's bearing
-	## distance: float - Distance from caller's position
-	## radius: float - Radius of the elliptical area
-	## action: String - Action key to execute on each affected actor
+	## radial: int - Angle in degrees (0-360) relative to caller's bearing (required)
+	## distance: float - Distance in pixels from caller's position to AoE center (required)
+	## radius: float - Radius of the elliptical area in pixels (required)
+	## action: String - KeyRef to Action entity to execute on each affected actor (required)
+	## Executes action on all actors in elliptical area at radial position from caller.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -802,10 +820,11 @@ func area_of_effect_at_self_radial(self_name: String, _target_name: String, para
 		invoke_action(action_key, self_name, actor.get_name())
 
 func area_of_effect_at_target_radial(self_name: String, target_name: String, params: Dictionary) -> void:
-	## radial: int - Angle in degrees (0-360) relative to actor's bearing
-	## distance: float - Distance from target's position
-	## radius: float - Radius of the elliptical area
-	## action: String - Action key to execute on each affected actor
+	## radial: int - Angle in degrees (0-360) relative to caller's bearing (required)
+	## distance: float - Distance in pixels from target's position to AoE center (required)
+	## radius: float - Radius of the elliptical area in pixels (required)
+	## action: String - KeyRef to Action entity to execute on each affected actor (required)
+	## Executes action on all actors in elliptical area at radial position from target.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -828,13 +847,15 @@ func area_of_effect_at_target_radial(self_name: String, target_name: String, par
 		invoke_action(action_key, self_name, actor.get_name())
 
 func despawn_self(self_name: String, _target_name: String, _params: Dictionary) -> void:
-	## Despawns the calling actor. No parameters required.
+	## No parameters required
+	## Removes calling actor from the game world permanently.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 	self_actor.despawn()
 
 func despawn_target(_self_name: String, target_name: String, _params: Dictionary) -> void:
-	## Despawns the target actor. No parameters required.
+	## No parameters required
+	## Removes target actor from the game world permanently.
 	if target_name.is_empty(): return
 	var target_actor: Actor = Finder.get_actor(target_name)
 	if target_actor == null: return
@@ -903,6 +924,7 @@ func change_actor_target(_self_name: String, target_name: String, params: Dictio
 
 func spawn_actor_at_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## actor: String - KeyRef to Actor entity (required)
+	## Spawns a new actor instance at caller's current position.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -925,6 +947,7 @@ func spawn_actor_at_self(self_name: String, _target_name: String, params: Dictio
 
 func spawn_actor_at_target(_self_name: String, target_name: String, params: Dictionary) -> void:
 	## actor: String - KeyRef to Actor entity (required)
+	## Spawns a new actor instance at target's current position.
 	if target_name.is_empty(): return
 
 	var target_actor: Actor = Finder.get_actor(target_name)
@@ -949,8 +972,9 @@ func spawn_actor_at_target(_self_name: String, target_name: String, params: Dict
 
 func spawn_actor_at_self_radial(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## actor: String - KeyRef to Actor entity (required)
-	## radial: int - Angle in degrees (0-360) relative to caller's bearing
-	## distance: float - Distance from caller's position
+	## radial: int - Angle in degrees (0-360) relative to caller's bearing (required)
+	## distance: float - Distance in pixels from caller's position (required)
+	## Spawns a new actor instance at radial position from caller.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -978,8 +1002,9 @@ func spawn_actor_at_self_radial(self_name: String, _target_name: String, params:
 
 func spawn_actor_at_target_radial(self_name: String, target_name: String, params: Dictionary) -> void:
 	## actor: String - KeyRef to Actor entity (required)
-	## radial: int - Angle in degrees (0-360) relative to caller's bearing
-	## distance: float - Distance from target's position
+	## radial: int - Angle in degrees (0-360) relative to caller's bearing (required)
+	## distance: float - Distance in pixels from target's position (required)
+	## Spawns a new actor instance at radial position from target.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -1011,6 +1036,7 @@ func spawn_actor_at_target_radial(self_name: String, target_name: String, params
 
 func play_keyframe_self(self_name: String, _target_name: String, params: Dictionary) -> void:
 	## animation: String - KeyRef to Animation entity (required)
+	## Plays specified animation on caller. Sets animation state and triggers playback.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 
@@ -1023,6 +1049,7 @@ func play_keyframe_self(self_name: String, _target_name: String, params: Diction
 
 func play_keyframe_target(_self_name: String, target_name: String, params: Dictionary) -> void:
 	## animation: String - KeyRef to Animation entity (required)
+	## Plays specified animation on target. Sets animation state and triggers playback.
 	if target_name.is_empty(): return
 
 	var target_actor: Actor = Finder.get_actor(target_name)
@@ -1036,15 +1063,16 @@ func play_keyframe_target(_self_name: String, target_name: String, params: Dicti
 	target_actor.use_animation()
 
 func use_track(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## track: String containing pipe-separated KeyRefs to Track entities (e.g., "track1|track2|track3")
-	## Designed to be used as a behavior action.
+	## track: String - Pipe-separated KeyRefs to Track entities (e.g., "track1|track2|track3") (required)
+	## Executes a sequence of tracks for AI pathfinding behavior.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	var track_param: String = params.get("track", "")
 	var track_keys: Array = track_param.split("|")
 	self_actor.use_track(track_keys)
 
 func change_strategy(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## strategy: KeyRef to Strategy entity
+	## strategy: String - KeyRef to Strategy entity (required)
+	## Interrupts current strategy and switches caller to new AI strategy.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	self_actor.interrupt_strategy()
 	var strategy_key: String = params.get("strategy")
@@ -1055,7 +1083,8 @@ func change_strategy(self_name: String, _target_name: String, params: Dictionary
 		self_actor.set_strategy(strategy_ent)
 
 func set_speed_target(_self_name: String, target_name: String, params: Dictionary) -> void:
-	## speed: Float value to set target's speed to
+	## speed: float - New speed value in pixels per second (required)
+	## Permanently sets target's movement speed.
 	if target_name == "": return
 	var target_actor: Actor = Finder.get_actor(target_name)
 	if target_actor == null: return
@@ -1063,15 +1092,17 @@ func set_speed_target(_self_name: String, target_name: String, params: Dictionar
 	target_actor.set_speed(new_speed)
 
 func set_speed_self(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## speed: Float value to set caller's speed to
+	## speed: float - New speed value in pixels per second (required)
+	## Permanently sets caller's movement speed.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 	var new_speed: float = params.get("speed", 1.0)
 	self_actor.set_speed(new_speed)
 
 func temp_speed_target(_self_name: String, target_name: String, params: Dictionary) -> void:
-	## speed: Float value to temporarily set target's speed to
-	## duration: Float time in seconds for the temporary speed change
+	## speed: float - Temporary speed value in pixels per second (required)
+	## duration: float - Duration in seconds for the speed change (required)
+	## Temporarily changes target's speed, then restores original speed after duration.
 	if target_name == "": return
 	var target_actor: Actor = Finder.get_actor(target_name)
 	if target_actor == null: return
@@ -1080,14 +1111,15 @@ func temp_speed_target(_self_name: String, target_name: String, params: Dictiona
 	var original_speed: float = target_actor.speed
 	target_actor.set_speed(new_speed)
 	var timer = get_tree().create_timer(duration)
-	timer.timeout.connect(func(): 
+	timer.timeout.connect(func():
 		if target_actor != null and is_instance_valid(target_actor):
 			target_actor.set_speed(original_speed)
 	, CONNECT_ONE_SHOT)
 
 func temp_speed_self(self_name: String, _target_name: String, params: Dictionary) -> void:
-	## speed: Float value to temporarily set caller's speed to
-	## duration: Float time in seconds for the temporary speed change
+	## speed: float - Temporary speed value in pixels per second (required)
+	## duration: float - Duration in seconds for the speed change (required)
+	## Temporarily changes caller's speed, then restores original speed after duration.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 	var new_speed: float = params.get("speed", 1.0)
@@ -1134,27 +1166,28 @@ func set_modulate_target(_self_name: String, target_name: String, params: Dictio
 	target_actor.modulate = color
 
 func open_options(_self_name: String, _target_name: String, _params: Dictionary) -> void:
-	## Opens the options/settings menu. No parameters required.
-	## Currently a placeholder implementation.
+	## No parameters required
+	## Opens the options/settings menu. Currently a placeholder.
 	Logger.info("Options menu - Placeholder")
 
 func close_game(_self_name: String, _target_name: String, _params: Dictionary) -> void:
-	## Closes/exits the game. No parameters required.
-	## Currently a placeholder implementation.
+	## No parameters required
+	## Closes and exits the game. Currently a placeholder.
 	Logger.info("Close game - Placeholder")
 
 func show_connection_info(_self_name: String, _target_name: String, _params: Dictionary) -> void:
-	## Displays connection/network information. No parameters required.
-	## Currently a placeholder implementation.
+	## No parameters required
+	## Displays connection and network information. Currently a placeholder.
 	Logger.info("Connection info - Placeholder")
 
 func open_chat(_self_name: String, _target_name: String, _params: Dictionary) -> void:
-	## Opens the chat interface. No parameters required.
-	## Currently a placeholder implementation.
+	## No parameters required
+	## Opens the chat interface. Currently a placeholder.
 	Logger.info("Open chat - Placeholder")
 
 func open_plate(self_name: String, target_name: String, params: Dictionary) -> void:
-	## plate: KeyRef to Plate entity
+	## plate: String - KeyRef to Plate entity (required)
+	## Opens a text plate dialog for the caller, displaying title and text content.
 	var self_actor: Actor = Finder.get_actor(self_name)
 	if self_actor == null: return
 	var plate_key: String = params.get("plate", "")

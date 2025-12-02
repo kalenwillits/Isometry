@@ -1,11 +1,20 @@
+## Tile Entity
+## A single tile definition with navigation and rendering properties.
+##
 extends Entity
 
+## Symbol identifier for this tile type.
 var symbol: String
+## Index in the tileset texture grid.
 var index: int
-var origin: int # Ysort origin
-var navigation: bool # if true, the surface of this tile will be available for pathing. This should be true for any floor tile
-var obstacle: bool # if true, this will disable any navigation tile that it's on top of. Used for placing walls.
-var ghost: bool # if true, the tile texture will not be rendered, but the tile will still exist for pathing/collisions
+## Y-sort origin offset for rendering layering.
+var origin: int
+## If true, tile surface is walkable and available for pathfinding.
+var navigation: bool
+## If true, blocks navigation on underlying tiles. Used for walls.
+var obstacle: bool
+## If true, tile is invisible but still functional for pathfinding/collision.
+var ghost: bool
 
 func _ready() -> void:
 	tag(tile_group_name())

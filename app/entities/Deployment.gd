@@ -1,7 +1,12 @@
+## Deployment Entity
+## Defines an actor's initial placement on a map.
+##
 extends Entity
 
-var location: KeyRef
-var actor: KeyRef
+## Vertex entity defining spawn position (x, y).
+var location: KeyRef # Vertex
+## Actor entity to deploy at this location.
+var actor: KeyRef # Actor
 
 func _ready() -> void:
 	tag(Group.DEPLOYMENT_ENTITY)

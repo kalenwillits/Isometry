@@ -122,10 +122,12 @@ func load_archive():
 		.build()\
 		.render()
 	if archive.open(path) == OK:
-		var all_assets: Array = archive.get_files()
-		archive.close()
-		Logger.info("Loading [%s] assets from campaign [%s]..." % [all_assets.size(), path])
-		for asset_filename in all_assets:
+		var all_files: Array = archive.get_files()
+		Logger.info("Loading [%s] assets from campaign [%s]..." % [all_files.size(), path])
+
+		# Collect all JSON assets into a single dictionary
+		var campaign_data: Dictionary = {}
+		for asset_filename in all_files:
 			if asset_filename.ends_with(".json"):
 				var asset_key: String = asset_filename.split("/", true, 1)[-1]
 				var asset: Dictionary = AssetLoader.builder()\
@@ -134,7 +136,34 @@ func load_archive():
 				.type(AssetLoader.Type.OBJECT)\
 				.build()\
 				.pull()
-				add_asset_as_entities_to_tree(asset)
+
+				# Merge this asset into campaign_data
+				for entity_type in asset.keys():
+					if not campaign_data.has(entity_type):
+						campaign_data[entity_type] = {}
+					for entity_key in asset[entity_type].keys():
+						campaign_data[entity_type][entity_key] = asset[entity_type][entity_key]
+
+		# Validate campaign before loading
+		var validator := CampaignValidator.new()
+		var validation_result := validator.validate(campaign_data, archive)
+
+		if validation_result.has_errors():
+			Logger.error("Campaign validation failed with %d error(s)" % validation_result.get_error_count())
+			Logger.error(validation_result.get_summary())
+			archive.close()
+
+			# Hide LoadingModal and show validation error modal instead
+			LoadingModal.hide()
+			var error_modal = Scene.validation_error_modal.instantiate()
+			get_tree().root.add_child(error_modal)
+			error_modal.show_errors(validation_result)
+
+			return FAILED
+
+		# Validation passed, proceed with loading
+		archive.close()
+		add_asset_as_entities_to_tree(campaign_data)
 		campaign_checksum = calculate_campaign_checksum()
 		load_complete.emit.call_deferred()
 		return OK

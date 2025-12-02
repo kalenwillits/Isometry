@@ -1,6 +1,11 @@
+## Vertex Entity
+## A 2D coordinate point used for positions, dimensions, and polygon vertices.
+##
 extends Entity
 
+## X coordinate in pixels.
 var x: int
+## Y coordinate in pixels.
 var y: int
 
 func _ready() -> void:
