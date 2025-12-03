@@ -10,10 +10,11 @@ config_version=5
 
 [application]
 
-config/name="Atlas"
+config/name="Isometry"
 config/description="Atlas RPG platform software by Dark Mode Games"
-config/version="0.56"
+config/version="0.58"
 run/main_scene="res://main.tscn"
+config/custom_user_dir_name="isometry"
 config/features=PackedStringArray("4.4", "Mobile")
 
 [autoload]
