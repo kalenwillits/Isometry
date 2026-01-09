@@ -67,6 +67,23 @@ func _validate_entity_keyrefs(entity_data: Dictionary, entity_type: String, enti
 
 ## Validates a single KeyRef resolves to an existing entity
 func _validate_keyref(ref_key: String, expected_type: String, entity_type: String, entity_key: String, field_name: String, result: ValidationResult) -> void:
+	# Special case: Behavior.action can be either an Action KeyRef OR an action function name
+	if entity_type == "Behavior" and field_name == "action":
+		# If it's not a KeyRef, check if it's a valid action function name
+		if not all_keys_flat.has(ref_key):
+			if _is_valid_action_function(ref_key):
+				# Valid action function name - skip KeyRef validation
+				return
+			# Not a valid KeyRef or action function - report error
+			result.add_error(
+				ValidationError.Type.KEYREF_UNRESOLVED,
+				entity_type,
+				entity_key,
+				field_name,
+				"KeyRef '%s' does not exist in campaign and is not a valid action function" % ref_key
+			)
+			return
+
 	# Check if key exists
 	if not all_keys_flat.has(ref_key):
 		result.add_error(
@@ -89,6 +106,11 @@ func _validate_keyref(ref_key: String, expected_type: String, entity_type: Strin
 				field_name,
 				"KeyRef '%s' resolves to type '%s', expected '%s'" % [ref_key, actual_type, expected_type]
 			)
+
+## Checks if a string is a valid action function name
+func _is_valid_action_function(function_name: String) -> bool:
+	# Use ActionValidator's list of valid action functions
+	return function_name in ActionValidator.VALID_ACTION_FUNCTIONS
 
 ## Gets schema for an entity type (helper function)
 func _get_schema_for_type(entity_type: String) -> Dictionary:
