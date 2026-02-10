@@ -1,0 +1,18 @@
+metadata:
+  title: "Isometry User Guide"
+  author: "Dark Mode Games"
+  language: "en-US"
+  identifier: "isometry-user-guide"
+  date: "2026-02-10"
+  publisher: "Dark Mode Games"
+  description: "Complete guide for setting up, running, and playing Isometry campaigns."
+  subject: "Gaming, RPG, Isometric"
+
+default_css:
+  - "custom.css"
+
+content:
+  discovery: "auto"
+
+output:
+  filename: "isometry-user-guide.epub"

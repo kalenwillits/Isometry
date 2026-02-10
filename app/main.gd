@@ -1,6 +1,9 @@
 extends Node
 
 func _ready() -> void:
+	if OS.has_feature("launcher"):
+		Route.to(Scene.launcher)
+		return
 	var parsed_args: Dictionary = ArgParse.parse()
 	for arg in [
 		"uri",

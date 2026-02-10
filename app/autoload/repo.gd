@@ -65,7 +65,7 @@ func extract_single_key_from_dict(dict: Dictionary, key_to_keep: String) -> Dict
 	
 func add_asset_as_entities_to_tree(asset: Dictionary):
 	for objtype in asset.keys(): # Loop through named types in asset
-		if objtype in _entities.keys(): # Becuase this is user generated content, ensure the type is valid
+		if _entities.has(objtype): # Because this is user generated content, ensure the type is valid
 			for objkey in asset[objtype].keys():
 				var objdata: Dictionary = asset[objtype]
 				var entity = _entities[objtype].new()

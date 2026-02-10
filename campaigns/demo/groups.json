@@ -1,0 +1,16 @@
+{
+	"Group": {
+		"playerGroup": {
+			"name": "Players",
+			"color": "#00FF00"
+		},
+		"enemyGroup": {
+			"name": "Enemies",
+			"color": "#FF0000"
+		},
+		"neutralGroup": {
+			"name": "Neutral",
+			"color": "#FFFF00"
+		}
+	}
+}

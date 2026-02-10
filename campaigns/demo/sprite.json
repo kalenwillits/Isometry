@@ -1,0 +1,14 @@
+{
+	"Sprite": {
+		"heroSprite": {
+			"animation_set": "heroAnimSet",
+			"texture": "/assets/astronaut_sprite.png",
+			"size": "spriteSize",
+			"margin": "spriteMargin"
+		}
+	},
+	"Vertex": {
+		"spriteSize": { "x": 64, "y": 64 },
+		"spriteMargin": { "x": 16, "y": 16 }
+	}
+}

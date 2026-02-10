@@ -1,0 +1,138 @@
+{
+	"Action": {
+		"attackAction": {
+			"name": "Attack",
+			"time": 1.1,
+			"animation": "attackAnim",
+			"do": "minus_resource_target",
+			"parameters": ["attackResourceParam", "attackDamageParam"]
+		},
+		"healAction": {
+			"name": "Heal",
+			"do": "plus_resource_self",
+			"parameters": ["healResourceParam", "healAmountParam"]
+		},
+		"greetAction": {
+			"name": "Greet",
+			"do": "echo",
+			"parameters": ["greetMsg"]
+		},
+		"inspectAction": {
+			"name": "Inspect",
+			"do": "echo",
+			"parameters": ["inspectMsg"]
+		},
+		"tradeAction": {
+			"name": "Trade",
+			"do": "echo",
+			"parameters": ["tradeMsg"]
+		},
+		"deathAction": {
+			"name": "Death Check",
+			"if": "isDead",
+			"do": "echo",
+			"parameters": ["deathMsg"]
+		},
+		"regenAction": {
+			"name": "Regen Health",
+			"do": "plus_resource_self",
+			"parameters": ["healResourceParam", "regenAmountParam"]
+		},
+		"conditionalHealAction": {
+			"name": "Smart Heal",
+			"if": "isHurt",
+			"do": "plus_resource_self",
+			"then": "healConfirmAction",
+			"else_": "alreadyFullAction",
+			"parameters": ["healResourceParam", "healAmountParam"]
+		},
+		"healConfirmAction": {
+			"name": "Heal Confirmed",
+			"do": "echo",
+			"parameters": ["healConfirmMsg"]
+		},
+		"alreadyFullAction": {
+			"name": "Already Full",
+			"do": "echo",
+			"parameters": ["alreadyFullMsg"]
+		},
+		"followTargetAction": {
+			"name": "Follow",
+			"do": "target_nearest",
+			"then": "pursueAction"
+		},
+		"pursueAction": {
+			"name": "Pursue",
+			"do": "move_to_target"
+		},
+		"patrolAction": {
+			"name": "Patrol",
+			"do": "use_track",
+			"then": "scanAction",
+			"parameters": ["patrolTrackParam"]
+		},
+		"scanAction": {
+			"name": "Scan",
+			"do": "target_nearest"
+		},
+		"showWelcomePlate": {
+			"name": "Read Welcome",
+			"do": "open_plate",
+			"parameters": ["welcomePlateParam"]
+		},
+		"showStatusPlate": {
+			"name": "Check Status",
+			"do": "open_plate",
+			"parameters": ["statusPlateParam"]
+		},
+		"changeToFollowStrategy": {
+			"name": "Switch to Follow",
+			"do": "change_strategy",
+			"parameters": ["followStrategyParam"]
+		}
+	},
+	"Parameter": {
+		"attackResourceParam": { "name": "resource", "value": "health" },
+		"attackDamageParam": { "name": "expression", "value": "(1d6)-1" },
+		"healResourceParam": { "name": "resource", "value": "health" },
+		"healAmountParam": { "name": "expression", "value": "1d4+2" },
+		"regenAmountParam": { "name": "expression", "value": "1d4" },
+		"greetMsg": { "name": "message", "value": "You greet them warmly." },
+		"inspectMsg": { "name": "message", "value": "You inspect the target closely." },
+		"tradeMsg": { "name": "message", "value": "You initiate a trade." },
+		"deathMsg": { "name": "message", "value": "Death action triggered!" },
+		"healConfirmMsg": { "name": "message", "value": "Healed successfully." },
+		"alreadyFullMsg": { "name": "message", "value": "Already at full health." },
+		"patrolTrackParam": { "name": "track", "value": "patrolTrackOne" },
+		"welcomePlateParam": { "name": "plate", "value": "welcomePlate" },
+		"statusPlateParam": { "name": "plate", "value": "statusPlate" },
+		"followStrategyParam": { "name": "strategy", "value": "followStrategy" }
+	},
+	"Condition": {
+		"isDead": {
+			"left": "@health",
+			"operator": "<=",
+			"right": "0"
+		},
+		"isHurt": {
+			"left": "@health",
+			"operator": "<",
+			"right": "20"
+		},
+		"hasTarget": {
+			"left": "@has_target",
+			"operator": "=",
+			"right": "1"
+		},
+		"isNearTarget": {
+			"left": "@distance_to_target",
+			"operator": ">",
+			"right": "1"
+		},
+		"isAtDestination": {
+			"left": "@distance_to_destination",
+			"operator": "<",
+			"right": "1"
+		}
+	}
+}

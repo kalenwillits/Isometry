@@ -1,0 +1,22 @@
+{
+	"TileMap": {
+		"demoTileMap": {
+			"tileset": "demoTileSet",
+			"layers": ["demoFloor", "demoWater", "demoWalls"]
+		}
+	},
+	"Layer": {
+		"demoFloor": {
+			"source": "/demoMap/layer0",
+			"ysort": false
+		},
+		"demoWater": {
+			"source": "/demoMap/layer1",
+			"ysort": true
+		},
+		"demoWalls": {
+			"source": "/demoMap/layer2",
+			"ysort": true
+		}
+	}
+}

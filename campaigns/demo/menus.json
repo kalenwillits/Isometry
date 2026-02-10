@@ -1,0 +1,20 @@
+{
+	"Menu": {
+		"heroMenu": {
+			"name": "Actions",
+			"actions": ["inspectAction", "greetAction", "showWelcomePlate", "showStatusPlate"]
+		},
+		"guardMenu": {
+			"name": "Guard",
+			"actions": ["inspectAction", "greetAction"]
+		},
+		"merchantMenu": {
+			"name": "Merchant",
+			"actions": ["inspectAction", "tradeAction"]
+		},
+		"healthMenu": {
+			"name": "Health",
+			"actions": ["inspectAction"]
+		}
+	}
+}

@@ -1,0 +1,14 @@
+{
+	"Waypoint": {
+		"townCenter": {
+			"name": "Town Center",
+			"location": "townCenterPos",
+			"icon": "/assets/icons/sun.png",
+			"map": "demoMap",
+			"description": "The center of the demo town."
+		}
+	},
+	"Vertex": {
+		"townCenterPos": { "x": 300, "y": 200 }
+	}
+}

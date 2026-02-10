@@ -545,10 +545,11 @@ func _physics_process(delta) -> void:
 	use_state()
 	use_animation()
 	use_strategy()
-	if is_primary():
+	var _is_primary: bool = is_primary()
+	if _is_primary:
 		use_bearing_input(delta)  # Process manual bearing input first
 	use_move_view(delta)  # Camera look-ahead (uses bearing if active)
-	if is_primary():
+	if _is_primary:
 		use_move_discovery()
 		use_pathing(delta)
 		click_to_move()

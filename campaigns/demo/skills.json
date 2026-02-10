@@ -1,0 +1,18 @@
+{
+	"Skill": {
+		"attackSkill": {
+			"name": "Attack",
+			"start": "attackAction",
+			"end": "attackAction",
+			"icon": "/assets/basic.png",
+			"description": "Strike a target for 1d6-1 damage."
+		},
+		"healSkill": {
+			"name": "Heal",
+			"start": "conditionalHealAction",
+			"end": "conditionalHealAction",
+			"icon": "/assets/icons/health.png",
+			"description": "Restore 1d4+2 health if injured."
+		}
+	}
+}

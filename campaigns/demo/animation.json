@@ -1,0 +1,26 @@
+{
+	"AnimationSet": {
+		"heroAnimSet": {
+			"name": "Hero Animations",
+			"animations": ["idleAnim", "runAnim", "attackAnim"]
+		}
+	},
+	"Animation": {
+		"idleAnim": {
+			"N": [0], "NE": [1], "E": [2], "SE": [3],
+			"S": [4], "SW": [5], "W": [6], "NW": [7],
+			"loop": false
+		},
+		"runAnim": {
+			"N": [0, 8, 16, 24], "NE": [1, 9, 17, 25], "E": [2, 10, 18, 26], "SE": [3, 11, 19, 27],
+			"S": [4, 12, 20, 28], "SW": [5, 13, 21, 29], "W": [6, 14, 22, 30], "NW": [7, 15, 23, 31],
+			"loop": true
+		},
+		"attackAnim": {
+			"N": [32], "NE": [33], "E": [34], "SE": [35],
+			"S": [36], "SW": [37], "W": [38], "NW": [39],
+			"sound": "attackSound",
+			"loop": false
+		}
+	}
+}

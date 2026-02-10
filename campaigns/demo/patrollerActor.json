@@ -1,0 +1,18 @@
+{
+	"Actor": {
+		"patrollerActor": {
+			"name": "Patroller",
+			"speed": 0.8,
+			"sprite": "heroSprite",
+			"polygon": "actorFootprint",
+			"hitbox": "actorHitBox",
+			"public": ["health"],
+			"perception": 20,
+			"salience": 1,
+			"menu": "guardMenu",
+			"resources": ["health"],
+			"group": "enemyGroup",
+			"strategy": "followStrategy"
+		}
+	}
+}

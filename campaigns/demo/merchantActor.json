@@ -1,0 +1,16 @@
+{
+	"Actor": {
+		"merchantActor": {
+			"name": "Merchant",
+			"speed": 0.3,
+			"sprite": "heroSprite",
+			"polygon": "actorFootprint",
+			"hitbox": "actorHitBox",
+			"perception": 10,
+			"salience": 1,
+			"menu": "merchantMenu",
+			"group": "neutralGroup",
+			"strategy": "patrolStrategy"
+		}
+	}
+}

@@ -1,0 +1,8 @@
+{
+	"Main": {
+		"demoMain": {
+			"actor": "heroActor",
+			"map": "demoMap"
+		}
+	}
+}

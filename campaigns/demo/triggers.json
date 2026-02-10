@@ -1,0 +1,15 @@
+{
+	"Trigger": {
+		"deathTrigger": {
+			"resource": "health",
+			"action": "deathAction"
+		}
+	},
+	"Timer": {
+		"regenTimer": {
+			"total": "",
+			"interval": "1d12",
+			"action": "regenAction"
+		}
+	}
+}

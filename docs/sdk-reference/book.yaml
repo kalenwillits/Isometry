@@ -1,0 +1,18 @@
+metadata:
+  title: "Isometry SDK Reference"
+  author: "Dark Mode Games"
+  language: "en-US"
+  identifier: "isometry-sdk-reference"
+  date: "2026-02-10"
+  publisher: "Dark Mode Games"
+  description: "Complete SDK reference for Isometry content creators. Covers all 30 entity types, campaign structure, and the action API."
+  subject: "Game Development, SDK, RPG"
+
+default_css:
+  - "custom.css"
+
+content:
+  discovery: "auto"
+
+output:
+  filename: "isometry-sdk-reference.epub"

@@ -1,0 +1,21 @@
+{
+	"Deployment": {
+		"guardDeploy": {
+			"location": "guardPos",
+			"actor": "guardActor"
+		},
+		"merchantDeploy": {
+			"location": "merchantPos",
+			"actor": "merchantActor"
+		},
+		"patrollerDeploy": {
+			"location": "patrollerPos",
+			"actor": "patrollerActor"
+		}
+	},
+	"Vertex": {
+		"guardPos": { "x": 400, "y": 200 },
+		"merchantPos": { "x": 100, "y": 300 },
+		"patrollerPos": { "x": 500, "y": 400 }
+	}
+}

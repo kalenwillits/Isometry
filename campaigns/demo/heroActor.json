@@ -1,0 +1,26 @@
+{
+	"Actor": {
+		"heroActor": {
+			"name": "Hero",
+			"speed": 1.0,
+			"sprite": "heroSprite",
+			"polygon": "actorFootprint",
+			"hitbox": "actorHitBox",
+			"public": ["health"],
+			"private": ["health", "mana", "gold"],
+			"skills": ["attackSkill", "healSkill"],
+			"perception": 25,
+			"salience": 1,
+			"menu": "heroMenu",
+			"location": "heroStartPos",
+			"resources": ["health", "mana", "gold"],
+			"measures": ["luckMeasure"],
+			"triggers": ["deathTrigger"],
+			"timers": ["regenTimer"],
+			"group": "playerGroup"
+		}
+	},
+	"Vertex": {
+		"heroStartPos": { "x": 200, "y": 100 }
+	}
+}

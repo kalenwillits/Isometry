@@ -1,0 +1,31 @@
+body {
+  font-family: serif;
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  font-family: sans-serif;
+}
+
+code {
+  font-family: monospace;
+  background-color: #f4f4f4;
+  padding: 2px 4px;
+}
+
+pre {
+  background-color: #f4f4f4;
+  padding: 10px;
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}

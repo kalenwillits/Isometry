@@ -1,0 +1,13 @@
+{
+	"Sound": {
+		"bgMusic": {
+			"source": "/assets/Audio/Crystal caverns Chimes 1.mp3",
+			"scale": "1d200",
+			"loop": true
+		},
+		"attackSound": {
+			"source": "/assets/Audio/fx.mp3",
+			"scale": "50+(1d100)"
+		}
+	}
+}

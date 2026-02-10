@@ -1,0 +1,11 @@
+{
+	"Measure": {
+		"luckMeasure": {
+			"expression": "1d20",
+			"icon": "/assets/icons/sun.png",
+			"public": false,
+			"private": true,
+			"reveal": 0
+		}
+	}
+}

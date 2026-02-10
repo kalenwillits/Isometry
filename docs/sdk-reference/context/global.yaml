@@ -1,0 +1,4 @@
+product_name: "Isometry"
+version: "0.58"
+engine: "Godot 4.4"
+entity_count: 30

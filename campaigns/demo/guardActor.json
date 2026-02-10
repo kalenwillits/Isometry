@@ -1,0 +1,19 @@
+{
+	"Actor": {
+		"guardActor": {
+			"name": "Guard",
+			"speed": 0.5,
+			"sprite": "heroSprite",
+			"polygon": "actorFootprint",
+			"hitbox": "actorHitBox",
+			"public": ["health"],
+			"perception": 15,
+			"salience": 1,
+			"menu": "guardMenu",
+			"resources": ["health"],
+			"triggers": ["deathTrigger"],
+			"group": "enemyGroup",
+			"strategy": "guardStrategy"
+		}
+	}
+}

@@ -1,0 +1,25 @@
+{
+	"TileSet": {
+		"demoTileSet": {
+			"columns": 8,
+			"texture": "/assets/basic.png",
+			"tiles": ["grass", "water", "wall"]
+		}
+	},
+	"Tile": {
+		"grass": {
+			"symbol": "G",
+			"index": 0,
+			"navigation": true
+		},
+		"water": {
+			"symbol": "W",
+			"index": 46
+		},
+		"wall": {
+			"symbol": "X",
+			"index": 52,
+			"obstacle": true
+		}
+	}
+}

@@ -26,6 +26,14 @@ custom_minimum_size = Vector2(550, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="Title" type="Label" parent="VBox/HBox/VBox"]
+layout_mode = 2
+text = "ISOMETRY LAUNCHER"
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="VBox/HBox/VBox"]
+layout_mode = 2
+
 [node name="UsernameBox" type="VBoxContainer" parent="VBox/HBox/VBox"]
 layout_mode = 2
 
@@ -53,9 +61,9 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="VBox/HBox/VBox/ArchiveBox"]
 layout_mode = 2
-text = "ARCHIVE"
+text = "CAMPAIGN"
 
-[node name="LineEdit" type="LineEdit" parent="VBox/HBox/VBox/ArchiveBox"]
+[node name="OptionButton" type="OptionButton" parent="VBox/HBox/VBox/ArchiveBox"]
 layout_mode = 2
 
 [node name="UriBox" type="VBoxContainer" parent="VBox/HBox/VBox"]
@@ -63,8 +71,7 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="VBox/HBox/VBox/UriBox"]
 layout_mode = 2
-text = "URI
-"
+text = "URI"
 
 [node name="LineEdit" type="LineEdit" parent="VBox/HBox/VBox/UriBox"]
 layout_mode = 2
@@ -74,13 +81,12 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="VBox/HBox/VBox/PortBox"]
 layout_mode = 2
-text = "PORT
-"
+text = "PORT"
 
 [node name="LineEdit" type="LineEdit" parent="VBox/HBox/VBox/PortBox"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBox/HBox/VBox"]
+[node name="Spacer" type="Label" parent="VBox/HBox/VBox"]
 layout_mode = 2
 
 [node name="HBox" type="HBoxContainer" parent="VBox/HBox/VBox"]
@@ -94,7 +100,7 @@ text = "HOST"
 [node name="JoinButton" type="Button" parent="VBox/HBox/VBox/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Join"
+text = "JOIN"
 
 [connection signal="button_up" from="VBox/HBox/VBox/HBox/HostButton" to="." method="_on_host_button_button_up"]
 [connection signal="button_up" from="VBox/HBox/VBox/HBox/JoinButton" to="." method="_on_join_button_button_up"]

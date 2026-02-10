@@ -1,0 +1,27 @@
+{
+	"Strategy": {
+		"patrolStrategy": {
+			"behaviors": ["patrolBehavior"]
+		},
+		"followStrategy": {
+			"behaviors": ["followBehavior"]
+		},
+		"guardStrategy": {
+			"behaviors": ["guardBehavior", "followBehavior"]
+		}
+	},
+	"Behavior": {
+		"patrolBehavior": {
+			"goals": ["hasTarget"],
+			"action": "patrolAction"
+		},
+		"followBehavior": {
+			"goals": ["isNearTarget"],
+			"action": "pursueAction"
+		},
+		"guardBehavior": {
+			"goals": ["hasTarget"],
+			"action": "scanAction"
+		}
+	}
+}

@@ -1,0 +1,12 @@
+{
+	"Plate": {
+		"welcomePlate": {
+			"title": "Welcome to Isometry",
+			"text": "This is the demo campaign. It showcases all entity types available in the Isometry engine. Explore the map, interact with NPCs, and try your skills."
+		},
+		"statusPlate": {
+			"title": "Status Report",
+			"text": "Health: {{@health}} / 20\nMana: {{@mana}} / 10\nGold: {{$gold}}"
+		}
+	}
+}

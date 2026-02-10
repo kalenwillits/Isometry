@@ -69,7 +69,7 @@ func _handle_expiry() -> void:
 	var now: float = Time.get_unix_time_from_system()
 	var keys: Array = expiry.keys().duplicate()
 	var expired_count = 0
-	for key in expiry.keys():
+	for key in keys:
 		if expiry[key] < 0:
 			continue
 		if expiry[key] < now:

@@ -1,0 +1,29 @@
+{
+	"Resource": {
+		"health": {
+			"name": "Health",
+			"default": 20,
+			"min": 0,
+			"max": 20,
+			"icon": "/assets/icons/health.png",
+			"description": "Hit points. Reach 0 and you're done.",
+			"menu": "healthMenu"
+		},
+		"mana": {
+			"name": "Mana",
+			"default": 10,
+			"min": 0,
+			"max": 10,
+			"icon": "/assets/icons/sun.png",
+			"description": "Magical energy for casting skills."
+		},
+		"gold": {
+			"name": "Gold",
+			"default": 5,
+			"min": 0,
+			"max": 999,
+			"icon": "/assets/icons/sun.png",
+			"description": "Currency for trading with merchants."
+		}
+	}
+}
