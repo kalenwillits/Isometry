@@ -4,7 +4,6 @@
 			"name": "Patroller",
 			"speed": 0.8,
 			"sprite": "heroSprite",
-			"polygon": "actorFootprint",
 			"hitbox": "actorHitBox",
 			"public": ["health"],
 			"perception": 20,

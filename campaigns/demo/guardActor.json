@@ -4,7 +4,6 @@
 			"name": "Guard",
 			"speed": 0.5,
 			"sprite": "heroSprite",
-			"polygon": "actorFootprint",
 			"hitbox": "actorHitBox",
 			"public": ["health"],
 			"perception": 15,

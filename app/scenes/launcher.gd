@@ -46,6 +46,8 @@ func _get_game_binary() -> String:
 	var exe_dir = OS.get_executable_path().get_base_dir()
 	if OS.has_feature("windows"):
 		return exe_dir.path_join("isometry_windows.exe")
+	elif OS.has_feature("macos"):
+		return exe_dir.path_join("isometry_macos.app")
 	else:
 		return exe_dir.path_join("isometry_linux.x86_64")
 
@@ -58,12 +60,14 @@ func _launch_game(network_mode: String) -> void:
 	var port = $VBox/HBox/VBox/PortBox/LineEdit.get_text().strip_edges()
 
 	var binary = _get_game_binary()
+	var exe_dir = OS.get_executable_path().get_base_dir()
+	var relative_dir = campaign_dir.trim_prefix(exe_dir).lstrip("/")
 	var args: Array = [
 		"--campaign=%s" % campaign,
 		"--uri=%s" % uri,
 		"--port=%s" % port,
 		"--network=%s" % network_mode,
-		"--dir=%s" % campaign_dir,
+		"--dir=%s" % relative_dir,
 		"--username=%s" % username,
 		"--password=%s" % password,
 	]

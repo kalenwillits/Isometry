@@ -8,6 +8,6 @@ TARGET_DIR="${1:-$HOME/Dev/maps/target}"
 mkdir -p "$TARGET_DIR"
 
 echo "Packaging demo campaign..."
-cd "$CAMPAIGN_SRC"
-zip -r "$TARGET_DIR/demo.zip" . -x "*.DS_Store"
+cd "$CAMPAIGN_SRC/.."
+zip -r "$TARGET_DIR/demo.zip" demo/ -x "*.DS_Store"
 echo "Demo campaign built: $TARGET_DIR/demo.zip"

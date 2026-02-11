@@ -16,22 +16,19 @@
 			"audio": [
 				"bgMusic"
 			],
-			"floor_": [
+			"floor": [
 				"demoFloorOverlay"
 			]
 		}
 	},
 	"Vertex": {
-		"demoSpawn": { "x": 200, "y": 100 }
+		"demoSpawn": { "x": 200, "y": 100 },
+		"floorLocation": { "x": 0, "y": 0 }
 	},
 	"Floor": {
 		"demoFloorOverlay": {
 			"location": "floorLocation",
 			"texture": "/assets/SpaceBg/Backgrounds/Blue1.png"
 		}
-	},
-	"Vertex": {
-		"demoSpawn": { "x": 200, "y": 100 },
-		"floorLocation": { "x": 0, "y": 0 }
 	}
 }

@@ -43,7 +43,7 @@
 			"if": "isHurt",
 			"do": "plus_resource_self",
 			"then": "healConfirmAction",
-			"else_": "alreadyFullAction",
+			"else": "alreadyFullAction",
 			"parameters": ["healResourceParam", "healAmountParam"]
 		},
 		"healConfirmAction": {

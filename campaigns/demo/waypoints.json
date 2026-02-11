@@ -1,7 +1,7 @@
 {
 	"Waypoint": {
 		"townCenter": {
-			"name": "Town Center",
+			"name_": "Town Center",
 			"location": "townCenterPos",
 			"icon": "/assets/icons/sun.png",
 			"map": "demoMap",
