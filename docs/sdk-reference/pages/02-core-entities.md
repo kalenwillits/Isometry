@@ -35,7 +35,7 @@ Defines a game level with terrain, NPCs, background, and audio.
 | `deployments` | KeyRefArray (Deployment) | No | NPCs to spawn on this map |
 | `background` | KeyRefArray (Parallax) | No | Background layers |
 | `audio` | KeyRefArray (Sound) | No | Background music/ambience |
-| `floor_` | KeyRefArray (Floor) | No | Floor texture overlays |
+| `floor` | KeyRefArray (Floor) | No | Floor texture overlays |
 
 ```json
 {
@@ -62,11 +62,10 @@ Characters in the game world - both player-controlled and NPCs.
 | `speed` | float | No | Movement speed (pixels/sec) |
 | `bearing` | int | No | Facing direction (0-360, default 0 = north) |
 | `sprite` | KeyRef (Sprite) | No | Visual appearance |
-| `polygon` | KeyRef (Polygon) | No | Navigation footprint |
-| `hitbox` | KeyRef (Polygon) | No | Clickable area |
+| `base` | int | Yes | Base circle radius in pixels |
+| `hitbox` | KeyRef (Polygon) | No | Collision polygon |
 | `perception` | int | No | Vision range in pixels |
 | `salience` | int | No | How visible this actor is (0 = invisible) |
-| `location` | KeyRef (Vertex) | No | Initial position (x, y) |
 | `group` | KeyRef (Group) | No | Faction membership |
 | `menu` | KeyRef (Menu) | No | Right-click context menu |
 | `strategy` | KeyRef (Strategy) | No | AI behavior (NPCs only) |

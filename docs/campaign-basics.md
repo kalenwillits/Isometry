@@ -412,7 +412,7 @@ ERROR: Campaign has duplicate Main entities (found 3)
 
 **Rule:** Action `do` field must reference a valid function
 
-**Valid functions:** See [Action Reference](actions/reference.md) for all 69 actions
+**Valid functions:** Must match one of the 62 available action functions
 
 **Error:**
 ```json
@@ -741,15 +741,9 @@ Now that you have a working campaign:
 1. **Add skills** - See [Skills Entity](entities/skills.md)
 2. **Add actions** - See [Action System](entities/action-system.md)
 3. **Add more maps** - Create multiple maps with transitions
-4. **Add NPCs** - See [Deployments](entities/ui-entities.md#deployment-entity)
+4. **Add NPCs** - Create Deployment entities for actor placements
 5. **Add AI behaviors** - See [AI System](entities/ai-system.md)
-
-### Full Tutorial
-
-For a complete walkthrough, see:
-- [Minimal Campaign Tutorial](examples/minimal-campaign.md)
-- [Campaign Walkthrough](examples/campaign-walkthrough.md)
 
 ---
 
-**Next:** [Entity System](entities/README.md) | [Action System](actions/README.md) | [Back to Home](README.md)
+**Next:** [Entity System](entities/README.md) | [Back to Home](README.md)

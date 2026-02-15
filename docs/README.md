@@ -6,7 +6,6 @@
 
 - **[Quick Start Guide](quickstart.md)** - Get up and running in 5 minutes
 - **[CLI Reference](cli-reference.md)** - Command-line arguments
-- **[Action API](actions/reference.md)** - All 69 available actions
 - **[Entity API](entities/README.md)** - All 30 entity types
 - **[Philosophy](philosophy.md)** - Why Isometry was built this way
 
@@ -31,33 +30,11 @@
 - [Resources & Measures](entities/resources.md) - Resource, Measure
 - [Skills](entities/skills.md) - Skill entity and action slots
 - [AI System](entities/ai-system.md) - Strategy, Behavior, Trigger, Timer
-- [Visual Entities](entities/visual-entities.md) - Sprite, Animation, AnimationSet
-- [Terrain](entities/terrain.md) - TileSet, TileMap, Tile, Layer, Floor
-- [Geometry](entities/geometry.md) - Vertex, Polygon
-- [Audio](entities/audio.md) - Sound, Parallax
-- [UI Entities](entities/ui-entities.md) - Menu, Plate, Waypoint, Group, Deployment
-
-#### Action Documentation
-- [Action System Overview](actions/README.md) - How actions work
-- [Action Reference](actions/reference.md) - All 69 actions documented
-- [Action Cookbook](actions/cookbook.md) - Common patterns and examples
-
-#### Examples & Tutorials
-- [Minimal Campaign Tutorial](examples/minimal-campaign.md) - Build your first campaign step-by-step
-- [Campaign Walkthrough](examples/campaign-walkthrough.md) - Complete campaign with NPCs, combat, and quests
-- [Sample JSON Files](examples/sample-jsons/) - Example entity definitions
 
 ### Reference
 - [CLI Reference](cli-reference.md) - Complete command-line documentation
 - [Design Philosophy](philosophy.md) - Why isometric? Why pixel art? Design principles
 - [Troubleshooting](troubleshooting.md) - Common issues and solutions
-- [Campaign Launcher](launcher.md) - Distributing your campaigns
-
-### Appendices
-- [Dice Notation](appendix/dice-notation.md) - Dice expression syntax and usage
-- [Coordinate System](appendix/coordinate-system.md) - Isometric coordinates and radial angles
-- [Validation System](appendix/validation.md) - How campaign validation works
-- [Glossary](appendix/glossary.md) - Terms and definitions
 
 ## What is Isometry?
 
@@ -65,14 +42,14 @@ Isometry is a **highly opinionated** framework for creating isometric pixel art 
 
 - **Data-Driven Design** - Define everything in JSON, no coding required
 - **Multiplayer Support** - Client-server architecture with RSA authentication
-- **Rich Action System** - 69 built-in actions for combat, movement, and interaction
+- **Rich Action System** - 62 built-in actions for combat, movement, and interaction
 - **AI Behaviors** - Goal-based AI system for NPCs
 - **Campaign Modularity** - ZIP-based campaigns that work like D&D homebrew modules
 
 ### Key Features
 
 ✅ **30 Entity Types** - Actors, Maps, Actions, Skills, Resources, and more
-✅ **69 Actions** - Movement, combat, targeting, spawning, and UI actions
+✅ **62 Actions** - Movement, combat, targeting, spawning, and UI actions
 ✅ **Multiplayer Ready** - Host, server, and client modes with secure authentication
 ✅ **AI System** - Strategies, behaviors, triggers, and timers for NPC automation
 ✅ **Isometric Rendering** - Classic CRPG aesthetic with Y-sorting and elliptical collision

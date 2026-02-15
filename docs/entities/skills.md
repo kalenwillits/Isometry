@@ -6,7 +6,7 @@ Documentation for the Skill entity - player abilities bound to action slots.
 
 ### Purpose
 
-The **Skill** entity defines player abilities that are bound to hotkeys (1-9). Skills trigger actions when activated.
+The **Skill** entity defines player abilities that are bound to hotkeys (Q/W/E/R/T/Y/U/I/O by default). Skills trigger actions when activated.
 
 ### Tags
 
@@ -144,22 +144,22 @@ The **Skill** entity defines player abilities that are bound to hotkeys (1-9). S
 
 ### Action Slot Limit
 
-**Maximum:** 9 skills per actor (bound to keys 1-9)
+**Maximum:** 9 skills per actor (bound to Q/W/E/R/T/Y/U/I/O by default)
 
 ```json
 {
   "Actor": {
     "mage": {
       "skills": [
-        "fireball",      // Key 1
-        "ice_blast",     // Key 2  
-        "lightning",     // Key 3
-        "teleport",      // Key 4
-        "shield",        // Key 5
-        "heal",          // Key 6
-        "mana_drain",    // Key 7
-        "meteor",        // Key 8
-        "time_stop"      // Key 9
+        "fireball",      // Q
+        "ice_blast",     // W
+        "lightning",     // E
+        "teleport",      // R
+        "shield",        // T
+        "heal",          // Y
+        "mana_drain",    // U
+        "meteor",        // I
+        "time_stop"      // O
       ]
     }
   }
@@ -274,4 +274,4 @@ The **Skill** entity defines player abilities that are bound to hotkeys (1-9). S
 
 ---
 
-**Next:** [AI System](ai-system.md) | [Visual Entities](visual-entities.md) | [Back to Entity Overview](README.md)
+**Next:** [AI System](ai-system.md) | [Back to Entity Overview](README.md)

@@ -22,9 +22,9 @@ Extract the ZIP and place it wherever you like. No installation required.
 2. The launcher will automatically detect campaigns in the `campaigns/` folder next to it
 3. Select a campaign from the dropdown
 4. Fill in a **Username** and **Password**
-5. Click **Host** to start a game you can invite others to, or **Join** to connect to an existing game
+5. Click **Host** to start a game, or **Join** to connect to an existing game
 
-The launcher will start the Isometry game engine with your chosen settings.
+The launcher will start the Isometry game engine with your chosen settings. To play solo, just **Host** a game without sharing the connection details.
 
 ### Where to Put Campaign Files
 
@@ -36,15 +36,15 @@ Place campaign `.zip` files in the `campaigns/` folder next to the launcher exec
 
 - **Right Click** - Move to a destination (pathfinding)
 - **Arrow Keys** - Move directly in a direction (hold to keep moving)
+- **W / A / S / D** - Change facing direction (bearing)
 
 ### Camera
 
-- **W / A / S / D** - Pan camera (when camera is unlocked)
 - **Space** - Toggle camera lock on your character (hold to temporarily recenter)
 - **Page Up / Mouse Wheel Up** - Zoom in
 - **Page Down / Mouse Wheel Down** - Zoom out
 
-The camera also pans automatically when your cursor is near the screen edges.
+The camera follows your character by default and also pans automatically when your cursor is near the screen edges.
 
 ### Targeting
 
@@ -52,21 +52,20 @@ The camera also pans automatically when your cursor is near the screen edges.
 - **Shift + Tab** - Cycle to previous target
 - **F** - Target self
 - **Esc** - Clear target
-- **+** / **-** - Cycle through target groups
+- **=** / **-** - Cycle through target groups
 
 ### Skills
 
-- **1-9** - Activate skills in action slots 1-9 (hold to charge, release to fire if the skill supports charging)
+- **Q / W / E / R / T / Y / U / I / O** - Activate skills in action slots 1-9 (hold to charge, release to fire if the skill supports charging)
 
 ### UI
 
 - **Enter** - Open chat
 - **C** - Cycle chat channel
-- **M** - Toggle map
 - **` (Backtick)** - Open context menu for current target
 - **Home** - Open global menu
-- **Esc** - Close current menu
-- **F1-F4** - Focus UI quadrants (Shift+F1-F4 to clear)
+- **Esc** - Clear target / close current menu
+- **F1-F4** - Set focus targets (Shift+F1-F4 to clear)
 
 ### Resources
 
@@ -80,7 +79,6 @@ Campaigns define **resources** for your character (such as health, mana, currenc
 
 ### For Campaign Creators
 - Read [Campaign Basics](campaign-basics.md) to understand campaign structure
-- Follow the [Minimal Campaign Tutorial](examples/minimal-campaign.md) to build your first campaign
 - Explore the [Entity API](entities/README.md) to see what's possible
 
 ### For Server Operators

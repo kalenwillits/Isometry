@@ -34,7 +34,7 @@ Networking was built into the architecture from day one rather than bolted on la
 
 ## Why opinionated constraints?
 
-Isometry limits certain things on purpose. Skills are capped at 9 action slots because that maps to the 1-9 keys and forces creators to design focused ability sets rather than bloated hotbars. All stats (health, mana, gold, experience) use the same Resource system because a unified model is easier to learn, easier to validate, and easier to trigger events from. There's no hard-coded game logic because every special case is a barrier to modding. These constraints exist to make campaign creation simpler, not to limit creativity.
+Isometry limits certain things on purpose. Skills are capped at 9 action slots because that maps neatly to a row of keys and forces creators to design focused ability sets rather than bloated hotbars. All stats (health, mana, gold, experience) use the same Resource system because a unified model is easier to learn, easier to validate, and easier to trigger events from. There's no hard-coded game logic because every special case is a barrier to modding. These constraints exist to make campaign creation simpler, not to limit creativity.
 
 ---
 

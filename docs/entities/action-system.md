@@ -46,8 +46,8 @@ The **Action** entity defines executable behaviors that affect actors, resources
 #### do
 - **Type**: String (function name)
 - **Required**: Yes
-- **Description**: Name of the function to execute. Must match one of the 69 available action functions.
-- **See**: [Action Reference](../actions/reference.md) for all valid functions
+- **Description**: Name of the function to execute. Must match one of the 62 available action functions.
+- **See**: Action Reference for all valid functions
 - **Example**: `"plus_resource_self"`, `"move_to_target"`, `"spawn_actor_at_self"`
 
 #### parameters
@@ -91,7 +91,7 @@ The **Action** entity defines executable behaviors that affect actors, resources
 - **Required**: No
 - **Default**: `null`
 - **Description**: Animation to play while executing the action
-- **See**: [Animation Entity](visual-entities.md#animation-entity)
+- **See**: Animation entity
 
 ### JSON Example - Simple Action
 
@@ -164,7 +164,7 @@ The **Action** entity defines executable behaviors that affect actors, resources
   },
   "Condition": {
     "health_below_50": {
-      "left": "self.health",
+      "left": "$health",
       "operator": "<",
       "right": "50"
     }
@@ -310,11 +310,12 @@ The **Condition** entity defines boolean comparisons used for conditional action
 #### left
 - **Type**: String (expression or reference)
 - **Required**: Yes
-- **Description**: Left side of the comparison
+- **Description**: Left side of the comparison. Evaluated as a dice expression.
 - **Formats**:
   - Literal value: `"50"`
-  - Resource reference: `"self.health"`, `"target.mana"`
-  - Dice expression: `"2d6+3"` (planned feature)
+  - Caller resource: `"$health"` (`$` prefix = self/caller)
+  - Target resource: `"@mana"` (`@` prefix = target)
+  - Dice expression: `"2d6+3"`
 
 #### operator
 - **Type**: String
@@ -331,7 +332,7 @@ The **Condition** entity defines boolean comparisons used for conditional action
 #### right
 - **Type**: String (expression or reference)
 - **Required**: Yes
-- **Description**: Right side of the comparison
+- **Description**: Right side of the comparison. Evaluated as a dice expression.
 - **Formats**: Same as `left`
 
 ### JSON Examples
@@ -341,7 +342,7 @@ The **Condition** entity defines boolean comparisons used for conditional action
 {
   "Condition": {
     "health_below_50": {
-      "left": "self.health",
+      "left": "$health",
       "operator": "<",
       "right": "50"
     }
@@ -354,9 +355,9 @@ The **Condition** entity defines boolean comparisons used for conditional action
 {
   "Condition": {
     "health_exceeds_mana": {
-      "left": "self.health",
+      "left": "$health",
       "operator": ">",
-      "right": "self.mana"
+      "right": "$mana"
     }
   }
 }
@@ -367,7 +368,7 @@ The **Condition** entity defines boolean comparisons used for conditional action
 {
   "Condition": {
     "health_full": {
-      "left": "self.health",
+      "left": "$health",
       "operator": "==",
       "right": "100"
     }
@@ -380,7 +381,7 @@ The **Condition** entity defines boolean comparisons used for conditional action
 {
   "Condition": {
     "target_low_health": {
-      "left": "target.health",
+      "left": "@health",
       "operator": "<=",
       "right": "25"
     }
@@ -406,7 +407,7 @@ The **Condition** entity defines boolean comparisons used for conditional action
   },
   "Condition": {
     "health_below_75": {
-      "left": "self.health",
+      "left": "$health",
       "operator": "<",
       "right": "75"
     }
@@ -420,9 +421,9 @@ The **Condition** entity defines boolean comparisons used for conditional action
 ```json
 {
   "Condition": {
-    "critical_health": { "left": "self.health", "operator": "<", "right": "20" },
-    "low_health": { "left": "self.health", "operator": "<", "right": "50" },
-    "healthy": { "left": "self.health", "operator": ">", "right": "75" }
+    "critical_health": { "left": "$health", "operator": "<", "right": "20" },
+    "low_health": { "left": "$health", "operator": "<", "right": "50" },
+    "healthy": { "left": "$health", "operator": ">", "right": "75" }
   }
 }
 ```
@@ -431,8 +432,8 @@ The **Condition** entity defines boolean comparisons used for conditional action
 ```json
 {
   "Condition": {
-    "has_mana": { "left": "self.mana", "operator": ">=", "right": "30" },
-    "can_afford": { "left": "self.gold", "operator": ">=", "right": "100" }
+    "has_mana": { "left": "$mana", "operator": ">=", "right": "30" },
+    "can_afford": { "left": "$gold", "operator": ">=", "right": "100" }
   }
 }
 ```
@@ -509,7 +510,7 @@ The **Parameter** entity defines name-value pairs passed to action functions.
 - `radial` - Direction (degrees)
 - `distance` - Distance from origin
 
-See [Action Reference](../actions/reference.md) for parameter requirements of each action.
+See Action Reference for parameter requirements of each action.
 
 ### JSON Examples
 

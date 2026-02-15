@@ -145,7 +145,7 @@ All documentation includes:
 
 The following could be added based on user feedback:
 - Remaining entity documentation (Visual, Terrain, Geometry, Audio, UI)
-- Complete action reference (all 69 actions)
+- Complete action reference (all 62 actions)
 - Action cookbook with patterns
 - Step-by-step tutorials
 - Sample campaign files
@@ -165,7 +165,7 @@ The following could be added based on user feedback:
 ## ✨ Key Features
 
 - **30 Entity Types** - Everything is data-driven
-- **69 Actions** - Rich gameplay possibilities
+- **62 Actions** - Rich gameplay possibilities
 - **4 Network Modes** - none/host/server/client
 - **RSA Authentication** - Secure multiplayer
 - **Campaign Validation** - Catch errors early

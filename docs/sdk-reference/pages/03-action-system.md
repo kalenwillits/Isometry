@@ -15,7 +15,7 @@ Defines an executable command with optional conditions and chaining.
 | `animation` | KeyRef (Animation) | No | Animation to play (requires time > 0) |
 | `if` | KeyRef (Condition) | No | Condition to check before execution |
 | `then` | KeyRef (Action) | No | Action to execute after `do` completes (if condition passes) |
-| `else_` | KeyRef (Action) | No | Action if condition fails |
+| `else` | KeyRef (Action) | No | Action if condition fails |
 
 ### Execution Flow
 
@@ -23,7 +23,7 @@ Defines an executable command with optional conditions and chaining.
 2. If condition passes (or no condition), execute `do` with `parameters`
 3. If `animation` is set and `time` > 0, play the animation
 4. After completion, execute `then` if set
-5. If condition failed, execute `else_` if set
+5. If condition failed, execute `else` if set
 
 ```json
 {
@@ -33,7 +33,7 @@ Defines an executable command with optional conditions and chaining.
       "if": "isHurt",
       "do": "plus_resource_self",
       "then": "healMessage",
-      "else_": "fullHealthMessage",
+      "else": "fullHealthMessage",
       "parameters": ["healthParam", "healAmount"]
     }
   }
@@ -50,23 +50,23 @@ Boolean comparison used by actions for conditional logic.
 | `operator` | String | Yes | Comparison: `=`, `!=`, `<`, `>`, `<=`, `>=` |
 | `right` | String | Yes | Right operand (value or `@variable`) |
 
-The `@` prefix accesses actor properties:
-- `@health` - Current health resource value
-- `@mana` - Current mana resource value
-- `@has_target` - 1 if actor has a target, 0 otherwise
-- `@distance_to_target` - Distance to current target
-- `@distance_to_destination` - Distance to movement destination
+Operands are evaluated as dice expressions with resource injection:
+- `$health` - Caller's (self) health resource value
+- `$mana` - Caller's mana resource value
+- `@health` - Target's health resource value
+- `50` - Literal integer value
+- `2d6+3` - Dice expression
 
 ```json
 {
   "Condition": {
     "isHurt": {
-      "left": "@health",
+      "left": "$health",
       "operator": "<",
       "right": "20"
     },
     "isDead": {
-      "left": "@health",
+      "left": "$health",
       "operator": "<=",
       "right": "0"
     }
@@ -103,7 +103,7 @@ Parameters that accept expressions support dice notation:
 
 ## Skill
 
-Player abilities bound to hotbar keys (1-9).
+Player abilities bound to hotbar keys (Q/W/E/R/T/Y/U/I/O by default).
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -139,9 +139,9 @@ Player abilities bound to hotbar keys (1-9).
 | `plus_resource_target` | Add to target's resource | `resource`, `expression` |
 | `minus_resource_target` | Subtract from target's resource | `resource`, `expression` |
 | `move_to_target` | Move toward current target | (none) |
-| `move_map_target` | Move target to another map | `map`, `location` |
-| `move_map_self` | Move self to another map | `map`, `location` |
-| `set_destination_self` | Set movement destination | `location` |
+| `change_map_target` | Move target to another map | `map`, `location` |
+| `change_map_self` | Move self to another map | `map`, `location` |
+| `set_destination_self` | Set movement destination | `waypoint` |
 | `target_nearest` | Target the nearest visible actor | (none) |
 | `change_strategy` | Change AI strategy | `strategy` |
 | `open_plate` | Display a text plate | `plate` |

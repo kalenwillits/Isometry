@@ -361,7 +361,7 @@ The **Measure** entity defines calculated values based on dice expressions (armo
 - **Type**: String (dice expression)
 - **Required**: Yes
 - **Description**: Formula to calculate the measure value
-- **Format**: Dice notation (see [Dice Notation](../appendix/dice-notation.md))
+- **Format**: Dice notation (e.g., `2d6+3`)
 - **Example**: `"2d6+3"`, `"1d20"`, `"10"`
 
 #### icon

@@ -104,38 +104,31 @@ If you receive a "Campaign mismatch" error:
 ### Movement
 
 **Mouse Controls:**
-- **Left Click (ground)** - Move to location
-- **Left Click (actor)** - Target actor
-- **Hold Left Click (actor)** - Follow actor
-- **Right Click** - Context menu / interact
+- **Right Click** - Move to a destination (pathfinding)
 
 **Keyboard Movement:**
-- Isometry uses click-to-move navigation
-- Your character automatically pathfinds to the clicked location
-- Movement respects terrain collision and obstacles
+- **Arrow Keys** - Move directly in a direction (hold to keep moving)
+- **W / A / S / D** - Change facing direction (bearing)
 
 ### Camera Controls
 
 **Mouse:**
-- **Middle Mouse + Drag** - Pan camera
 - **Mouse Wheel Up** - Zoom in
 - **Mouse Wheel Down** - Zoom out
 
 **Keyboard:**
-- **W** or **Up Arrow** - Pan camera up
-- **A** or **Left Arrow** - Pan camera left
-- **S** or **Down Arrow** - Pan camera down
-- **D** or **Right Arrow** - Pan camera right
+- **Space** - Toggle camera lock on your character (hold to temporarily recenter)
+- **Page Up** - Zoom in
+- **Page Down** - Zoom out
 
 **Camera Tips:**
 - The camera follows your character by default
-- Panning temporarily unlocks the camera
-- Click on your character to re-center the camera
+- The camera pans automatically when your cursor is near the screen edges
 
 ### Skills and Actions
 
-**Action Slots (1-9):**
-- **1-9 Keys** - Activate skills in slots 1-9
+**Action Slots (Q-O):**
+- **Q / W / E / R / T / Y / U / I / O** - Activate skills in slots 1-9
 - **Hold Key** - Charge skill (if charging is enabled)
 - **Release Key** - Release charged skill
 
@@ -153,11 +146,12 @@ If you receive a "Campaign mismatch" error:
 - **Esc** - Clear target
 
 **Focus Groups:**
-Isometry supports 4 focus groups for tab-targeting:
-- **Ctrl+1** - Add target to focus group 1
-- **Ctrl+2** - Add target to focus group 2
-- **Ctrl+3** - Add target to focus group 3
-- **Ctrl+4** - Add target to focus group 4
+Isometry supports 4 focus slots for quick-targeting:
+- **F1** - Set focus target (top-left)
+- **F2** - Set focus target (top-right)
+- **F3** - Set focus target (bottom-left)
+- **F4** - Set focus target (bottom-right)
+- **Shift+F1-F4** - Clear the corresponding focus slot
 
 Tab-targeting cycles through your focus groups first, then nearby actors.
 
@@ -169,17 +163,12 @@ Tab-targeting cycles through your focus groups first, then nearby actors.
 
 ### UI Controls
 
-- **T** - Open chat window
-- **M** - Toggle map (if campaign provides waypoints)
-- **I** - Toggle inventory (campaign-dependent)
-- **Esc** - Open options menu or close current UI
-
-### Interaction
-
-**Context Menus:**
-- Right-click actors to open their interaction menu
-- Right-click resources to see available actions
-- Some objects provide custom menus defined by the campaign
+- **Enter** - Open chat
+- **C** - Cycle chat channel
+- **` (Backtick)** - Open context menu for current target
+- **Home** - Open global menu
+- **Esc** - Clear target / close current menu
+- **=** / **-** - Cycle through target groups
 
 ## Gameplay Mechanics
 
@@ -222,7 +211,7 @@ Combat mechanics are entirely campaign-defined using the action system:
 
 **Typical Combat Flow:**
 1. Target an enemy (Tab or left-click)
-2. Activate skills (1-9 keys)
+2. Activate skills (Q-O keys)
 3. Skills execute actions (damage, healing, buffs, debuffs)
 4. Resources update (health, mana, cooldowns)
 5. Repeat until combat ends
@@ -265,13 +254,13 @@ Campaigns can define automated behaviors:
 **Waypoints:**
 - Discoverable fast-travel locations
 - Interact with waypoints to unlock them
-- Use map UI (M key) to fast-travel
+- Use the map view to fast-travel (keybind must be configured)
 
 ## Chat and Communication
 
 ### Opening Chat
 
-Press **T** to open the chat window.
+Press **Enter** to open the chat input.
 
 ### Chat Channels
 
@@ -361,7 +350,7 @@ If you experience lag or low FPS:
 
 ### Can't see my character
 
-- Press **Esc** to center camera
+- Hold **Space** to recenter camera on your character
 - Check that you're on the correct map
 - Verify the campaign spawned your character correctly
 - Look for error messages in chat

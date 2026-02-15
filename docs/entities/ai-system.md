@@ -81,8 +81,8 @@ The **Behavior** entity defines a goal-action pair for AI decision making.
     }
   },
   "Condition": {
-    "health_below_50": {"left": "self.health", "operator": "<", "right": "50"},
-    "has_mana": {"left": "self.mana", "operator": ">=", "right": "20"}
+    "health_below_50": {"left": "$health", "operator": "<", "right": "50"},
+    "has_mana": {"left": "$mana", "operator": ">=", "right": "20"}
   },
   "Action": {
     "cast_heal": {
@@ -130,7 +130,7 @@ The **Trigger** entity monitors a resource and executes an action when it change
     }
   },
   "Condition": {
-    "health_is_zero": {"left": "self.health", "operator": "==", "right": "0"}
+    "health_is_zero": {"left": "$health", "operator": "==", "right": "0"}
   }
 }
 ```
@@ -178,4 +178,4 @@ The **Timer** entity executes an action at intervals or after a duration.
 
 ---
 
-**Next:** [Visual Entities](visual-entities.md) | [Back to Entity Overview](README.md)
+**Next:** [Back to Entity Overview](README.md)

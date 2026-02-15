@@ -289,43 +289,43 @@ var tagged_entities = Repo.query(["tag1", "tag2"])
 
 | Entity | Purpose | Key Fields |
 |--------|---------|------------|
-| **[Sprite](visual-entities.md#sprite-entity)** | Visual config | texture, size, animation_set |
-| **[Animation](visual-entities.md#animation-entity)** | 8-directional frames | N, NE, E, SE, S, SW, W, NW |
-| **[AnimationSet](visual-entities.md#animationset-entity)** | Animation collection | animations |
+| **Sprite** | Visual config | texture, size, animation_set |
+| **Animation** | 8-directional frames | N, NE, E, SE, S, SW, W, NW |
+| **AnimationSet** | Animation collection | animations |
 
 ### Terrain System
 
 | Entity | Purpose | Key Fields |
 |--------|---------|------------|
-| **[TileSet](terrain.md#tileset-entity)** | Tile collection | texture, columns, tiles |
-| **[TileMap](terrain.md#tilemap-entity)** | Map grid | tileset, layers |
-| **[Tile](terrain.md#tile-entity)** | Single tile | symbol, navigation, obstacle |
-| **[Layer](terrain.md#layer-entity)** | Tile data | source, ysort |
-| **[Floor](terrain.md#floor-entity)** | Floor texture | location, texture |
+| **TileSet** | Tile collection | texture, columns, tiles |
+| **TileMap** | Map grid | tileset, layers |
+| **Tile** | Single tile | symbol, navigation, obstacle |
+| **Layer** | Tile data | source, ysort |
+| **Floor** | Floor texture | location, texture |
 
 ### Geometry
 
 | Entity | Purpose | Key Fields |
 |--------|---------|------------|
-| **[Vertex](geometry.md#vertex-entity)** | 2D coordinate | x, y |
-| **[Polygon](geometry.md#polygon-entity)** | Shape | vertices |
+| **Vertex** | 2D coordinate | x, y |
+| **Polygon** | Shape | vertices |
 
 ### Audio
 
 | Entity | Purpose | Key Fields |
 |--------|---------|------------|
-| **[Sound](audio.md#sound-entity)** | Audio playback | source, scale, loop |
-| **[Parallax](audio.md#parallax-entity)** | Background layer | texture, effect |
+| **Sound** | Audio playback | source, scale, loop |
+| **Parallax** | Background layer | texture, effect |
 
 ### UI System
 
 | Entity | Purpose | Key Fields |
 |--------|---------|------------|
-| **[Menu](ui-entities.md#menu-entity)** | Action menu | actions |
-| **[Plate](ui-entities.md#plate-entity)** | Text display | title, text |
-| **[Waypoint](ui-entities.md#waypoint-entity)** | Fast-travel point | location, map |
-| **[Group](ui-entities.md#group-entity)** | Faction/team | color |
-| **[Deployment](ui-entities.md#deployment-entity)** | Actor placement | actor, location |
+| **Menu** | Action menu | actions |
+| **Plate** | Text display | title, text |
+| **Waypoint** | Fast-travel point | location, map |
+| **Group** | Faction/team | color |
+| **Deployment** | Actor placement | actor, location |
 
 ## Field Types Reference
 
@@ -360,7 +360,7 @@ Some fields accept **dice notation** strings:
 }
 ```
 
-See [Dice Notation](../appendix/dice-notation.md) for syntax.
+Dice notation uses standard RPG syntax (e.g., `2d6+3` means roll two six-sided dice and add 3).
 
 ## Entity Tags
 
@@ -413,16 +413,8 @@ GDScript has reserved keywords that can't be used as field names. Isometry alias
 - [Resources & Measures](resources.md)
 - [Skills](skills.md)
 - [AI System](ai-system.md)
-- [Visual Entities](visual-entities.md)
-- [Terrain System](terrain.md)
-- [Geometry](geometry.md)
-- [Audio](audio.md)
-- [UI Entities](ui-entities.md)
-
 **Or explore:**
-- [Action Reference](../actions/reference.md) - All 69 actions
 - [Campaign Basics](../campaign-basics.md) - Creating campaigns
-- [Examples](../examples/minimal-campaign.md) - Tutorials
 
 ---
 

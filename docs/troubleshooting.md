@@ -234,7 +234,7 @@ sudo kill <PID>
 - Spawn coordinates outside the tile grid
 
 **Solutions:**
-1. Press Esc to recenter camera
+1. Hold Space to recenter camera on your character
 2. Check you're on correct map
 3. Look for spawn errors in logs
 4. Verify spawn coordinates (Vertex) are within the isometric world bounds of your tile grid. Use the coordinate formula: `world_x = (tile_x - tile_y) * 16`, `world_y = (tile_x + tile_y) * 8` to calculate valid positions
@@ -306,7 +306,7 @@ sudo kill <PID>
 **Error:** `Action 'my_action' references unknown function 'invalid_func'`
 
 **Solution:**
-- Use valid action function from [Action Reference](actions/reference.md)
+- Use a valid action function name
 - Check spelling matches exactly
 
 ### Circular References

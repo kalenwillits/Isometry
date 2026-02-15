@@ -180,7 +180,7 @@ The **Map** entity defines a game level containing terrain, spawn points, actors
 - **Type**: KeyRef to TileMap entity
 - **Required**: Yes
 - **Description**: The tilemap defining the terrain grid and collision
-- **See**: [TileMap Entity](terrain.md#tilemap-entity)
+- **See**: TileMap entity
 
 #### spawn
 - **Type**: KeyRef to Vertex entity
@@ -193,14 +193,14 @@ The **Map** entity defines a game level containing terrain, spawn points, actors
 - **Required**: No
 - **Default**: `[]` (empty array)
 - **Description**: NPCs and actors placed on the map at specific locations
-- **See**: [Deployment Entity](ui-entities.md#deployment-entity)
+- **See**: Deployment entity
 
 #### floor
 - **Type**: KeyRefArray to Floor entities
 - **Required**: No
 - **Default**: `[]` (empty array)
 - **Description**: Decorative floor textures placed at specific coordinates
-- **See**: [Floor Entity](terrain.md#floor-entity)
+- **See**: Floor entity
 - **Use case**: Carpets, pools of water, blood stains, etc.
 
 #### background
@@ -208,7 +208,7 @@ The **Map** entity defines a game level containing terrain, spawn points, actors
 - **Required**: No
 - **Default**: `[]` (empty array)
 - **Description**: Parallax scrolling background layers for depth
-- **See**: [Parallax Entity](audio.md#parallax-entity)
+- **See**: Parallax entity
 - **Use case**: Distant mountains, clouds, sky, stars
 
 #### audio
@@ -216,7 +216,7 @@ The **Map** entity defines a game level containing terrain, spawn points, actors
 - **Required**: No
 - **Default**: `[]` (empty array)
 - **Description**: Looping background music or ambient sounds
-- **See**: [Sound Entity](audio.md#sound-entity)
+- **See**: Sound entity
 - **Use case**: Background music, ambient forest sounds, dungeon ambiance
 
 ### JSON Example
@@ -356,7 +356,7 @@ Actors can transition between maps using actions:
 }
 ```
 
-See [change_map_self](../actions/reference.md#change_map_self) and [change_map_target](../actions/reference.md#change_map_target) actions.
+See the `change_map_self` and `change_map_target` actions.
 
 ### Related Entities
 
@@ -435,7 +435,7 @@ The **Actor** entity represents all characters in the game - player-controlled, 
 - **Type**: KeyRef to Sprite entity
 - **Required**: Yes
 - **Description**: Visual appearance with animations
-- **See**: [Sprite Entity](visual-entities.md#sprite-entity)
+- **See**: Sprite entity
 
 #### base
 - **Type**: Int (pixels)
@@ -448,7 +448,7 @@ The **Actor** entity represents all characters in the game - player-controlled, 
 - **Type**: KeyRef to Polygon entity
 - **Required**: Yes
 - **Description**: Precise collision boundary
-- **See**: [Polygon Entity](geometry.md#polygon-entity)
+- **See**: Polygon entity
 - **Tip**: Usually matches base size (e.g., 32x32 square polygon for base: 32)
 
 #### speed
@@ -482,7 +482,7 @@ The **Actor** entity represents all characters in the game - player-controlled, 
 - **Type**: KeyRefArray to Skill entities
 - **Required**: No
 - **Default**: `[]`
-- **Limit**: Maximum **9 skills** (bound to keys 1-9)
+- **Limit**: Maximum **9 skills** (bound to Q/W/E/R/T/Y/U/I/O by default)
 - **Description**: Available abilities
 - **See**: [Skill Entity](skills.md#skill-entity)
 
@@ -520,14 +520,14 @@ The **Actor** entity represents all characters in the game - player-controlled, 
 - **Required**: No
 - **Default**: `null`
 - **Description**: Faction/team membership for outline color and targeting
-- **See**: [Group Entity](ui-entities.md#group-entity)
+- **See**: Group entity
 
 #### menu
 - **Type**: KeyRef to Menu entity
 - **Required**: No
 - **Default**: `null`
 - **Description**: Right-click interaction menu
-- **See**: [Menu Entity](ui-entities.md#menu-entity)
+- **See**: Menu entity
 
 #### strategy
 - **Type**: KeyRef to Strategy entity
@@ -735,7 +735,7 @@ The **Actor** entity represents all characters in the game - player-controlled, 
 Actors are spawned in two ways:
 
 1. **Deployments** - Placed on maps at campaign load
-2. **Actions** - Spawned dynamically via [spawn_actor_*](../actions/reference.md) actions
+2. **Actions** - Spawned dynamically via `spawn_actor_*` actions
 
 #### Runtime State
 At runtime, actors have:
@@ -746,7 +746,7 @@ At runtime, actors have:
 
 #### Despawning
 Actors are removed via:
-- [despawn_self](../actions/reference.md#despawn_self) or [despawn_target](../actions/reference.md#despawn_target) actions
+- `despawn_self` or `despawn_target` actions
 - Death (resource reaches 0 with associated trigger)
 - Map transitions
 

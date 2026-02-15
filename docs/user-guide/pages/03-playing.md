@@ -3,34 +3,37 @@
 ## Controls
 
 ### Movement
-- **Left Click** on the map to move your character to that location
-- **Right Click** on an actor to set a destination toward them
+- **Right Click** - Move to a destination (pathfinding)
+- **Arrow Keys** - Move directly in a direction (hold to keep moving)
+- **W / A / S / D** - Change facing direction (bearing)
 - Characters navigate automatically using pathfinding around obstacles
 
 ### Camera
-- **Scroll Wheel** - Zoom in/out
-- **Space** - Recenter camera on your character
-- **M** - Toggle map view
+- **Space** - Toggle camera lock on your character (hold to temporarily recenter)
+- **Page Up / Mouse Wheel Up** - Zoom in
+- **Page Down / Mouse Wheel Down** - Zoom out
 
 ### Targeting
-- **Left Click** on an actor to target them
 - **Tab** - Cycle to next target
-- **Escape** - Clear current target
-- **+/-** - Cycle target groups
+- **Shift + Tab** - Cycle to previous target
+- **F** - Target self
+- **Esc** - Clear current target
+- **=** / **-** - Cycle target groups
 
 ### Skills
-- **1-9 Keys** - Activate skills assigned to action bar slots
+- **Q / W / E / R / T / Y / U / I / O** - Activate skills in slots 1-9
 - Skills may require a target to be selected
 - Some skills are instant, others have casting animations
+- Hold a skill key to charge (if the skill supports charging)
 
 ### Menus
-- **Right Click** on a target to open their context menu
-- **Escape** - Open system menu / close current menu
-- **Enter/Return** - Accept menu selection
-- **Backtick (`)** - Open selection menu
+- **` (Backtick)** - Open context menu for current target
+- **Home** - Open global menu
+- **Esc** - Close current menu
 
 ### Chat
-- **T** (or your configured key) opens the chat input
+- **Enter** - Open the chat input
+- **C** - Cycle chat channel
 - Type your message and press **Enter** to send
 
 ## Gameplay Mechanics
@@ -43,7 +46,7 @@ Resources are numeric values tracked on your character (health, mana, gold, etc.
 - Resources can trigger actions when they change (e.g., death on 0 health)
 
 ### Skills & Actions
-Skills are bound to your number keys (1-9). Pressing a skill key executes its associated action, which may:
+Skills are bound to Q/W/E/R/T/Y/U/I/O by default. Pressing a skill key executes its associated action, which may:
 
 - Deal damage to a target
 - Heal yourself
