@@ -2,8 +2,9 @@
 set -euo pipefail
 
 GODOT="${GODOT:-$HOME/Apps/Godot/Godot.x86_64}"
-PROJECT_DIR="$(cd "$(dirname "$0")/app" && pwd)"
-BUILD_DIR="$PROJECT_DIR/build"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$SCRIPT_DIR/app"
+BUILD_DIR="$SCRIPT_DIR/releases"
 
 mkdir -p "$BUILD_DIR"
 

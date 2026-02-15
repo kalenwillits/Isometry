@@ -37,6 +37,8 @@ env/*
 
 tmp/
 
+releases/
+
 target/
 
 godot.gdkey

@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CAMPAIGN_SRC="$SCRIPT_DIR/campaigns/demo"
-TARGET_DIR="${1:-$HOME/Dev/maps/target}"
+TARGET_DIR="$SCRIPT_DIR/releases/campaigns/"
 
 mkdir -p "$TARGET_DIR"
 
