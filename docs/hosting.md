@@ -45,7 +45,7 @@ Use `--network=server` when:
 ### Basic Host Command
 
 ```bash
-./atlas --campaign=mycampaign \
+./isometry --campaign=mycampaign \
   --network=host \
   --port=5000 \
   --username=admin \
@@ -62,7 +62,7 @@ Use `--network=server` when:
 
 ```bash
 # Host a campaign called "dungeon_crawl"
-./atlas --campaign=dungeon_crawl \
+./isometry --campaign=dungeon_crawl \
   --network=host \
   --port=7777 \
   --username=dungeon_master \
@@ -79,7 +79,7 @@ Waiting for players...
 Players use client mode to connect:
 
 ```bash
-./atlas --campaign=dungeon_crawl \
+./isometry --campaign=dungeon_crawl \
   --network=client \
   --uri=your.ip.address \
   --port=7777 \
@@ -98,7 +98,7 @@ Players use client mode to connect:
 ### Basic Server Command
 
 ```bash
-./atlas --campaign=mycampaign \
+./isometry --campaign=mycampaign \
   --network=server \
   --port=5000 \
   --username=server \
@@ -115,7 +115,7 @@ Players use client mode to connect:
 
 ```bash
 # Run dedicated server for "epic_campaign"
-./atlas --campaign=epic_campaign \
+./isometry --campaign=epic_campaign \
   --network=server \
   --port=5000 \
   --username=server_admin \
@@ -133,7 +133,7 @@ Waiting for connections...
 **Linux (using nohup):**
 
 ```bash
-nohup ./atlas --campaign=mycampaign \
+nohup ./isometry --campaign=mycampaign \
   --network=server \
   --port=5000 \
   --username=server \
@@ -141,36 +141,36 @@ nohup ./atlas --campaign=mycampaign \
   > server.log 2>&1 &
 
 # Check it's running
-ps aux | grep atlas
+ps aux | grep isometry
 
 # View logs
 tail -f server.log
 
 # Stop server
-pkill atlas
+pkill isometry
 ```
 
 **Linux (using screen):**
 
 ```bash
 # Start a screen session
-screen -S atlas-server
+screen -S isometry-server
 
 # Run the server
-./atlas --campaign=mycampaign --network=server --port=5000 --username=server --password=pass
+./isometry --campaign=mycampaign --network=server --port=5000 --username=server --password=pass
 
 # Detach: Ctrl+A, then D
 
 # Reattach later
-screen -r atlas-server
+screen -r isometry-server
 
 # Kill the screen
-screen -X -S atlas-server quit
+screen -X -S isometry-server quit
 ```
 
 ### Systemd Service (Linux)
 
-Create `/etc/systemd/system/atlas-server.service`:
+Create `/etc/systemd/system/isometry-server.service`:
 
 ```ini
 [Unit]
@@ -179,9 +179,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=atlas
-WorkingDirectory=/opt/atlas
-ExecStart=/opt/atlas/atlas \
+User=isometry
+WorkingDirectory=/opt/isometry
+ExecStart=/opt/isometry/isometry \
   --campaign=mycampaign \
   --network=server \
   --port=5000 \
@@ -199,12 +199,12 @@ WantedBy=multi-user.target
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable atlas-server
-sudo systemctl start atlas-server
-sudo systemctl status atlas-server
+sudo systemctl enable isometry-server
+sudo systemctl start isometry-server
+sudo systemctl status isometry-server
 
 # View logs
-sudo journalctl -u atlas-server -f
+sudo journalctl -u isometry-server -f
 ```
 
 ### Docker Deployment (Advanced)
@@ -223,13 +223,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Isometry executable and campaigns
-COPY atlas /opt/atlas/atlas
-COPY campaigns/ /opt/atlas/campaigns/
+COPY isometry /opt/isometry/isometry
+COPY campaigns/ /opt/isometry/campaigns/
 
-WORKDIR /opt/atlas
+WORKDIR /opt/isometry
 EXPOSE 5000/udp
 
-CMD ["./atlas", \
+CMD ["./isometry", \
      "--campaign=${CAMPAIGN}", \
      "--network=server", \
      "--port=5000", \
@@ -240,21 +240,21 @@ CMD ["./atlas", \
 **Build and run:**
 
 ```bash
-docker build -t atlas-server .
+docker build -t isometry-server .
 
 docker run -d \
-  --name atlas \
+  --name isometry \
   -p 5000:5000/udp \
   -e CAMPAIGN=mycampaign \
   -e USERNAME=server \
   -e PASSWORD=secret \
-  atlas-server
+  isometry-server
 
 # View logs
-docker logs -f atlas
+docker logs -f isometry
 
 # Stop
-docker stop atlas
+docker stop isometry
 ```
 
 ## Port Forwarding and Firewall
@@ -378,7 +378,7 @@ Isometry doesn't include a built-in user database. As a server operator, you:
 Enable trace logging to see connection events:
 
 ```bash
-./atlas --campaign=mycampaign --network=server --log-level=trace
+./isometry --campaign=mycampaign --network=server --log-level=trace
 ```
 
 Log messages include:
@@ -400,7 +400,7 @@ As the host (peer ID 1), you can see all connected players:
 ### Command-Line Options
 
 ```bash
-./atlas \
+./isometry \
   --campaign=CAMPAIGN_NAME \     # Required: Campaign to load
   --network=server \              # Required: Server mode (or "2")
   --port=5000 \                   # Optional: Port (default 5000)
@@ -424,20 +424,20 @@ As the host (peer ID 1), you can see all connected players:
 
 By default, Isometry looks for campaigns in:
 - Same directory as executable
-- `~/.local/share/atlas/campaigns/` (Linux)
-- `C:\Users\Name\AppData\Roaming\atlas\campaigns\` (Windows)
+- `~/.local/share/isometry/campaigns/` (Linux)
+- `C:\Users\Name\AppData\Roaming\isometry\campaigns\` (Windows)
 
 Override with `--dir`:
 
 ```bash
-./atlas --campaign=mycampaign --network=server --dir=/opt/atlas/campaigns
+./isometry --campaign=mycampaign --network=server --dir=/opt/isometry/campaigns
 ```
 
 ### Data Directory
 
 Player saves and server data are stored in:
-- Linux: `~/.local/share/atlas/data/`
-- Windows: `C:\Users\Name\AppData\Roaming\atlas\data\`
+- Linux: `~/.local/share/isometry/data/`
+- Windows: `C:\Users\Name\AppData\Roaming\isometry\data\`
 
 **Files:**
 - `<hash>.json` - Player save files
@@ -455,17 +455,17 @@ Player saves and server data are stored in:
 
 ```bash
 #!/bin/bash
-BACKUP_DIR="/backup/atlas/$(date +%Y%m%d)"
+BACKUP_DIR="/backup/isometry/$(date +%Y%m%d)"
 mkdir -p "$BACKUP_DIR"
 
 # Backup campaign
 cp campaigns/*.zip "$BACKUP_DIR/"
 
 # Backup player data
-cp -r ~/.local/share/atlas/data "$BACKUP_DIR/"
+cp -r ~/.local/share/isometry/data "$BACKUP_DIR/"
 
 # Backup RSA keys
-cp -r ~/.local/share/atlas/.rsa "$BACKUP_DIR/"
+cp -r ~/.local/share/isometry/.rsa "$BACKUP_DIR/"
 
 echo "Backup completed: $BACKUP_DIR"
 ```
@@ -474,13 +474,13 @@ echo "Backup completed: $BACKUP_DIR"
 
 ```bash
 # Restore player data
-cp -r /backup/atlas/20250115/data/* ~/.local/share/atlas/data/
+cp -r /backup/isometry/20250115/data/* ~/.local/share/isometry/data/
 
 # Restore RSA keys
-cp -r /backup/atlas/20250115/.rsa ~/.local/share/atlas/
+cp -r /backup/isometry/20250115/.rsa ~/.local/share/isometry/
 
 # Restart server
-systemctl restart atlas-server
+systemctl restart isometry-server
 ```
 
 ## Performance Optimization

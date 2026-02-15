@@ -15,7 +15,7 @@ Complete guide to playing Isometry campaigns.
 Launch Isometry in offline mode to play solo:
 
 ```bash
-./atlas --campaign=mycampaign --network=none
+./isometry --campaign=mycampaign --network=none
 ```
 
 In single-player mode:
@@ -27,8 +27,8 @@ In single-player mode:
 ### Saved Games
 
 Your progress is automatically saved in:
-- Linux: `~/.local/share/atlas/save/`
-- Windows: `C:\Users\YourName\AppData\Roaming\atlas\save/`
+- Linux: `~/.local/share/isometry/save/`
+- Windows: `C:\Users\YourName\AppData\Roaming\isometry\save/`
 
 Save files include:
 - Character position
@@ -43,7 +43,7 @@ Save files include:
 To join a hosted or dedicated server:
 
 ```bash
-./atlas --campaign=mycampaign \
+./isometry --campaign=mycampaign \
   --network=client \
   --uri=server.example.com \
   --port=5000 \

@@ -445,7 +445,7 @@ ERROR: Campaign has duplicate Main entities (found 3)
 **Log Output:**
 
 ```bash
-./atlas --campaign=my_campaign --network=none
+./isometry --campaign=my_campaign --network=none
 
 Starting campaign validation...
 Phase 1: Schema validation
@@ -726,7 +726,7 @@ zip -r my_campaign.zip my_campaign/
 #### 10. Test
 
 ```bash
-./atlas --campaign=my_campaign --network=none
+./isometry --campaign=my_campaign --network=none
 ```
 
 You should see:

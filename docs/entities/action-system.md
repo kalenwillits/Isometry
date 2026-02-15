@@ -20,7 +20,7 @@ The **Action** entity defines executable behaviors that affect actors, resources
 
 ### File
 
-`/home/kalen/Dev/atlas/app/entities/Action.gd`
+`/home/kalen/Dev/isometry/app/entities/Action.gd`
 
 ### Fields
 
@@ -295,7 +295,7 @@ The **Condition** entity defines boolean comparisons used for conditional action
 
 ### File
 
-`/home/kalen/Dev/atlas/app/entities/Condition.gd`
+`/home/kalen/Dev/isometry/app/entities/Condition.gd`
 
 ### Fields
 
@@ -455,7 +455,7 @@ The **Parameter** entity defines name-value pairs passed to action functions.
 
 ### File
 
-`/home/kalen/Dev/atlas/app/entities/Parameter.gd`
+`/home/kalen/Dev/isometry/app/entities/Parameter.gd`
 
 ### Fields
 

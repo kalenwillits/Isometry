@@ -1,6 +1,8 @@
 # Isometry
 
-An isometric pixel art RPG framework built with Godot 4.4. Create multiplayer campaigns using JSON configuration files.
+> **Alpha Release** — This project is in early alpha and needs contributor participation to be completed. Expect bugs, missing features, and breaking changes. Contributions and feedback are welcome!
+
+Isometry is a multiplayer isometric pixel art RPG framework built with Godot 4.4. Content creators can design and share their own campaigns written entirely in JSON configuration files — no programming required. Define maps, actors, items, skills, quests, and more through a declarative config-driven system, then play them solo or with friends over the network.
 
 ## Quick Start
 
@@ -35,7 +37,7 @@ Requires [Godot 4.4+](https://godotengine.org/) with export templates installed.
 ## Project Structure
 
 ```
-atlas/
+isometry/
 ├── app/                  # Godot project
 │   ├── autoload/         # Global singletons
 │   ├── classes/          # Utility classes
@@ -67,6 +69,10 @@ Build docs as EPUB using [ebk](https://github.com/anthropics/ebk):
 cd docs/user-guide && ebk
 cd docs/sdk-reference && ebk
 ```
+
+## Documentation Disclaimer
+
+Much of the documentation in this project has been written with the assistance of AI. While efforts have been made to review it for accuracy, there may be errors or outdated information. If you find something wrong, please open an issue or submit a PR.
 
 ## License
 

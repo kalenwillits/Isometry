@@ -167,8 +167,8 @@ admin:supersecret789
 ### Player Data Storage
 
 **Location:**
-- Linux: `~/.local/share/atlas/data/`
-- Windows: `C:\Users\Name\AppData\Roaming\atlas\data\`
+- Linux: `~/.local/share/isometry/data/`
+- Windows: `C:\Users\Name\AppData\Roaming\isometry\data\`
 
 **File Format:**
 ```
@@ -357,14 +357,14 @@ sudo ufw limit ssh
 
 **3. Dedicated User:**
 ```bash
-# Create atlas user (no login)
-sudo useradd -r -s /bin/false atlas
+# Create isometry user (no login)
+sudo useradd -r -s /bin/false isometry
 
 # Set ownership
-sudo chown -R atlas:atlas /opt/atlas
+sudo chown -R isometry:isometry /opt/isometry
 
-# Run server as atlas user
-sudo -u atlas /opt/atlas/atlas --network=server ...
+# Run server as isometry user
+sudo -u isometry /opt/isometry/isometry --network=server ...
 ```
 
 **4. Monitoring:**
@@ -373,7 +373,7 @@ sudo -u atlas /opt/atlas/atlas --network=server ...
 sudo apt install fail2ban
 
 # Monitor logs
-sudo journalctl -u atlas-server -f
+sudo journalctl -u isometry-server -f
 
 # Set up alerts (example with email)
 # Configure system to email on errors
@@ -449,24 +449,24 @@ Consider a UDP reverse proxy with:
 ```bash
 #!/bin/bash
 DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="/backup/atlas/$DATE"
+BACKUP_DIR="/backup/isometry/$DATE"
 mkdir -p "$BACKUP_DIR"
 
 # Backup player data
-cp -r ~/.local/share/atlas/data "$BACKUP_DIR/"
+cp -r ~/.local/share/isometry/data "$BACKUP_DIR/"
 
 # Backup campaigns
 cp campaigns/*.zip "$BACKUP_DIR/"
 
 # Backup keys
-cp -r ~/.local/share/atlas/.rsa "$BACKUP_DIR/"
+cp -r ~/.local/share/isometry/.rsa "$BACKUP_DIR/"
 
 # Compress
 tar -czf "$BACKUP_DIR.tar.gz" "$BACKUP_DIR"
 rm -rf "$BACKUP_DIR"
 
 # Keep only last 30 days
-find /backup/atlas -name "*.tar.gz" -mtime +30 -delete
+find /backup/isometry -name "*.tar.gz" -mtime +30 -delete
 
 echo "Backup completed: $BACKUP_DIR.tar.gz"
 ```
@@ -477,7 +477,7 @@ echo "Backup completed: $BACKUP_DIR.tar.gz"
 crontab -e
 
 # Add hourly backup
-0 * * * * /opt/atlas/backup.sh
+0 * * * * /opt/isometry/backup.sh
 ```
 
 ### Incident Response
@@ -534,16 +534,16 @@ sudo apt update
 sudo apt install -y libgl1-mesa-glx libxcursor1 libxinerama1 libxrandr2
 
 # Upload Isometry
-scp -i key.pem atlas ubuntu@ec2-xx-xx-xx-xx:~/
+scp -i key.pem isometry ubuntu@ec2-xx-xx-xx-xx:~/
 
 # Upload campaign
 scp -i key.pem campaign.zip ubuntu@ec2-xx-xx-xx-xx:~/
 
 # Make executable
-chmod +x atlas
+chmod +x isometry
 
 # Run server
-./atlas --campaign=mycampaign --network=server --port=5000 --username=server --password=pass
+./isometry --campaign=mycampaign --network=server --port=5000 --username=server --password=pass
 ```
 
 **4. Use Elastic IP:**
@@ -568,12 +568,12 @@ sudo ufw enable
 **3. Deploy:**
 ```bash
 # Upload files
-scp atlas root@droplet-ip:~/
+scp isometry root@droplet-ip:~/
 scp campaign.zip root@droplet-ip:~/
 
 # SSH and run
 ssh root@droplet-ip
-./atlas --campaign=mycampaign --network=server --port=5000 --username=server --password=pass
+./isometry --campaign=mycampaign --network=server --port=5000 --username=server --password=pass
 ```
 
 ### External Authentication Server
@@ -691,8 +691,8 @@ Campaign C ────►┌─────────┐
 **2. iptables Rate Limiting:**
 ```bash
 # Limit new connections
-sudo iptables -A INPUT -p udp --dport 5000 -m state --state NEW -m recent --name atlas --set
-sudo iptables -A INPUT -p udp --dport 5000 -m state --state NEW -m recent --name atlas --update --seconds 10 --hitcount 5 -j DROP
+sudo iptables -A INPUT -p udp --dport 5000 -m state --state NEW -m recent --name isometry --set
+sudo iptables -A INPUT -p udp --dport 5000 -m state --state NEW -m recent --name isometry --update --seconds 10 --hitcount 5 -j DROP
 ```
 
 **3. fail2ban:**
@@ -736,7 +736,7 @@ sudo ufw allow from 5.6.7.8 to any port 5000
 **3. Custom monitoring:**
 ```bash
 # Parse logs and send to monitoring service
-tail -f atlas.log | grep "Player connected" | wc -l
+tail -f isometry.log | grep "Player connected" | wc -l
 ```
 
 ## Network Troubleshooting

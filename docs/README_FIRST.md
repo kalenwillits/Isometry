@@ -107,18 +107,18 @@ docs/
 
 **Launch single-player:**
 ```bash
-./atlas --campaign=mycampaign --network=none
+./isometry --campaign=mycampaign --network=none
 ```
 
 **Host multiplayer:**
 ```bash
-./atlas --campaign=mycampaign --network=host --port=5000 \
+./isometry --campaign=mycampaign --network=host --port=5000 \
   --username=admin --password=secret
 ```
 
 **Join server:**
 ```bash
-./atlas --campaign=mycampaign --network=client \
+./isometry --campaign=mycampaign --network=client \
   --uri=server.com --port=5000 \
   --username=player1 --password=pass
 ```

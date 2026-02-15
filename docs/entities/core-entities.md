@@ -20,7 +20,7 @@ The **Main** entity defines the campaign's entry point and starting state. Every
 
 ### File
 
-`/home/kalen/Dev/atlas/app/entities/Main.gd`
+`/home/kalen/Dev/isometry/app/entities/Main.gd`
 
 ### Fields
 
@@ -154,7 +154,7 @@ The **Map** entity defines a game level containing terrain, spawn points, actors
 
 ### File
 
-`/home/kalen/Dev/atlas/app/entities/Map.gd`
+`/home/kalen/Dev/isometry/app/entities/Map.gd`
 
 ### Fields
 
@@ -381,7 +381,7 @@ The **Actor** entity represents all characters in the game - player-controlled, 
 
 ### File
 
-`/home/kalen/Dev/atlas/app/entities/Actor.gd`
+`/home/kalen/Dev/isometry/app/entities/Actor.gd`
 
 ### Fields Overview
 

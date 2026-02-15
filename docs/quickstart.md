@@ -18,13 +18,13 @@ Isometry is an isometric pixel art RPG framework. You can play campaigns created
 The simplest way to launch Isometry is in single-player mode:
 
 ```bash
-./atlas --campaign=my_campaign --network=none
+./isometry --campaign=my_campaign --network=none
 ```
 
 Or on Windows:
 
 ```cmd
-atlas.exe --campaign=my_campaign --network=none
+isometry.exe --campaign=my_campaign --network=none
 ```
 
 **Parameters:**
@@ -36,15 +36,15 @@ atlas.exe --campaign=my_campaign --network=none
 Place campaign ZIP files in one of these locations:
 
 - Same directory as the Isometry executable
-- `~/.local/share/atlas/campaigns/` (Linux)
-- `C:\Users\YourName\AppData\Roaming\atlas\campaigns\` (Windows)
+- `~/.local/share/isometry/campaigns/` (Linux)
+- `C:\Users\YourName\AppData\Roaming\isometry\campaigns\` (Windows)
 - Custom directory specified with `--dir=/path/to/campaigns`
 
 ### Example: Launching a Sample Campaign
 
 ```bash
-# Place sample_campaign.zip in the same folder as atlas
-./atlas --campaign=sample_campaign --network=none
+# Place sample_campaign.zip in the same folder as isometry
+./isometry --campaign=sample_campaign --network=none
 ```
 
 ## Basic Controls
@@ -118,16 +118,16 @@ The campaign has errors in its JSON files. Ask the campaign creator for a fixed 
 
 ```bash
 # Single player
-./atlas --campaign=mycampaign --network=none
+./isometry --campaign=mycampaign --network=none
 
 # Join multiplayer game
-./atlas --campaign=mycampaign --network=client --uri=server.com --port=5000 --username=player1 --password=secret
+./isometry --campaign=mycampaign --network=client --uri=server.com --port=5000 --username=player1 --password=secret
 
 # Host a game (play + host)
-./atlas --campaign=mycampaign --network=host --port=5000 --username=admin --password=adminpass
+./isometry --campaign=mycampaign --network=host --port=5000 --username=admin --password=adminpass
 
 # Run dedicated server (headless)
-./atlas --campaign=mycampaign --network=server --port=5000 --username=server --password=serverpass
+./isometry --campaign=mycampaign --network=server --port=5000 --username=server --password=serverpass
 ```
 
 See the complete [CLI Reference](cli-reference.md) for all options.

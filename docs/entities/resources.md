@@ -19,7 +19,7 @@ The **Resource** entity defines trackable numeric values for actors (health, man
 
 ### File
 
-`/home/kalen/Dev/atlas/app/entities/Resource.gd`
+`/home/kalen/Dev/isometry/app/entities/Resource.gd`
 
 ### Fields
 
@@ -342,7 +342,7 @@ The **Measure** entity defines calculated values based on dice expressions (armo
 
 ### File
 
-`/home/kalen/Dev/atlas/app/entities/Measure.gd`
+`/home/kalen/Dev/isometry/app/entities/Measure.gd`
 
 ### Fields
 

@@ -14,7 +14,7 @@ The **Skill** entity defines player abilities that are bound to hotkeys (1-9). S
 
 ### File
 
-`/home/kalen/Dev/atlas/app/entities/Skill.gd`
+`/home/kalen/Dev/isometry/app/entities/Skill.gd`
 
 ### Fields
 
