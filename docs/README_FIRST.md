@@ -4,12 +4,6 @@
 
 Isometry is an isometric pixel art RPG framework built with Godot. This documentation will help you play, host, and create campaigns.
 
-## 📚 Documentation Complete
-
-**Status:** ✅ Production-ready  
-**Total:** 7,143 lines across 18 files  
-**Quality:** Comprehensive with examples
-
 ## 🚀 Quick Start
 
 **New to Isometry?** Start here:
@@ -191,10 +185,3 @@ Or jump directly to:
 - [Main Documentation](README.md)
 - [Campaign Creation](campaign-basics.md)
 - [Entity System](entities/README.md)
-
----
-
-**Documentation Version:** 1.0  
-**Total Lines:** 7,143  
-**Files:** 18  
-**Status:** Production-ready ✅
