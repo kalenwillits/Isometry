@@ -4,6 +4,7 @@
 			"name": "Guard",
 			"speed": 0.5,
 			"sprite": "heroSprite",
+			"base": 8,
 			"hitbox": "actorHitBox",
 			"public": ["health"],
 			"perception": 15,

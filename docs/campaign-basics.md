@@ -156,8 +156,10 @@ campaign/
 **Primitive Types:**
 - `String` - Text: `"value"`
 - `Int` - Integer: `42`
-- `Float` - Decimal: `3.14`
+- `Float` - Decimal: `3.14` (must include decimal point — `3` is rejected for Float fields)
 - `Bool` - Boolean: `true` or `false`
+
+> **Type Strictness:** The validator accepts `3.0` for an Int field (whole-number float → int), but does **not** accept `3` for a Float field. Always include a decimal point for Float values (e.g., `200.0` not `200`).
 
 **Reference Types:**
 - `KeyRef` - Reference to another entity: `"entity_key"`
@@ -311,6 +313,8 @@ When Isometry loads your campaign:
 3. Spawns the player's `actor` at the map's spawn point
 4. Initializes resources, skills, and AI behaviors
 5. Game begins!
+
+> **Save File Override:** If the player has a save file from a previous session, saved `actor` and `map` values are merged into the spawn data. If the campaign has changed (e.g., entity keys were renamed), stale save data can cause the wrong actor or map to load. Players may need to delete their save file in the data directory to resolve this.
 
 ## Campaign Validation
 
@@ -673,12 +677,22 @@ cd my_campaign
   },
   "Layer": {
     "grass_layer": {
-      "source": "GGGGGGGGG\nGGGGGGGGG\nGGGGGGGGG",
+      "source": "/my_campaign_map/layer0",
       "ysort": false
     }
   }
 }
 ```
+
+The `source` field is a **file path** (relative to the campaign root) pointing to a text grid file. Create the layer file at `my_campaign_map/layer0`:
+
+```
+GGGGGGGGG
+GGGGGGGGG
+GGGGGGGGG
+```
+
+Each character maps to a tile symbol defined in your TileSet. Spaces mean no tile.
 
 #### 8. Add Assets
 

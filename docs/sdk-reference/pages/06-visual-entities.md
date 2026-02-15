@@ -92,13 +92,17 @@ Background layers that scroll at different speeds for depth effect.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `texture` | String | Yes | Path to background image |
-| `effect` | float | Yes | Scroll speed multiplier (lower = slower) |
+| `effect` | float | Yes | Scroll speed factor, divided by 100 internally (e.g., `10.0` → `0.1` ratio). Lower values scroll slower. |
+
+The `effect` value is divided by an internal scalar of `100.0`, so an effect of `10.0` means the layer scrolls at 10% of camera movement, and `50.0` means 50%. Use lower values (5–20) for distant backgrounds and higher values (30–60) for nearer layers.
+
+> **Float Required:** The `effect` field is a Float type. You **must** include a decimal point (e.g., `20.0` not `20`), or the validator will reject it.
 
 ```json
 {
   "Parallax": {
-    "farBg": { "texture": "/assets/sky.png", "effect": 20 },
-    "nearBg": { "texture": "/assets/clouds.png", "effect": 60 }
+    "farBg": { "texture": "/assets/sky.png", "effect": 10.0 },
+    "nearBg": { "texture": "/assets/clouds.png", "effect": 30.0 }
   }
 }
 ```

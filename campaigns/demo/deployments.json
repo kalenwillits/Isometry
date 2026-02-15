@@ -14,8 +14,8 @@
 		}
 	},
 	"Vertex": {
-		"guardPos": { "x": 400, "y": 200 },
-		"merchantPos": { "x": 100, "y": 300 },
-		"patrollerPos": { "x": 500, "y": 400 }
+		"guardPos": { "x": 128, "y": -48 },
+		"merchantPos": { "x": 160, "y": 32 },
+		"patrollerPos": { "x": 288, "y": 0 }
 	}
 }

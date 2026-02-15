@@ -77,7 +77,7 @@ XXXXXXXXXXXXXXXX
     }
   },
   "Vertex": {
-    "playerSpawn": { "x": 200, "y": 100 }
+    "playerSpawn": { "x": 128, "y": 16 }
   }
 }
 ```
@@ -188,12 +188,15 @@ XXXXXXXXXXXXXXXX
 ## Step 7: Package and Test
 
 ```bash
-cd my-campaign/
-zip -r my-campaign.zip .
+# ZIP must contain a root folder matching the campaign name
+cd ..
+zip -r my-campaign.zip my-campaign/
 cp my-campaign.zip ~/path/to/campaigns/
 ./isometry_linux.x86_64 --campaign=my-campaign --network=host \
   --port=5000 --username=test --password=test
 ```
+
+> **Important:** The ZIP must contain a single root folder (e.g., `my-campaign/`) with all files inside it. Running `zip` from inside the campaign directory creates a flat archive without the root folder, which will fail to load.
 
 ## Validation
 

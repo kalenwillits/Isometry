@@ -4,6 +4,7 @@
 			"name": "Patroller",
 			"speed": 0.8,
 			"sprite": "heroSprite",
+			"base": 8,
 			"hitbox": "actorHitBox",
 			"public": ["health"],
 			"perception": 20,

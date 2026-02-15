@@ -4,6 +4,7 @@
 			"name": "Hero",
 			"speed": 1.0,
 			"sprite": "heroSprite",
+			"base": 8,
 			"hitbox": "actorHitBox",
 			"public": ["health"],
 			"private": ["health", "mana", "gold"],

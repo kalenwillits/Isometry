@@ -35,12 +35,15 @@ An individual tile type within a tileset.
 | `obstacle` | bool | No | Tile blocks movement (walls, rocks) |
 | `ghost` | bool | No | Invisible but functional for pathfinding |
 
+> **Ghost Tiles:** When `ghost` is `true`, the tile is **not rendered** in the tilemap — it exists only for pathfinding and collision purposes. Do not set `ghost: true` on your primary walkable floor tiles, or the entire terrain will be invisible.
+
 ```json
 {
   "Tile": {
     "grass": { "symbol": "G", "index": 0, "navigation": true },
     "water": { "symbol": "W", "index": 46 },
-    "wall": { "symbol": "X", "index": 52, "obstacle": true }
+    "wall": { "symbol": "X", "index": 52, "obstacle": true },
+    "invisible_nav": { "symbol": "N", "index": 0, "navigation": true, "ghost": true }
   }
 }
 ```
@@ -71,7 +74,7 @@ A single layer in a tilemap, referencing a text grid file.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `source` | String | Yes | Path to layer data file (text grid) |
+| `source` | String | Yes | Path to layer data file (text grid), relative to campaign root |
 | `ysort` | bool | No | Enable Y-sorting for depth rendering |
 
 ```json
@@ -105,6 +108,19 @@ XXXXXXXXXXXXXXXX
 - Space = empty (no tile)
 
 The grid is rendered in isometric projection. Each character maps to one tile.
+
+### Coordinate System
+
+In layer files, rows increment the tile X coordinate and characters decrement the tile Y coordinate. The isometric world position is calculated as:
+
+- `world_x = (tile_x - tile_y) * half_tile_width`
+- `world_y = (tile_x + tile_y) * half_tile_height`
+
+With a standard tile size of 32x16, `half_tile_width = 16` and `half_tile_height = 8`.
+
+### Fog of War
+
+Tiles are rendered with a fog-of-war system. All tiles start fully transparent and only become visible when an actor's discovery area overlaps them. This means even correctly placed tiles will appear invisible until the player's actor gets close enough. The actor's `perception` field controls the discovery radius.
 
 ## Floor
 

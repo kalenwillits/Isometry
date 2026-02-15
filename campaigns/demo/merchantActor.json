@@ -4,6 +4,7 @@
 			"name": "Merchant",
 			"speed": 0.3,
 			"sprite": "heroSprite",
+			"base": 8,
 			"hitbox": "actorHitBox",
 			"perception": 10,
 			"salience": 1,

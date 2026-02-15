@@ -55,6 +55,12 @@ ERROR: Actor 'hero' field 'base' must be Int, got String
 ```
 **Fix:** Remove quotes from numbers: `"base": 32` not `"base": "32"`
 
+#### Float Field Given Integer
+```
+ERROR: Parallax 'farBg' field 'effect' must be Float, got Int
+```
+**Fix:** Always include a decimal point for Float fields: `"effect": 20.0` not `"effect": 20`. The validator accepts `3.0` for Int fields but does **not** accept `3` for Float fields.
+
 #### Main Entity Issues
 ```
 ERROR: Campaign requires exactly one Main entity (found 0)
@@ -179,6 +185,32 @@ sudo kill <PID>
 3. Check for circular action references
 4. Restart server periodically
 
+## Gray Screen / Nothing Renders
+
+### Stale Save File
+
+**Symptom:** Campaign loads but shows a gray screen, or the wrong map/actor appears.
+
+**Cause:** A save file from a previous session contains outdated `actor` and `map` values that override the Main entity's defaults. When the player spawns, the engine merges saved data into the spawn parameters. If the saved keys reference entities that no longer exist, loading fails silently.
+
+**Fix:** Delete the save file in the game's data directory (typically `data/` next to the game binary). Save files are named by a numeric hash (e.g., `155582795.json`).
+
+### Ghost Tiles Making Terrain Invisible
+
+**Symptom:** Map loads, parallax shows, actor spawns, but no terrain tiles are visible.
+
+**Cause:** Tiles with `ghost: true` are not rendered — they only exist for pathfinding. If your primary floor tile has `ghost: true`, the entire terrain will be invisible.
+
+**Fix:** Remove `ghost: true` from walkable floor tiles. Only use ghost on tiles that should be invisible navigation helpers.
+
+### Parallax Shows Then Disappears
+
+**Symptom:** Background flashes briefly then everything goes gray.
+
+**Cause:** Usually indicates the actor or map failed to load. The parallax renders during initial load, but the transition screen (fade from black) covers it. If the actor doesn't spawn, the camera never positions correctly and the map never enables.
+
+**Fix:** Check logs for actor/map loading errors. Verify the Main entity's `actor` and `map` keys reference valid entities. Delete any stale save files (see above).
+
 ## Gameplay Issues
 
 ### Controls Not Responding
@@ -199,11 +231,25 @@ sudo kill <PID>
 - Camera not centered
 - Wrong map
 - Actor not spawned
+- Spawn coordinates outside the tile grid
 
 **Solutions:**
 1. Press Esc to recenter camera
 2. Check you're on correct map
 3. Look for spawn errors in logs
+4. Verify spawn coordinates (Vertex) are within the isometric world bounds of your tile grid. Use the coordinate formula: `world_x = (tile_x - tile_y) * 16`, `world_y = (tile_x + tile_y) * 8` to calculate valid positions
+
+### Tiles Not Visible Despite Correct Map
+
+**Causes:**
+- Fog of war: tiles start fully transparent until discovered
+- Actor's `perception` too low to reveal tiles
+- Spawn point too far from tile grid
+
+**Solutions:**
+1. Tiles become visible when the actor's discovery area overlaps them — this is the fog of war system, not a bug
+2. Increase the actor's `perception` value (controls discovery radius)
+3. Ensure the spawn Vertex is positioned over walkable tiles
 
 ### Skills Won't Activate
 

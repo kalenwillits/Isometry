@@ -2,11 +2,11 @@
 	"Parallax": {
 		"skyParallax": {
 			"texture": "/assets/SpaceBg/Backgrounds/Blue1.png",
-			"effect": 40.0
+			"effect": 10.0
 		},
 		"starsParallax": {
 			"texture": "/assets/SpaceBg/Backgrounds/BlueStars.png",
-			"effect": 60.0
+			"effect": 20.0
 		}
 	}
 }

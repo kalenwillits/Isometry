@@ -3,7 +3,7 @@
 		"attackAction": {
 			"name": "Attack",
 			"time": 1.1,
-			"animation": "attackAnim",
+			"animation": "tool",
 			"do": "minus_resource_target",
 			"parameters": ["attackResourceParam", "attackDamageParam"]
 		},
