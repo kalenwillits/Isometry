@@ -6,71 +6,71 @@ Get up and running with Isometry in 5 minutes.
 
 Isometry is an isometric pixel art RPG framework. You can play campaigns created by others or build your own using JSON configuration files - no programming required.
 
-## Prerequisites
+## Getting Started
 
-- Isometry executable (download from releases or build from source)
-- A campaign ZIP file (ask your campaign creator or use a sample campaign)
+Download the latest release ZIP for your platform. It contains:
+
+- **Isometry Launcher** - a graphical launcher for configuring and starting games
+- **Isometry** - the game engine itself
+- **campaigns/** - a folder containing campaign `.zip` files (includes a demo campaign)
+
+Extract the ZIP and place it wherever you like. No installation required.
 
 ## Launching Your First Campaign
 
-### Single Player Mode
+1. Run the **Isometry Launcher** (`isometry_launcher_linux.x86_64`, `isometry_launcher_windows.exe`, or `isometry_launcher_macos.app` depending on your platform)
+2. The launcher will automatically detect campaigns in the `campaigns/` folder next to it
+3. Select a campaign from the dropdown
+4. Fill in a **Username** and **Password**
+5. Click **Host** to start a game you can invite others to, or **Join** to connect to an existing game
 
-The simplest way to launch Isometry is in single-player mode:
-
-```bash
-./isometry --campaign=my_campaign --network=none
-```
-
-Or on Windows:
-
-```cmd
-isometry.exe --campaign=my_campaign --network=none
-```
-
-**Parameters:**
-- `--campaign=my_campaign` - The name of your campaign ZIP file (without .zip extension)
-- `--network=none` - Launch in offline single-player mode
+The launcher will start the Isometry game engine with your chosen settings.
 
 ### Where to Put Campaign Files
 
-Place campaign ZIP files in one of these locations:
-
-- Same directory as the Isometry executable
-- `~/.local/share/isometry/campaigns/` (Linux)
-- `C:\Users\YourName\AppData\Roaming\isometry\campaigns\` (Windows)
-- Custom directory specified with `--dir=/path/to/campaigns`
-
-### Example: Launching a Sample Campaign
-
-```bash
-# Place sample_campaign.zip in the same folder as isometry
-./isometry --campaign=sample_campaign --network=none
-```
+Place campaign `.zip` files in the `campaigns/` folder next to the launcher executable. The launcher scans this directory on startup.
 
 ## Basic Controls
 
-Once the game launches:
-
 ### Movement
-- **Left Click** - Move to location
-- **Hold Left Click on Actor** - Follow actor
-- **Right Click** - Interact with target
+
+- **Right Click** - Move to a destination (pathfinding)
+- **Arrow Keys** - Move directly in a direction (hold to keep moving)
 
 ### Camera
-- **WASD** or **Arrow Keys** - Pan camera
-- **Mouse Wheel** - Zoom in/out
-- **Middle Click + Drag** - Pan camera
 
-### Combat & Skills
-- **1-9 Keys** - Use skills in action slots 1-9
-- **Tab** - Cycle through nearby targets
+- **W / A / S / D** - Pan camera (when camera is unlocked)
+- **Space** - Toggle camera lock on your character (hold to temporarily recenter)
+- **Page Up / Mouse Wheel Up** - Zoom in
+- **Page Down / Mouse Wheel Down** - Zoom out
+
+The camera also pans automatically when your cursor is near the screen edges.
+
+### Targeting
+
+- **Tab** - Cycle to next target
+- **Shift + Tab** - Cycle to previous target
+- **F** - Target self
 - **Esc** - Clear target
+- **+** / **-** - Cycle through target groups
+
+### Skills
+
+- **1-9** - Activate skills in action slots 1-9 (hold to charge, release to fire if the skill supports charging)
 
 ### UI
-- **T** - Open chat
+
+- **Enter** - Open chat
+- **C** - Cycle chat channel
 - **M** - Toggle map
-- **I** - Toggle inventory (if implemented by campaign)
-- **Esc** - Open options menu
+- **` (Backtick)** - Open context menu for current target
+- **Home** - Open global menu
+- **Esc** - Close current menu
+- **F1-F4** - Focus UI quadrants (Shift+F1-F4 to clear)
+
+### Resources
+
+Campaigns define **resources** for your character (such as health, mana, currency, etc.). These are visible in the resources panel when your character has them. There is no generic inventory - resources are defined entirely by the campaign you're playing.
 
 ## Next Steps
 
@@ -91,12 +91,9 @@ Once the game launches:
 
 ### Campaign won't load
 
-**Error: "Campaign not found"**
+**Launcher shows "(no campaigns found)"**
 
-Check that:
-- The campaign ZIP file exists
-- You're using the correct filename (without .zip extension)
-- The file is in a valid campaign directory
+Check that campaign `.zip` files are in the `campaigns/` folder next to the launcher executable.
 
 **Error: "Validation failed"**
 
@@ -113,24 +110,6 @@ The campaign has errors in its JSON files. Ask the campaign creator for a fixed 
 - Try lowering your resolution
 - Reduce zoom level (zoom out)
 - Check your campaign's actor count (too many NPCs can impact performance)
-
-## Command-Line Quick Reference
-
-```bash
-# Single player
-./isometry --campaign=mycampaign --network=none
-
-# Join multiplayer game
-./isometry --campaign=mycampaign --network=client --uri=server.com --port=5000 --username=player1 --password=secret
-
-# Host a game (play + host)
-./isometry --campaign=mycampaign --network=host --port=5000 --username=admin --password=adminpass
-
-# Run dedicated server (headless)
-./isometry --campaign=mycampaign --network=server --port=5000 --username=server --password=serverpass
-```
-
-See the complete [CLI Reference](cli-reference.md) for all options.
 
 ## Getting Help
 
